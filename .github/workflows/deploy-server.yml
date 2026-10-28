@@ -1,0 +1,84 @@
+# Each push to main that touches the server or the companion: GitHub builds and tests them, then the
+# server laptop (a self-hosted runner, labelled `home-hub`) swaps the new build into
+# C:\Program Files\TVLauncher and restarts the `tvl-server` service. The household's data and keys
+# stay on the laptop (C:\ProgramData\TVLauncher\server); nothing secret goes through GitHub.
+# Setting the laptop up for this: docs/OPERATIONS.md, "Deploys on push".
+name: Deploy server
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "crates/**"
+      - "apps/companion/**"
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - "package.json"
+      - "package-lock.json"
+      - "scripts/deploy-server.ps1"
+      - ".github/workflows/deploy-server.yml"
+  workflow_dispatch:
+
+# One deploy at a time; a newer push waits for the running one instead of cutting it off mid-swap.
+concurrency:
+  group: deploy-server
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-latest
+    env:
+      # .cargo/config.toml points target-dir at the dev PC's C:\TVLauncher\build; keep it in the
+      # workspace here so the cache finds it.
+      CARGO_TARGET_DIR: ${{ github.workspace }}\target
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Test the crates
+        run: cargo test --locked
+
+      - name: Build the server
+        run: cargo build --release --locked -p tvl-server
+
+      - name: Build the companion
+        run: |
+          npm ci
+          npm run companion:build
+
+      - name: Gather the deploy
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory deploy | Out-Null
+          Copy-Item "$env:CARGO_TARGET_DIR\release\tvl-server.exe" deploy\
+          Copy-Item -Recurse apps\companion\dist deploy\companion
+          Copy-Item scripts\deploy-server.ps1 deploy\
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tvl-server
+          path: deploy
+          retention-days: 14
+
+  deploy:
+    needs: build
+    runs-on: [self-hosted, windows, home-hub]
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: tvl-server
+          path: deploy
+
+      - name: Swap it in and restart the service
+        shell: powershell
+        run: powershell -NoProfile -ExecutionPolicy Bypass -File deploy\deploy-server.ps1 -From deploy -Commit $env:GITHUB_SHA

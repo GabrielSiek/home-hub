@@ -78,8 +78,34 @@ Check: on the laptop, open `http://localhost:47960`; on a phone, `http://tvl.loc
 - **Settings without a PIN**: `http://localhost:47960` on the laptop itself counts as admin.
 - **Backups**: copy `C:\ProgramData\TVLauncher\server` somewhere safe and private: it holds the
   household's keys, the devices' local keys and the home CA's key.
-- **Update**: stop the service, replace `tvl-server.exe` (and `companion`), start it.
+- **Update**: pushes to main deploy by themselves (below). By hand: stop the service, replace
+  `tvl-server.exe` (and `companion`), start it, or (*admin*) `scripts\deploy-server.ps1 -From <folder>`.
 - **Remove**: `tvl-server uninstall` (*admin*); the data folder stays.
+
+## Deploys on push
+
+`.github/workflows/deploy-server.yml` runs on each push to main that touches `crates/`,
+`apps/companion/`, the lock files or the deploy itself (or by hand: Actions › Deploy server › Run
+workflow). GitHub tests the crates and builds the server and the companion; then the laptop, a
+self-hosted runner labelled `home-hub`, runs `scripts\deploy-server.ps1`: stop the service, keep
+the running build in `TVLauncher\previous`, copy the new one in, start it, and check that
+`http://localhost:47960` answers. If it doesn't within a minute, the previous build goes back and
+the run fails. `TVLauncher\deployed.txt` holds the commit that's running.
+
+The household's data never goes through GitHub: it stays in `C:\ProgramData\TVLauncher\server`.
+
+Set the laptop up once, after step 4 (*admin*):
+
+```powershell
+$token = gh api -X POST repos/GabrielSiek/home-hub/actions/runners/registration-token --jq .token
+scripts\setup-deploy-runner.ps1 -Repo https://github.com/GabrielSiek/home-hub -Token $token
+```
+
+It installs the service if it isn't yet, lets the runner's account (`NETWORK SERVICE`) replace the
+files in `C:\Program Files\TVLauncher` and stop/start `tvl-server` (it still can't read the data
+folder), and registers the runner in `C:\actions-runner` as a Windows service. Check it under the
+repo's Settings › Actions › Runners. Since the runner acts on the laptop, the workflow only runs
+for pushes to main, never for pull requests.
 
 ## Next to the old launcher, on the dev PC
 

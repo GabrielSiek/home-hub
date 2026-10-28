@@ -15,7 +15,7 @@ the old code found and where each item is fixed.
 | `crates/server` | `tvl-server.exe`: the Windows service |
 | `apps/tv` | The desktop app for TV PCs (TV UI + agent) |
 | `apps/companion` | The touch UI for phones and tablets, served by the server |
-| `scripts/` | `check-untouched.ps1` (nothing outside `refactor\` changed), `test-names-diff.ps1` (old tests carried over) |
+| `scripts/` | `check-untouched.ps1` (nothing outside `refactor\` changed), `test-names-diff.ps1` (old tests carried over), `deploy-server.ps1` / `setup-deploy-runner.ps1` (deploys on push to main) |
 
 ## Build and check
 

@@ -1,0 +1,5 @@
+[build]
+# target/ grows to several GB: kept outside OneDrive so it isn't synced. Next to the emulators the
+# launcher already installs in C:\TVLauncher. Change it on another PC, or override with
+# CARGO_TARGET_DIR.
+target-dir = "C:/TVLauncher/build/refactor"

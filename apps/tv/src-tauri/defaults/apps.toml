@@ -1,0 +1,84 @@
+# Apps on the Home screen, in this order.
+#
+# kind = "web"   opens `url` in the browser (Edge by default), fullscreen, with its own profile
+# kind = "uri"   hands `url` to Windows (steam://, spotify:, ...)
+# kind = "exec"  runs `exec` with `args`
+#
+# search_url      {q} is replaced by the title picked in Search
+# tmdb_providers  TMDB watch-provider ids; used to match "Open in" buttons in Search
+# user_agent      optional browser identity, for sites with a TV interface (YouTube). The launcher
+#                 also makes the browser's client hints say "TV device" to match
+# nav             how the controller drives a web app:
+#                   "tv"      (default) TV mode: the D-pad moves a highlight between the site's
+#                             links and buttons, A presses, B goes back; in the player
+#                             ←/→ seek, A plays/pauses or presses Skip intro, ↑/↓ reach the controls
+#                   "native"  plain arrow keys, Enter and Esc, for sites with their own TV interface
+# icon            optional tile artwork, path relative to this folder. Simpler: drop a file named
+#                 after the app's id in the icons folder (icons/netflix.png, icons/twitch.webp, ...)
+#                 and it is picked up without editing this file. Fills the whole tile:
+#                 16:9, 444×252 px or larger, PNG/JPG/WebP. Without one, the tile shows the name.
+# color           tile accent
+
+[[apps]]
+id = "netflix"
+name = "Netflix"
+kind = "web"
+url = "https://www.netflix.com/browse"
+search_url = "https://www.netflix.com/search?q={q}"
+color = "#e50914"
+tmdb_providers = [8]
+
+[[apps]]
+id = "prime"
+name = "Prime Video"
+kind = "web"
+url = "https://www.primevideo.com/"
+search_url = "https://www.primevideo.com/search?phrase={q}"
+color = "#1a98ff"
+# 531, 582, 2303: Paramount+, subscribed as an Amazon Channel, so it opens here
+tmdb_providers = [119, 9, 531, 582, 2303]
+
+[[apps]]
+id = "disney"
+name = "Disney+"
+kind = "web"
+url = "https://www.disneyplus.com/home"
+search_url = "https://www.disneyplus.com/search?q={q}"
+color = "#113ccf"
+tmdb_providers = [337]
+
+[[apps]]
+id = "hbomax"
+name = "HBO Max"
+kind = "web"
+url = "https://play.hbomax.com/"
+search_url = "https://play.hbomax.com/search?q={q}"
+color = "#5822b4"
+tmdb_providers = [1899, 384]
+
+[[apps]]
+id = "youtube"
+name = "YouTube"
+kind = "web"
+url = "https://www.youtube.com/tv"
+# The TV apps' runtime (Cobalt): youtube.com/tv only lets TV devices in.
+user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Cobalt/27.lts.3.1040976-gold (unlike Gecko) v8/13.8.258.54-jit gles Starboard/18, TVLauncher_DESKTOP_x8664_2026/0.1.0 (TVLauncher, Windows) dev.tvlauncher.app/0.1.0"
+nav = "native"
+color = "#ff0033"
+
+[[apps]]
+id = "twitch"
+name = "Twitch"
+kind = "web"
+url = "https://www.twitch.tv/"
+search_url = "https://www.twitch.tv/search?term={q}"
+color = "#9146ff"
+
+[[apps]]
+id = "globoplay"
+name = "Globoplay"
+kind = "web"
+url = "https://globoplay.globo.com/"
+search_url = "https://globoplay.globo.com/busca/?q={q}"
+color = "#fb0234"
+tmdb_providers = [307]

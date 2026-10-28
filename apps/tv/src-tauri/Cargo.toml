@@ -1,0 +1,76 @@
+[package]
+name = "tvl-tv"
+description = "The TV Launcher on a TV PC: its screens, and its link to the home server"
+version.workspace = true
+edition.workspace = true
+publish.workspace = true
+
+[lib]
+name = "tvl_tv_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tvl-kit.workspace = true
+tvl-protocol.workspace = true
+tvl-agent-link.workspace = true
+tauri = { version = "2", features = ["protocol-asset"] }
+tauri-plugin-single-instance = "2"
+tauri-plugin-autostart = "2"
+tauri-plugin-opener = "2"
+serde.workspace = true
+serde_json.workspace = true
+toml.workspace = true
+thiserror.workspace = true
+reqwest.workspace = true
+urlencoding.workspace = true
+# The project's .env, in debug builds only.
+dotenvy.workspace = true
+tracing.workspace = true
+# XInput backend: keeps reading the pad while a browser or game has focus.
+gilrs = { version = "0.11", default-features = false, features = ["xinput"] }
+enigo = "0.5"
+base64.workspace = true
+getrandom.workspace = true
+futures-util.workspace = true
+tokio.workspace = true
+# The browser's DevTools socket (ws:// on this PC).
+tokio-tungstenite = { version = "0.30.0", default-features = false, features = ["connect"] }
+# Microphone capture for the assistant, and its voice on the speakers.
+cpal = "0.16"
+# The assistant's voice on this PC (Kokoro). Linked statically; the build downloads the
+# prebuilt library from GitHub. 1.13.x: 2.0 dropped espeak-ng, which Kokoro needs for
+# Portuguese.
+sherpa-onnx = "=1.13.8"
+# The Google Photos picker link, shown on the TV for the phone to scan.
+qrcode.workspace = true
+# Emulator downloads (RetroArch, PCSX2 and Dolphin ship as .7z, RetroArch cores as .zip) and
+# the screenshot inside a PCSX2 save state (also a zip).
+sevenz-rust2 = "0.24"
+zip.workspace = true
+
+[target.'cfg(windows)'.dependencies]
+winreg = "0.55"
+# Reads the Guide/Home button, which gilrs doesn't report.
+rusty-xinput = "1.3"
+# The master volume (Core Audio), for the assistant; window checks that keep Steam from
+# taking over on the Guide button; the time zone's rules, for alarms; emulator versions, the
+# drives and Documents folder for the retro folder picker; the wired network address, for
+# Wake-on-LAN. Same version Tauri already builds.
+windows = { version = "0.61", features = [
+    "Win32_Foundation",
+    "Win32_Graphics_Gdi",
+    "Win32_Media_Audio",
+    "Win32_Media_Audio_Endpoints",
+    "Win32_NetworkManagement_IpHelper",
+    "Win32_Storage_FileSystem",
+    "Win32_System_Com",
+    "Win32_System_Com_StructuredStorage",
+    "Win32_System_Threading",
+    "Win32_System_Time",
+    "Win32_System_Variant",
+    "Win32_UI_Shell",
+    "Win32_UI_WindowsAndMessaging",
+] }

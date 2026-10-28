@@ -1,0 +1,56 @@
+[workspace]
+resolver = "2"
+members = ["crates/*", "apps/tv/src-tauri"]
+# A plain `cargo build` / `cargo test` covers the crates. The TV app (apps/tv/src-tauri) brings
+# Tauri and downloads sherpa-onnx, so it's built on its own with `-p tvl-tv`.
+default-members = ["crates/*"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+# Same versions as src-tauri/Cargo.toml; Cargo.lock was seeded from src-tauri/Cargo.lock.
+[workspace.dependencies]
+tvl-kit = { path = "crates/kit" }
+tvl-protocol = { path = "crates/protocol" }
+tvl-agent-link = { path = "crates/agent-link" }
+
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+toml = "0.8"
+thiserror = "2"
+reqwest = { version = "0.12", default-features = false, features = ["json", "multipart", "rustls-tls", "gzip"] }
+urlencoding = "2"
+dotenvy = "0.15"
+hmac = "0.12"
+sha2 = "0.10"
+base64 = "0.22"
+getrandom = "0.3"
+futures-util = { version = "0.3", features = ["sink"] }
+tokio = { version = "1", features = ["net", "io-util", "time", "macros", "sync", "fs", "rt-multi-thread", "signal"] }
+tokio-util = { version = "0.7", features = ["rt"] }
+tokio-tungstenite = { version = "0.30.0", default-features = false, features = ["connect", "rustls-tls-webpki-roots"] }
+parking_lot = "0.12"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt"] }
+tracing-appender = "0.2"
+aes = "0.8"
+aes-gcm = "0.10"
+cbc = { version = "0.1", features = ["alloc"] }
+md-5 = "0.10"
+crc32fast = "1"
+axum = { version = "0.8", features = ["ws"] }
+tower-http = { version = "0.6", features = ["fs"] }
+rcgen = { version = "0.14", default-features = false, features = ["crypto", "pem", "ring"] }
+rustls = { version = "0.23", default-features = false, features = ["ring", "std", "tls12"] }
+tokio-rustls = { version = "0.26", default-features = false, features = ["ring", "tls12"] }
+time = "0.3"
+zip = { version = "9", default-features = false, features = ["deflate"] }
+qrcode = { version = "0.14", default-features = false, features = ["svg"] }
+
+[profile.dev]
+debug = "line-tables-only"
+
+[profile.dev.package."*"]
+debug = false

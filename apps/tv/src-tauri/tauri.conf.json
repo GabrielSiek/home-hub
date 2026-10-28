@@ -1,0 +1,52 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "TV Launcher Home",
+  "version": "0.1.0",
+  "identifier": "dev.tvlauncher.tv",
+  "build": {
+    "beforeDevCommand": "npm run tv:dev",
+    "devUrl": "http://localhost:1421",
+    "beforeBuildCommand": "npm run tv:build",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "label": "main",
+        "title": "TV Launcher",
+        "width": 1280,
+        "height": 720,
+        "decorations": false,
+        "backgroundColor": "#0c0c14",
+        "useHttpsScheme": true,
+        "additionalBrowserArgs": "--disable-features=msWebOOUI,msPdfOOUI,msSmartScreenProtection --autoplay-policy=no-user-gesture-required"
+      }
+    ],
+    "security": {
+      "csp": {
+        "default-src": "'self' ipc: http://ipc.localhost",
+        "script-src": "'self' https://www.youtube.com https://player.twitch.tv",
+        "style-src": "'self' 'unsafe-inline'",
+        "font-src": "'self' data:",
+        "img-src": "'self' asset: http://asset.localhost https: data: blob:",
+        "media-src": "'self' asset: http://asset.localhost https: blob:",
+        "connect-src": "'self' ipc: http://ipc.localhost https: wss://irc-ws.chat.twitch.tv",
+        "frame-src": "https:"
+      },
+      "assetProtocol": {
+        "enable": true,
+        "scope": ["$APPDATA/icons/**", "$APPDATA/art/**", "$APPDATA/photos/**", "$APPDATA/retro-art/**", "$APPDATA/retro/**"]
+      }
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["msi", "nsis"],
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.ico"
+    ]
+  }
+}

@@ -1,0 +1,1356 @@
+/* Twitch screens (design canvas: Twitch, Twitch · Watching, Twitch · Search). */
+
+/* ---------- Shared ---------- */
+
+/* Twitch's own palette, scoped to its screens. */
+.tw {
+  --tw: #9146ff;
+  --tw-2: #bf94ff;
+  --tw-live: #eb0400;
+  --tw-bg: #0e0e10;
+  --tw-surface: #18181b;
+  --tw-surface-2: #26262c;
+  --tw-border: #2f2f35;
+  --tw-text: #efeff1;
+  --tw-muted: #adadb8;
+  --tw-ring: 0 0 0 4px var(--tw-bg), 0 0 0 8px var(--tw-2);
+  background: var(--tw-bg);
+  color: var(--tw-text);
+  overflow: hidden;
+}
+
+.tw-glow {
+  position: absolute;
+  top: -360px;
+  left: 380px;
+  width: 1300px;
+  height: 760px;
+  border-radius: var(--r-pill);
+  background: var(--tw);
+  filter: blur(200px);
+  opacity: 0.22;
+  pointer-events: none;
+}
+
+.tw-glow-right {
+  left: auto;
+  right: -200px;
+  width: 1200px;
+  opacity: 0.18;
+}
+
+.tw-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+
+.tw-head {
+  position: absolute;
+  top: 48px;
+  left: var(--gutter);
+  right: var(--gutter);
+  height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  z-index: 2;
+  animation: fadeIn 0.5s var(--ease) both;
+}
+
+.tw-head-group {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  min-width: 0;
+}
+
+.tw-logo {
+  height: 40px;
+  width: auto;
+  flex-shrink: 0;
+}
+
+.tw-crumb {
+  font-size: 26px;
+  font-weight: 600;
+  color: var(--tw-muted);
+  white-space: nowrap;
+}
+
+.tw-round,
+.tw-tab,
+.tw-field,
+.tw-btn,
+.tw-pill,
+.tw-mic,
+.tw-icon,
+.tw-channel,
+.tww-play,
+.tww-dictate {
+  transition:
+    background-color 0.2s var(--ease),
+    color 0.15s var(--ease),
+    border-color 0.15s var(--ease),
+    transform 0.2s var(--ease),
+    box-shadow 0.2s var(--ease);
+}
+
+.tw-round {
+  flex: none;
+  width: 52px;
+  height: 52px;
+  padding: 0;
+  border-radius: var(--r-pill);
+  border: 1px solid var(--tw-border);
+  background: var(--tw-surface);
+  color: var(--tw-text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tw-round-glass {
+  background: rgba(24, 24, 27, 0.7);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.tw-round.is-focused,
+.tw-btn.is-focused,
+.tww-play.is-focused,
+.tww-dictate.is-focused,
+.tw-mic.is-focused {
+  transform: scale(1.05);
+  box-shadow: var(--tw-ring);
+}
+
+.tw-tabs {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px;
+  border-radius: var(--r-pill);
+  background: var(--tw-surface);
+  border: 1px solid var(--tw-border);
+}
+
+.tw-tab {
+  display: flex;
+  align-items: center;
+  height: 48px;
+  padding: 0 26px;
+  border: 0;
+  border-radius: var(--r-pill);
+  background: transparent;
+  color: var(--tw-muted);
+  font-size: 22px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.tw-tab[aria-current='page'] {
+  background: var(--tw);
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.tw-tab.is-focused {
+  color: var(--tw-text);
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 0 0 3px var(--tw-2);
+}
+
+.tw-tab[aria-current='page'].is-focused {
+  background: var(--tw);
+  color: #ffffff;
+}
+
+.tw-field {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 383px;
+  height: 56px;
+  padding: 0 26px;
+  overflow: hidden;
+  border-radius: var(--r-pill);
+  background: var(--tw-surface);
+  border: 1px solid var(--tw-border);
+  color: var(--tw-muted);
+  font-size: 20px;
+}
+
+.tw-field svg {
+  flex-shrink: 0;
+}
+
+.tw-field.is-focused {
+  border-color: var(--tw-2);
+  color: var(--tw-text);
+  box-shadow: 0 0 0 2px var(--tw-2);
+}
+
+.tw-avatar {
+  flex: none;
+  border-radius: var(--r-pill);
+  object-fit: cover;
+  background: #3a2a5e;
+}
+
+.tw-avatar-none {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--tw-2);
+  font-weight: 600;
+}
+
+.tw-me {
+  width: 52px;
+  height: 52px;
+  font-size: 22px;
+  box-shadow:
+    0 0 0 2px var(--tw-bg),
+    0 0 0 4px var(--tw);
+}
+
+@keyframes livePulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
+}
+
+.tw-live {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 34px;
+  padding: 0 14px;
+  border-radius: 8px;
+  background: var(--tw-live);
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
+.tw-live-sm {
+  height: 26px;
+  padding: 0 10px;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.tw-live-dot {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  border-radius: var(--r-pill);
+  background: var(--tw-live);
+}
+
+.tw-live .tw-live-dot {
+  width: 8px;
+  height: 8px;
+  background: #ffffff;
+  animation: livePulse 1.6s ease-in-out infinite;
+}
+
+.tw-offline {
+  flex: none;
+  font-size: 18px;
+  color: var(--tw-muted);
+}
+
+.tw-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.tw-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 56px;
+  padding: 0 40px;
+  border-radius: var(--r-pill);
+  font-size: 22px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.tw-btn-primary {
+  border: 0;
+  background: var(--tw);
+  color: #ffffff;
+}
+
+.tw-btn-ghost {
+  border: 1px solid var(--tw-border);
+  background: var(--tw-surface);
+  color: var(--tw-text);
+  font-weight: 500;
+}
+
+/* A state, not a button: the API can't follow or unfollow. */
+.tw-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  height: 56px;
+  padding: 0 22px;
+  border-radius: var(--r-pill);
+  border: 1px solid var(--tw-border);
+  background: var(--tw-surface);
+  color: var(--tw-2);
+  font-size: 18px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.tw-chip-glass {
+  height: 52px;
+  border-color: rgba(255, 255, 255, 0.14);
+  background: rgba(24, 24, 27, 0.7);
+}
+
+.tw-pill {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 52px;
+  padding: 0 22px;
+  border-radius: var(--r-pill);
+  border: 1px solid var(--tw-border);
+  background: transparent;
+  color: var(--tw-muted);
+  font-size: 18px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.tw-pill-glass {
+  border-color: rgba(255, 255, 255, 0.14);
+  background: rgba(24, 24, 27, 0.7);
+  color: var(--tw-text);
+}
+
+.tw-pill.is-on {
+  background: rgba(145, 70, 255, 0.35);
+  border-color: var(--tw);
+  color: var(--tw-text);
+}
+
+.tw-pill-live.is-on {
+  background: rgba(235, 4, 0, 0.18);
+  border-color: var(--tw-live);
+}
+
+.tw-pill.is-focused {
+  border-color: var(--tw-2);
+  color: var(--tw-text);
+  transform: scale(1.05);
+  box-shadow: var(--tw-ring);
+}
+
+/* ---------- Following / Browse / Categories ---------- */
+
+.tw-setup {
+  position: absolute;
+  top: 300px;
+  left: var(--gutter);
+  width: 900px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 24px;
+  animation: fadeUp 0.7s var(--ease) both;
+}
+
+.tw-setup h1 {
+  font-size: 62px;
+  font-weight: 600;
+}
+
+.tw-setup p {
+  font-size: 24px;
+  line-height: 1.5;
+  color: var(--tw-muted);
+}
+
+.tw-hero {
+  position: absolute;
+  top: 164px;
+  left: var(--gutter);
+  right: var(--gutter);
+  display: flex;
+  gap: 48px;
+  animation: fadeUp 0.7s var(--ease) 0.1s both;
+}
+
+.tw-preview {
+  position: relative;
+  flex: 0 0 848px;
+  height: 477px;
+  padding: 0;
+  border: 0;
+  border-radius: 20px;
+  overflow: hidden;
+  background: #2e2448;
+  box-shadow: 0 32px 80px rgba(0, 0, 0, 0.5);
+  color: var(--tw-text);
+}
+
+.tw-preview img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  animation: fadeIn 0.4s var(--ease) both;
+}
+
+.tw-preview-shade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(0deg, rgba(14, 14, 16, 0.75) 0%, rgba(14, 14, 16, 0) 45%);
+}
+
+.tw-preview-badge {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+}
+
+.tw-preview-viewers {
+  position: absolute;
+  left: 24px;
+  bottom: 22px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 20px;
+  font-weight: 500;
+}
+
+.tw-hero-info {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 20px;
+  padding-top: 8px;
+}
+
+.tw-hero-who {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  min-width: 0;
+}
+
+.tw-hero-avatar {
+  width: 76px;
+  height: 76px;
+  font-size: 32px;
+  box-shadow:
+    0 0 0 3px var(--tw-bg),
+    0 0 0 6px var(--tw-live);
+}
+
+.tw-hero-names {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.tw-hero-name {
+  font-size: 34px;
+  font-weight: 600;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tw-hero-game {
+  font-size: 20px;
+  font-weight: 500;
+  color: var(--tw-2);
+}
+
+.tw-hero-title {
+  font-size: 28px;
+  line-height: 1.35;
+  font-weight: 500;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.tw-loading {
+  color: var(--tw-muted);
+}
+
+.tw-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.tw-tag {
+  display: inline-flex;
+  align-items: center;
+  height: 36px;
+  padding: 0 16px;
+  border-radius: var(--r-pill);
+  background: var(--tw-surface-2);
+  color: #dedee3;
+  font-size: 18px;
+  font-weight: 500;
+}
+
+.tw-hero-uptime {
+  font-size: 20px;
+  color: var(--tw-muted);
+}
+
+.tw-hero-info .tw-actions {
+  margin-top: 8px;
+}
+
+.tw-rail {
+  position: absolute;
+  top: 686px;
+  left: var(--gutter);
+  right: var(--gutter);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  animation: fadeUp 0.7s var(--ease) 0.25s both;
+}
+
+.tw-rail-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.tw-rail-head h2 {
+  font-size: 24px;
+  font-weight: 600;
+}
+
+.tw-count {
+  display: inline-flex;
+  align-items: center;
+  height: 30px;
+  padding: 0 12px;
+  border-radius: var(--r-pill);
+  background: rgba(145, 70, 255, 0.18);
+  color: var(--tw-2);
+  font-size: 16px;
+  font-weight: 600;
+}
+
+/* Runs edge to edge so cards scroll off-screen; the padding leaves room for the focus ring. */
+.tw-rail-items {
+  display: flex;
+  gap: 24px;
+  padding: 24px var(--gutter);
+  margin: -24px calc(-1 * var(--gutter));
+}
+
+.tw-card {
+  flex: 0 0 330px;
+  width: 330px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--tw-text);
+  text-align: left;
+}
+
+.tw-card-thumb {
+  position: relative;
+  width: 330px;
+  height: 186px;
+  border-radius: 14px;
+  overflow: hidden;
+  background: #2e2448;
+  transition:
+    transform 0.2s var(--ease),
+    box-shadow 0.2s var(--ease);
+}
+
+.tw-card-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.tw-card.is-focused .tw-card-thumb {
+  transform: scale(1.06);
+  box-shadow:
+    0 0 0 4px var(--tw-bg),
+    0 0 0 8px var(--tw),
+    0 24px 64px rgba(0, 0, 0, 0.5);
+}
+
+.tw-card-badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+}
+
+.tw-card-viewers {
+  position: absolute;
+  left: 12px;
+  bottom: 12px;
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.65);
+  font-size: 16px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+}
+
+.tw-card-info {
+  display: flex;
+  gap: 14px;
+  min-width: 0;
+}
+
+.tw-card-avatar {
+  width: 44px;
+  height: 44px;
+  font-size: 20px;
+}
+
+.tw-card-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.tw-card-name,
+.tw-card-title,
+.tw-card-game {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tw-card-name {
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.tw-card-title {
+  font-size: 18px;
+  color: var(--tw-muted);
+}
+
+.tw-card-game {
+  font-size: 16px;
+  color: var(--tw-muted);
+}
+
+.tw-cats {
+  position: absolute;
+  top: 164px;
+  bottom: 0;
+  left: var(--gutter);
+  right: var(--gutter);
+  animation: fadeUp 0.7s var(--ease) 0.1s both;
+}
+
+/* Scrolls under the header; the padding leaves room for the focus ring and the lift. */
+.tw-cat-grid {
+  height: 100%;
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  align-content: start;
+  gap: 32px 24px;
+  padding: 24px 24px 48px;
+  margin: -24px -24px 0;
+}
+
+.tw-cat {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--tw-text);
+  text-align: left;
+}
+
+.tw-cat-art {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #2a2a3d;
+  transition:
+    transform 0.2s var(--ease),
+    box-shadow 0.2s var(--ease);
+}
+
+.tw-cat-art img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.tw-cat.is-focused .tw-cat-art {
+  transform: scale(1.06);
+  box-shadow:
+    0 0 0 4px var(--tw-bg),
+    0 0 0 8px var(--tw),
+    0 24px 64px rgba(0, 0, 0, 0.5);
+}
+
+.tw-cat-name {
+  font-size: 20px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tw-cat-sm {
+  flex: 0 0 150px;
+  width: 150px;
+}
+
+.tw-cat-sm .tw-cat-name {
+  font-size: 18px;
+}
+
+.tw-cat-row {
+  display: flex;
+  gap: 20px;
+  padding: 24px;
+  margin: -24px;
+}
+
+/* ---------- Search ---------- */
+
+.tw .searchbar {
+  padding-right: 290px;
+  background: var(--tw-surface);
+  border-color: var(--tw);
+  box-shadow:
+    0 0 0 6px rgba(145, 70, 255, 0.15),
+    0 24px 64px rgba(0, 0, 0, 0.4);
+}
+
+.tw .caret {
+  background: var(--tw-2);
+}
+
+.tw .key {
+  background: var(--tw-surface);
+  border-color: var(--tw-border);
+}
+
+.tw .key.is-focused {
+  background: var(--tw);
+  border-color: var(--tw-2);
+  color: #ffffff;
+}
+
+.tw .key.is-on {
+  border-color: var(--tw-2);
+  color: var(--tw-2);
+}
+
+.tw .pill {
+  border-color: var(--tw-border);
+  color: var(--tw-muted);
+}
+
+.tw .pill.is-focused {
+  border-color: var(--tw-2);
+  color: var(--tw-text);
+  box-shadow: var(--tw-ring);
+}
+
+.tw-search-actions {
+  position: absolute;
+  top: 176px;
+  right: calc(var(--gutter) + 14px);
+  height: 56px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  z-index: 1;
+  animation: fadeUp 0.6s var(--ease) both;
+}
+
+.tw-mic {
+  width: 56px;
+  height: 56px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-pill);
+  background: var(--tw);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tw-mic.is-on,
+.tww-dictate.is-on {
+  background: var(--tw-live);
+}
+
+.tw-results {
+  gap: 14px;
+}
+
+.tw-results h2 {
+  font-size: 24px;
+  font-weight: 600;
+}
+
+.tw-results-head {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  font-size: 18px;
+  color: var(--tw-muted);
+}
+
+.tw-channel-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.tw-channel {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  height: 88px;
+  padding: 0 24px 0 14px;
+  border: 0;
+  border-radius: 16px;
+  background: var(--tw-surface);
+  color: var(--tw-text);
+  text-align: left;
+}
+
+.tw-channel.is-focused {
+  background: var(--tw-surface-2);
+  box-shadow: 0 0 0 3px var(--tw);
+}
+
+.tw-channel-avatar {
+  width: 60px;
+  height: 60px;
+  font-size: 26px;
+}
+
+.tw-channel-avatar.is-live {
+  box-shadow:
+    0 0 0 3px var(--tw-surface),
+    0 0 0 5px var(--tw-live);
+}
+
+.tw-channel-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.tw-channel-name {
+  font-size: 22px;
+  font-weight: 600;
+}
+
+.tw-channel-sub {
+  font-size: 18px;
+  color: var(--tw-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tw-none {
+  padding: 12px 0 20px;
+  font-size: 22px;
+  color: var(--tw-muted);
+}
+
+/* ---------- Watching ---------- */
+
+.tww {
+  background: #000000;
+}
+
+.tww-calm {
+  cursor: none;
+}
+
+.tww-video {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 1500px;
+  background: #000000;
+  transition: width 0.35s var(--ease);
+}
+
+.tww-video-full {
+  width: 1920px;
+}
+
+.tww-placeholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background: radial-gradient(ellipse 60% 60% at 50% 50%, #241a3a 0%, #000000 100%);
+  color: #8f8aa3;
+  font-size: 22px;
+}
+
+/* Twitch's iframe; it has to stay visible and at least 400×300 (embed terms). */
+.tww-player {
+  position: absolute;
+  inset: 0;
+}
+
+.tww-player iframe {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+
+.tww-chrome {
+  transition: opacity 0.4s var(--ease);
+}
+
+.tww-calm .tww-chrome {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.tww-shade {
+  position: absolute;
+  left: 0;
+  right: 0;
+  pointer-events: none;
+}
+
+.tww-shade-top {
+  top: 0;
+  height: 220px;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0) 100%);
+}
+
+.tww-shade-bottom {
+  bottom: 0;
+  height: 260px;
+  background: linear-gradient(0deg, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0) 100%);
+}
+
+.tww-head {
+  position: absolute;
+  top: 48px;
+  left: 80px;
+  right: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 32px;
+}
+
+.tww-who {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  min-width: 0;
+}
+
+.tww-avatar {
+  width: 60px;
+  height: 60px;
+  font-size: 26px;
+}
+
+.tww-avatar.is-live {
+  box-shadow:
+    0 0 0 3px #000000,
+    0 0 0 5px var(--tw-live);
+}
+
+.tww-names {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.tww-name {
+  font-size: 26px;
+  font-weight: 600;
+}
+
+.tww-title {
+  font-size: 20px;
+  color: #dedee3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tww-game {
+  font-size: 18px;
+  font-weight: 500;
+  color: var(--tw-2);
+}
+
+.tww-stats {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 20px;
+}
+
+.tww-stat {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tww-muted {
+  color: var(--tw-muted);
+}
+
+.tww-controls {
+  position: absolute;
+  left: 80px;
+  right: 64px;
+  bottom: 54px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.tww-controls-group {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.tww-controls-group:first-child {
+  gap: 24px;
+}
+
+.tww-play {
+  width: 72px;
+  height: 72px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-pill);
+  background: var(--tw);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tww-volume {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tw-icon {
+  width: 52px;
+  height: 52px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-pill);
+  background: transparent;
+  color: var(--tw-text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tw-icon.is-focused {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.12);
+  transform: scale(1.12);
+}
+
+.tww-volume-bar {
+  width: 160px;
+  height: 6px;
+  border-radius: var(--r-pill);
+  background: rgba(255, 255, 255, 0.25);
+  overflow: hidden;
+}
+
+.tww-volume-fill {
+  height: 100%;
+  background: var(--tw-text);
+  transition: width 0.2s var(--ease);
+}
+
+.tww-lag {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 18px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.tww-hints {
+  margin-top: 0;
+  flex-wrap: nowrap;
+}
+
+/* Beside the chat there's no room for the shortcuts. */
+.tww-video:not(.tww-video-full) .tww-hints {
+  display: none;
+}
+
+/* Over the stream the focused control lights up and grows instead of wearing the ring,
+   like the streaming services' players. */
+.tww .tw-round.is-focused,
+.tww .tw-pill.is-focused {
+  background: #ffffff;
+  border-color: #ffffff;
+  color: var(--tw-bg);
+  transform: scale(1.06);
+  box-shadow: none;
+}
+
+.tww .tww-play.is-focused {
+  background: #a970ff;
+  transform: scale(1.12);
+  box-shadow: 0 0 28px rgba(145, 70, 255, 0.75);
+}
+
+.tww .tww-dictate.is-focused {
+  background: #a970ff;
+  transform: scale(1.08);
+  box-shadow: 0 0 22px rgba(145, 70, 255, 0.7);
+}
+
+.tww .tww-dictate.is-on.is-focused {
+  background: #ff3b30;
+  box-shadow: 0 0 22px rgba(235, 4, 0, 0.6);
+}
+
+.tww .tww-field.is-focused {
+  border-color: #ffffff;
+  background: #34343c;
+  box-shadow: none;
+}
+
+/* The volume, shown on its own when the stick changes it with the controls hidden. */
+.tww-osd {
+  position: absolute;
+  top: 48px;
+  right: 64px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 22px;
+  border-radius: var(--r-pill);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(24, 24, 27, 0.7);
+  font-size: 20px;
+  font-variant-numeric: tabular-nums;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.35s var(--ease);
+}
+
+.tww-osd.is-on {
+  opacity: 1;
+  transition-duration: 0.2s;
+}
+
+.tww-osd .tww-volume-bar {
+  width: 140px;
+}
+
+.tww-chat {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 420px;
+  display: flex;
+  flex-direction: column;
+  background: var(--tw-surface);
+  border-left: 1px solid var(--tw-border);
+  transition: transform 0.35s var(--ease);
+}
+
+.tww-chat-hidden {
+  transform: translateX(420px);
+}
+
+.tww-chat-head {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 72px;
+  margin-top: 40px;
+  padding: 0 28px;
+  border-bottom: 1px solid var(--tw-border);
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--tw-muted);
+}
+
+.tww-chat-head img {
+  height: 22px;
+  width: auto;
+  opacity: 0.6;
+}
+
+.tww-messages {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 14px;
+  padding: 20px 28px;
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 120px);
+  mask-image: linear-gradient(180deg, transparent 0, #000 120px);
+}
+
+@keyframes msgIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.tww-message {
+  flex: none;
+  font-size: 20px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+  animation: msgIn 0.3s var(--ease) both;
+}
+
+.tww-user {
+  font-weight: 700;
+}
+
+.tww-sep {
+  color: var(--tw-muted);
+}
+
+.tww-chat-empty {
+  font-size: 18px;
+  color: var(--tw-muted);
+}
+
+.tww-compose {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 20px 28px 54px;
+  border-top: 1px solid var(--tw-border);
+}
+
+.tww-field {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  height: 56px;
+  padding: 0 18px;
+  border-radius: 12px;
+  background: var(--tw-surface-2);
+  border: 1px solid #3a3a40;
+  transition:
+    border-color 0.15s var(--ease),
+    box-shadow 0.2s var(--ease);
+}
+
+.tww-field.is-focused {
+  border-color: var(--tw-2);
+  box-shadow: 0 0 0 2px var(--tw-2);
+}
+
+.tww-field input {
+  flex: 1 1 auto;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: var(--tw-text);
+  font-size: 20px;
+  outline: none;
+  user-select: text;
+}
+
+.tww-field input::placeholder {
+  color: var(--tw-muted);
+}
+
+.tww-dictate {
+  flex: 0 0 56px;
+  width: 56px;
+  height: 56px;
+  padding: 0;
+  border: 0;
+  border-radius: 12px;
+  background: var(--tw);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

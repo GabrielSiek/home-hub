@@ -1,0 +1,282 @@
+/* The companion's base, from the Tablet · and Mobile · artboards of the design canvas: the same
+   tokens as the TV (Poppins, #0149B2, dark surfaces, pills, fade-up entrances), touch only. */
+:root {
+  --bg: #0c0c14;
+  --bg-2: #0e0e18;
+  --text: #f2f2f3;
+  --text-1: #dedee3;
+  --text-2: #c8c8c8;
+  --muted: #a0a0a0;
+  --dim: #8a8a94;
+  --accent: #0149b2;
+  --accent-2: #4c8dff;
+  --bad: #e5484d;
+  --ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --card: linear-gradient(160deg, rgba(40, 40, 50, 0.8) 0%, rgba(24, 24, 31, 0.8) 100%);
+  --card-border: rgba(255, 255, 255, 0.08);
+  --card-shadow: 0 16px 36px rgba(0, 0, 0, 0.3);
+  /* Under the status bar and above the home indicator, when the web app runs full screen. */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+  --font: 'Poppins', sans-serif;
+}
+
+html,
+body {
+  height: 100%;
+}
+/* Fixed, so nothing scrolls the page; --app-h is the screen's height where iOS 12 lays the
+   page out shorter than it draws it (compat/polyfills.ts). */
+#root {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--app-h, 100%);
+}
+html,
+body {
+  margin: 0;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  -webkit-tap-highlight-color: transparent;
+  -webkit-text-size-adjust: 100%;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+input,
+textarea {
+  -webkit-user-select: text;
+  user-select: text;
+}
+button,
+input,
+textarea,
+select {
+  font-family: inherit;
+}
+a {
+  color: #f5f5f7;
+}
+:focus-visible {
+  outline: none;
+}
+
+/* Rows that scroll inside their own area; no screen scrolls as a page. */
+.hs {
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  scroll-snap-type: x proximity;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+}
+.hs > * {
+  scroll-snap-align: start;
+}
+.vs {
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+.hs::-webkit-scrollbar,
+.vs::-webkit-scrollbar {
+  display: none;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes sheetUp {
+  from {
+    opacity: 0;
+    transform: translateY(60px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
+}
+@keyframes bar {
+  0%,
+  100% {
+    transform: scaleY(0.3);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+@keyframes flow {
+  to {
+    stroke-dashoffset: -56;
+  }
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes ripple {
+  from {
+    transform: scale(1);
+    opacity: 0.7;
+  }
+  to {
+    transform: scale(1.9);
+    opacity: 0;
+  }
+}
+
+/* Press feedback, the design's classes: rail links, taps, toggles, chips, round buttons, cards, swatches. */
+.rl,
+.tap,
+.tgl,
+.chip,
+.round,
+.card,
+.sw,
+.tb {
+  transition:
+    background-color 0.2s var(--ease),
+    color 0.15s var(--ease),
+    border-color 0.15s var(--ease),
+    transform 0.15s var(--ease),
+    box-shadow 0.2s var(--ease),
+    opacity 0.2s var(--ease);
+}
+.tgl span {
+  transition: left 0.2s var(--ease);
+}
+.rl:not([aria-current]):active {
+  background: rgba(255, 255, 255, 0.08) !important;
+}
+.tap:active,
+.card:active,
+.chip:active {
+  transform: scale(0.97);
+}
+.round:active,
+.sw:active,
+.tgl:active {
+  transform: scale(0.9);
+}
+.tb:active > span:first-child {
+  transform: scale(0.92);
+}
+button:disabled {
+  cursor: default;
+  opacity: 0.45;
+}
+.air path {
+  stroke-dasharray: 34 22;
+  animation: flow 1.6s linear infinite;
+}
+.air.off {
+  opacity: 0;
+}
+
+/* Range inputs laid over a drawn track: drag anywhere on it. */
+input.rng {
+  -webkit-appearance: none;
+  appearance: none;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  background: transparent;
+  cursor: pointer;
+  touch-action: none;
+}
+input.rng:focus {
+  outline: none;
+}
+input.rng::-webkit-slider-runnable-track {
+  height: 100%;
+  background: transparent;
+  border: 0;
+}
+input.rng::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: calc(100% - 10px);
+  margin-top: 5px;
+  border-radius: 10px;
+  background: linear-gradient(180deg, #ffffff, #dcdee4);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.45);
+}
+input.rng::-moz-range-track {
+  height: 100%;
+  background: transparent;
+  border: 0;
+}
+input.rng::-moz-range-thumb {
+  width: 20px;
+  height: 30px;
+  border: 0;
+  border-radius: 10px;
+  background: #ffffff;
+}
+input.rng.thin::-webkit-slider-thumb {
+  width: 16px;
+  height: 16px;
+  margin-top: 2px;
+  border-radius: 999px;
+  background: #ffffff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+}
+input.rng.thin::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
+}
+
+.ellipsis {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* A tile inside Home's Edit frame (screens/home/parts.tsx) fills it. */
+.edit-tile > * {
+  flex: 1 1 auto;
+  min-width: 0;
+}

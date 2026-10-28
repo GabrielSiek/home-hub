@@ -1,0 +1,752 @@
+/* ---------- Smart Home's rooms (canvas: Smart Home · rooms, Smart Home · living room) ---------- */
+
+/* The overview: what voice heard last and the house's own routines… */
+.shr-house {
+  position: absolute;
+  top: 236px;
+  left: var(--gutter);
+  right: var(--gutter);
+  height: 84px;
+  display: flex;
+  gap: 16px;
+  animation: fadeUp 0.6s var(--ease) 0.08s both;
+}
+
+.shr-heard {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 0 24px 0 14px;
+  border-radius: 24px;
+  background: rgba(30, 30, 40, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.shr-heard-mic {
+  flex: 0 0 56px;
+  width: 56px;
+  height: 56px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 22px rgba(1, 73, 178, 0.6);
+}
+
+.shr-heard-text {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  line-height: 1.3;
+}
+
+.shr-heard-text > * {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.shr-heard-text > :first-child {
+  font-size: 21px;
+  color: var(--muted);
+}
+
+.shr-heard-text b {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.shr-heard-text > :last-child {
+  font-size: 16px;
+  color: #8a8a94;
+}
+
+.shr-house-routines {
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 62%;
+  display: flex;
+  gap: 16px;
+  /* Room for the focus ring. */
+  margin: -10px;
+  padding: 10px;
+  overflow: hidden;
+}
+
+.shr-house-btn {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 84px;
+  padding: 0 28px;
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(30, 30, 40, 0.8);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 20px;
+  font-weight: 600;
+  white-space: nowrap;
+  transition:
+    transform 0.2s var(--ease),
+    box-shadow 0.2s var(--ease);
+}
+
+.shr-house-btn.is-on {
+  border-color: rgba(255, 255, 255, 0.6);
+}
+
+.shr-house-btn.is-focused {
+  transform: scale(1.03);
+  box-shadow: var(--focus-ring);
+}
+
+.shr-house-add {
+  width: 84px;
+  padding: 0;
+  justify-content: center;
+  border-style: dashed;
+  border-color: rgba(255, 255, 255, 0.2);
+  background: transparent;
+  color: var(--muted);
+}
+
+/* …and a card per room. */
+.shr-grid-wrap {
+  position: absolute;
+  top: 344px;
+  left: var(--gutter);
+  right: var(--gutter);
+  bottom: 40px;
+  animation: fadeUp 0.6s var(--ease) 0.12s both;
+}
+
+.shr-grid {
+  height: 100%;
+  box-sizing: border-box;
+  margin: -20px;
+  padding: 20px 20px 56px;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-auto-rows: 310px;
+  gap: 24px;
+  align-content: start;
+}
+
+.shr-card {
+  position: relative;
+  display: block;
+  padding: 0;
+  border-radius: 32px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--text);
+  font-family: inherit;
+  text-align: left;
+  overflow: hidden;
+  box-shadow:
+    0 20px 44px rgba(0, 0, 0, 0.32),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  transition:
+    transform 0.2s var(--ease),
+    box-shadow 0.2s var(--ease);
+}
+
+.shr-card.is-focused {
+  transform: scale(1.03);
+  box-shadow:
+    var(--focus-ring),
+    0 26px 50px rgba(0, 0, 0, 0.45);
+}
+
+.shr-card.is-editing {
+  border: 2px dashed rgba(255, 255, 255, 0.28);
+}
+
+.shr-card-glow {
+  position: absolute;
+  left: -60px;
+  top: -80px;
+  width: 420px;
+  height: 360px;
+  border-radius: 999px;
+  pointer-events: none;
+}
+
+.shr-card-mark {
+  position: absolute;
+  right: 20px;
+  bottom: 70px;
+  color: rgba(255, 255, 255, 0.05);
+  pointer-events: none;
+}
+
+.shr-card-top {
+  position: absolute;
+  left: 24px;
+  top: 24px;
+  right: 24px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.shr-card-title {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  line-height: 1.25;
+}
+
+.shr-card-title > * {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.shr-card-title > :first-child {
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.shr-card-title > :last-child {
+  font-size: 16px;
+  color: #c8c8c8;
+}
+
+.shr-glyph {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.shr-here {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 36px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: rgba(76, 141, 255, 0.18);
+  border: 1px solid rgba(76, 141, 255, 0.5);
+  color: #b9d0ff;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.shr-here > span {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #4c8dff;
+  box-shadow: 0 0 10px #4c8dff;
+}
+
+.shr-edit-tag {
+  background: rgba(242, 242, 243, 0.92);
+  border-color: transparent;
+  color: #0c0c14;
+}
+
+.shr-card-lights {
+  position: absolute;
+  left: 24px;
+  right: 24px;
+  top: 104px;
+  height: 64px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 0 10px 0 18px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(12, 12, 20, 0.45);
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.shr-card-lights > span:nth-child(2) {
+  flex: 1 1 auto;
+}
+
+.shr-card-lights.is-on > svg {
+  color: #ffd79a;
+}
+
+.shr-card-devs {
+  position: absolute;
+  left: 24px;
+  right: 24px;
+  top: 186px;
+  max-height: 54px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  overflow: hidden;
+}
+
+.shr-dev {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 16px;
+  color: #8a8a94;
+  white-space: nowrap;
+}
+
+.shr-dev.is-on {
+  color: var(--text);
+}
+
+.shr-dev > span {
+  flex: 0 0 9px;
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+}
+
+.shr-dev em {
+  font-style: normal;
+  color: #8a8a94;
+}
+
+.shr-card-foot {
+  position: absolute;
+  left: 24px;
+  right: 24px;
+  bottom: 22px;
+  display: flex;
+  gap: 8px;
+  overflow: hidden;
+}
+
+.shr-chip {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 38px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #dedee3;
+  font-size: 15px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.shr-chip-dark {
+  background: rgba(12, 12, 20, 0.4);
+  color: #c8c8c8;
+}
+
+.shr-card-new {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  border: 2px dashed rgba(255, 255, 255, 0.2);
+  background: transparent;
+  box-shadow: none;
+  color: var(--muted);
+  font-size: 22px;
+  font-weight: 600;
+}
+
+/* In a room: the left column holds the room itself. */
+.shr-side .shx-side-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.shr-lights {
+  position: relative;
+  flex: 0 0 auto;
+  margin: 10px 0 22px;
+  padding: 14px 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  border-radius: 26px;
+  background: linear-gradient(160deg, rgba(48, 48, 60, 0.92) 0%, rgba(24, 24, 31, 0.92) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.32);
+  overflow: hidden;
+}
+
+.shr-lights-glow {
+  position: absolute;
+  left: -60px;
+  top: -90px;
+  width: 380px;
+  height: 280px;
+  border-radius: 999px;
+  pointer-events: none;
+}
+
+.shr-lights-main {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 8px;
+  border: 0;
+  border-radius: 18px;
+  background: transparent;
+  color: var(--text);
+  font-family: inherit;
+  text-align: left;
+  transition:
+    background-color 0.2s var(--ease),
+    box-shadow 0.2s var(--ease);
+}
+
+.shr-lights-main.is-focused {
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: var(--focus-ring);
+}
+
+.shr-glyph-bulb {
+  width: 52px;
+  height: 52px;
+  flex-basis: 52px;
+  border-radius: 16px;
+  color: #ffd79a;
+}
+
+.shr-lights-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  line-height: 1.25;
+}
+
+.shr-lights-text > :first-child {
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.shr-lights-text > :last-child {
+  font-size: 15px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.shr-lights-dim {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 0 8px;
+}
+
+.shr-lights-level {
+  flex: 0 0 56px;
+  text-align: right;
+  font-size: 18px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.shr-lights-bar {
+  position: relative;
+  flex: 1 1 auto;
+  height: 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.07);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+}
+
+.shr-lights-bar > span {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  border-radius: 999px;
+  transition: width 0.2s var(--ease);
+}
+
+.shr-warmths {
+  position: relative;
+  display: flex;
+  gap: 8px;
+}
+
+.shr-warmth {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  height: 46px;
+  padding: 0;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
+  color: #c8c8c8;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  transition: box-shadow 0.2s var(--ease);
+}
+
+.shr-warmth > span {
+  flex: 0 0 9px;
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+}
+
+.shr-warmth.is-on {
+  color: #ffffff;
+}
+
+.shr-warmth.is-focused {
+  box-shadow: var(--focus-ring);
+}
+
+.shr-list {
+  flex: 0 0 auto;
+  margin: 0 0 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.shr-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  min-height: 72px;
+  padding: 0 14px;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text);
+  font-family: inherit;
+  text-align: left;
+  transition:
+    background-color 0.2s var(--ease),
+    box-shadow 0.2s var(--ease);
+}
+
+.shr-row.is-focused {
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow: var(--focus-ring);
+}
+
+.shr-row-icon {
+  flex: 0 0 44px;
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+}
+
+.shr-row-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  line-height: 1.3;
+}
+
+.shr-row-text > * {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.shr-row-text > :first-child {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.shr-row-text > :last-child {
+  font-size: 14px;
+  color: #8a8a94;
+}
+
+.shr-task.is-done .shr-row-text > :first-child {
+  color: #8a8a94;
+  text-decoration: line-through;
+}
+
+.shr-check {
+  flex: 0 0 30px;
+  width: 30px;
+  height: 30px;
+  box-sizing: border-box;
+  border-radius: 10px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #14141c;
+}
+
+.shr-screen {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 64px;
+  padding: 0 14px;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: rgba(255, 255, 255, 0.04);
+  color: #dedee3;
+}
+
+.shr-screen.is-this {
+  border-color: rgba(76, 141, 255, 0.45);
+  background: rgba(1, 73, 178, 0.16);
+}
+
+.shr-note {
+  padding: 6px 4px;
+  font-size: 15px;
+  line-height: 1.45;
+  color: #8a8a94;
+}
+
+.shr-tab-here {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #4c8dff;
+  box-shadow: 0 0 8px #4c8dff;
+}
+
+/* Customize shows the hidden tiles too, dimmed. */
+.shr-hidden > * {
+  opacity: 0.45;
+}
+
+.shr-add-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 20px;
+  border-radius: 26px;
+  border: 2px dashed rgba(255, 255, 255, 0.18);
+  background: transparent;
+  color: var(--muted);
+  font-family: inherit;
+  font-size: 20px;
+  font-weight: 600;
+  text-align: center;
+  transition: box-shadow 0.2s var(--ease);
+}
+
+.shr-add-tile.is-focused {
+  border-style: solid;
+  border-color: var(--ring);
+  color: var(--text);
+  box-shadow: var(--focus-ring);
+}
+
+.shr-icons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+.shr-icon {
+  width: 88px;
+  height: 88px;
+  padding: 0;
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: box-shadow 0.2s var(--ease);
+}
+
+.shr-icon.is-on {
+  border-color: var(--ring);
+  background: rgba(1, 73, 178, 0.3);
+}
+
+.shr-icon.is-focused {
+  box-shadow: var(--focus-ring);
+}
+
+.shr-confirm-text {
+  margin: 0 0 22px;
+  font-size: 18px;
+  line-height: 1.45;
+  color: var(--muted);
+}
+
+.btn.shr-danger {
+  background: #c93a3f;
+}
+
+.shx-menu-item.is-danger {
+  color: #ff9a9d;
+}
+
+/* A room's title, after the way back to every room. */
+.shr-head-left {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  min-width: 0;
+}
+
+.shr-back {
+  flex: 0 0 60px;
+  width: 60px;
+  height: 60px;
+  padding: 0;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface-glass);
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    background-color 0.2s var(--ease),
+    box-shadow 0.2s var(--ease);
+}
+
+.shr-back.is-focused {
+  background: rgba(255, 255, 255, 0.12);
+  box-shadow: var(--focus-ring);
+}
+
+/* The devices to add scroll: room inside for the focus ring, which the scroll box would cut. */
+.shr-add .shx-menu-list {
+  margin: 0 -14px;
+  padding: 10px 14px;
+}
+
+/* The overview's controller help, under the rooms. */
+.shr-hints {
+  position: absolute;
+  left: var(--gutter);
+  bottom: 40px;
+}

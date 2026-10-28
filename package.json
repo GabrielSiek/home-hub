@@ -1,0 +1,33 @@
+{
+  "name": "tv-launcher-refactor",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "tv:dev": "vite --config apps/tv/vite.config.ts",
+    "tv:build": "tsc -p apps/tv && vite build --config apps/tv/vite.config.ts",
+    "companion:dev": "vite --config apps/companion/vite.config.ts",
+    "companion:bundle": "vite build --config apps/companion/vite.config.ts",
+    "companion:build": "tsc -p apps/companion && npm run companion:bundle",
+    "typecheck": "tsc -p apps/tv && tsc -p apps/companion",
+    "lint": "biome lint apps",
+    "tauri": "tauri"
+  },
+  "dependencies": {
+    "@fontsource/poppins": "^5.3.0",
+    "@noriginmedia/norigin-spatial-navigation": "^3.3.0",
+    "@tauri-apps/api": "^2.12.4",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "zustand": "^5.0.15"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.5.15",
+    "@tauri-apps/cli": "^2.12.4",
+    "@types/react": "^18.3.31",
+    "@types/react-dom": "^18.3.7",
+    "@vitejs/plugin-react": "^6.1.2",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.5"
+  }
+}

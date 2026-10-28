@@ -1,0 +1,1290 @@
+﻿{
+    "companion\\public\\icon-256.png":  {
+                                            "size":  3969,
+                                            "sha256":  "0ED2D56E2158348FEC91D632E2CCE82F16544A41C1BA278882557DAF640FA94C"
+                                        },
+    "companion\\public\\icon-512.png":  {
+                                            "size":  7950,
+                                            "sha256":  "BA8F9B655A8C6F4F4ABE1D81DD9FA3E36CF7076B3518EA56778972F65D81A5AB"
+                                        },
+    "companion\\public\\manifest.webmanifest":  {
+                                                    "size":  330,
+                                                    "sha256":  "D72950ACBC2F4295B8483B2B0BA6ED834DB8949FD0490B7A2C3AAAEEA2D2C55A"
+                                                },
+    "companion\\src\\compat\\jsx-dev-runtime.ts":  {
+                                                       "size":  409,
+                                                       "sha256":  "2CF48B174FBB29FA89C6FAE284500495AC70F8166C0C229795D3520D2D882ABF"
+                                                   },
+    "companion\\src\\compat\\jsx-runtime.ts":  {
+                                                   "size":  1033,
+                                                   "sha256":  "734937ABFF5C41E543CF674E9A8E10A533D78AEB06AB5112C572EF940BECB67E"
+                                               },
+    "companion\\src\\compat\\polyfills.ts":  {
+                                                 "size":  5887,
+                                                 "sha256":  "051BE97C3105CE6A18528CBF69F4E182A34DBDAECFFD53D464335F39087E9521"
+                                             },
+    "companion\\src\\screens\\home\\actions.ts":  {
+                                                      "size":  6236,
+                                                      "sha256":  "B9217CC56834ADC93294A73FDC653AA0C66B60CD5026ACC30A205D080D05B2EB"
+                                                  },
+    "companion\\src\\screens\\home\\art.tsx":  {
+                                                   "size":  8074,
+                                                   "sha256":  "3C3D9A56328560FF865165B2C82E4D6A6C91D22F109C758D5A1A556811208118"
+                                               },
+    "companion\\src\\screens\\home\\ask.tsx":  {
+                                                   "size":  4654,
+                                                   "sha256":  "0FF0D227CB0F58087B648DAE9B144D9B67E268775B146BB9D9D042F7523A1D20"
+                                               },
+    "companion\\src\\screens\\home\\model.ts":  {
+                                                    "size":  6875,
+                                                    "sha256":  "3AAEF7DE5C48ECAFC316709257D8B044D5BE202669463C304D74F0F65B7573BA"
+                                                },
+    "companion\\src\\screens\\home\\panels.tsx":  {
+                                                      "size":  28747,
+                                                      "sha256":  "FE73059BA42668C111EF52994F2BBB0DC761D0615D85C2A866EADAA2DF198E39"
+                                                  },
+    "companion\\src\\screens\\home\\parts.tsx":  {
+                                                     "size":  48699,
+                                                     "sha256":  "814E53B400706A1735AE82E6B6F0A173B95200940E137A05B8AC666139EC5344"
+                                                 },
+    "companion\\src\\screens\\home\\tiles.tsx":  {
+                                                     "size":  26067,
+                                                     "sha256":  "F8E1738BD784D0979E0BF0ECDE543843AA04474323739A31FD13412D1EDC97E4"
+                                                 },
+    "companion\\src\\screens\\music\\data.ts":  {
+                                                    "size":  16600,
+                                                    "sha256":  "BA645B56349B727FB1C7F422E0897EB5EEB7C01AAE11358FA237AC1F206650F3"
+                                                },
+    "companion\\src\\screens\\music\\parts.tsx":  {
+                                                      "size":  24268,
+                                                      "sha256":  "F44FF7735B7A61E0A383D82F88BCDD9A85EA2C4382277005201D45E582140413"
+                                                  },
+    "companion\\src\\screens\\music\\sheets.tsx":  {
+                                                       "size":  22850,
+                                                       "sha256":  "E1078913382CBD4688E34AD16BE15B59E9E560ED8313786B2E0FE43561C55BFF"
+                                                   },
+    "companion\\src\\screens\\today\\agenda.tsx":  {
+                                                       "size":  24018,
+                                                       "sha256":  "E9D68A3CDF271C84DCF28786A8E8F9AF6ACDDFF26421BD58FBFA0CC79C352F8E"
+                                                   },
+    "companion\\src\\screens\\today\\clock.tsx":  {
+                                                      "size":  41751,
+                                                      "sha256":  "A79E8FFEDEDE6CD0ADD8A8104E8696688314E9A1A967FE93D4715A0197652807"
+                                                  },
+    "companion\\src\\screens\\watch\\data.ts":  {
+                                                    "size":  31426,
+                                                    "sha256":  "A2555AEB4EAB8E4FE83078BB447F93018D9FC93619A6E5E7DD5A5EC855957D6A"
+                                                },
+    "companion\\src\\screens\\watch\\parts.tsx":  {
+                                                      "size":  9460,
+                                                      "sha256":  "80945CE82EE36F6751D000A72D2EF67B10D231976B7024589B3A5D0367297845"
+                                                  },
+    "companion\\src\\screens\\watch\\Remote.tsx":  {
+                                                       "size":  23183,
+                                                       "sha256":  "71B30D4CC40D439AAA890AF7A10C6D8B17769CE0B6A92ABE79B1F506073C768C"
+                                                   },
+    "companion\\src\\screens\\Assistant.tsx":  {
+                                                   "size":  13615,
+                                                   "sha256":  "EB9832C92A0414A649EB9A2FA592C967D05F6E251A5108F72CD56B08F9C2C1CE"
+                                               },
+    "companion\\src\\screens\\Home.tsx":  {
+                                              "size":  29589,
+                                              "sha256":  "07FAF29E0FBA37E5F5B34B14437A05DDE99AE19A1DFD00C9AC30C8C954AB1B71"
+                                          },
+    "companion\\src\\screens\\Hub.tsx":  {
+                                             "size":  59112,
+                                             "sha256":  "88743210A10F417390DA559849F90BBF3A631F63EFD0D3C7AA2F731DC79CF93F"
+                                         },
+    "companion\\src\\screens\\Music.tsx":  {
+                                               "size":  18182,
+                                               "sha256":  "D90EDEB23D409B2E64F0498D106E73B0DEB25A3E63756496DE9DD3CC6BF35006"
+                                           },
+    "companion\\src\\screens\\Night.tsx":  {
+                                               "size":  10933,
+                                               "sha256":  "38F4110F262947FF956C186E91ADE76CB435002D6932777DBC81EFF592444043"
+                                           },
+    "companion\\src\\screens\\Today.tsx":  {
+                                               "size":  14549,
+                                               "sha256":  "99F8543044790B8E77CB5498308E36AA5901C292203FCADAC0958DC3E5CB1A7D"
+                                           },
+    "companion\\src\\screens\\Watch.tsx":  {
+                                               "size":  41901,
+                                               "sha256":  "57AFA9680B7A8F761445E25259D00129643B603AB6E387F61D21C24304C9061C"
+                                           },
+    "companion\\src\\App.tsx":  {
+                                    "size":  8316,
+                                    "sha256":  "26BD4806506863CDC82122C4B0B7D2E6C0720EE343699B0661798369D985BB09"
+                                },
+    "companion\\src\\backend.ts":  {
+                                       "size":  5237,
+                                       "sha256":  "FE2C4CCBA484807B77C42B39C169F6A1C120E85DE3BEECC3E58E1FDDCF209082"
+                                   },
+    "companion\\src\\format.ts":  {
+                                      "size":  3385,
+                                      "sha256":  "B9F3219674E03CA2DDF9921EA32F9D1C6982303D3F7569FE3F84271BD575DAA1"
+                                  },
+    "companion\\src\\icons.tsx":  {
+                                      "size":  9719,
+                                      "sha256":  "4F1EC282EB667EBD1830362516338E9BB01FC1E8AB40BCE587C6FBF3B5BC59DD"
+                                  },
+    "companion\\src\\live.ts":  {
+                                    "size":  9938,
+                                    "sha256":  "0F12CF5E129B47352E99CE5372E1B69270A57A1F402B7202203EC8A8E2D07BEF"
+                                },
+    "companion\\src\\main.tsx":  {
+                                     "size":  979,
+                                     "sha256":  "E29CC3DF2284A8FFC3CC099BC50FD963602B73813D8F814D929E18E0D7E11DD8"
+                                 },
+    "companion\\src\\nav.ts":  {
+                                   "size":  3306,
+                                   "sha256":  "9E1B2ADA6B186F01FCF384FAE0B0F3D8E8638F5482C4DE81A00974A6E4380908"
+                               },
+    "companion\\src\\screen.ts":  {
+                                      "size":  2177,
+                                      "sha256":  "C7A7877617606F3A836EB0CBC5A843E0B712312EA1761AC55968E8C9F1177BD2"
+                                  },
+    "companion\\src\\styles.css":  {
+                                       "size":  5336,
+                                       "sha256":  "3E3E6A1721FA211C63C73D6D742C3D9DD21746E6177E20FFBFE1C0D26814152D"
+                                   },
+    "companion\\src\\transport.ts":  {
+                                         "size":  3617,
+                                         "sha256":  "EA90700DA8FF1C0FA8E758B7D7FF2E01F8C8EB7D76BDB1C2DE92BB6096BE5EEF"
+                                     },
+    "companion\\src\\ui.tsx":  {
+                                   "size":  15311,
+                                   "sha256":  "EBAF959D6190668E5ED8BE74688DAEEAEF3FB4CE5E9AE62AD0D020FEC58251D6"
+                               },
+    "companion\\src\\voice.ts":  {
+                                     "size":  9488,
+                                     "sha256":  "9F9ADF5A572168BA9D5B9413F9F98B7EF10D15CEFC3F4D9F2558F1B579DC81D3"
+                                 },
+    "companion\\index.html":  {
+                                  "size":  3065,
+                                  "sha256":  "4F6128D510F022989D7D9455A235D8F310E74AC8B77C4A2CD60060C295B6792E"
+                              },
+    "companion\\tsconfig.json":  {
+                                     "size":  58,
+                                     "sha256":  "957C83AE61F96E99ABEDB49BBCEFFC1491283CFC8A3C900A8BB05E7A15AA2116"
+                                 },
+    "companion\\vite.config.ts":  {
+                                      "size":  1033,
+                                      "sha256":  "26EFFAA40B84D561D55C9C0A6AB83B9E1B8A8CDC001384DF2B8473F90D23458C"
+                                  },
+    "src\\assets\\brands\\disney.png":  {
+                                            "size":  6228,
+                                            "sha256":  "44767D89C7A0A9682057683CFEEF25857AD12D4BAC734F037164C0624F53A479"
+                                        },
+    "src\\assets\\brands\\globoplay.png":  {
+                                               "size":  9610,
+                                               "sha256":  "101C5C9BAF9E658022F802BDC7DDDBB80AAC19DF0B797A00A0227F6C75D6A9F2"
+                                           },
+    "src\\assets\\brands\\hbomax.png":  {
+                                            "size":  4209,
+                                            "sha256":  "AF6A7D65C141BBB5B4818E67607C3C90012922CFBF041A4A5CE9BC210BBDDA96"
+                                        },
+    "src\\assets\\brands\\netflix.png":  {
+                                             "size":  5361,
+                                             "sha256":  "0B3E257312550B68E1076DBA108B44220528905E6C5BC2D88C4E52EAF2C0EE86"
+                                         },
+    "src\\assets\\brands\\prime.png":  {
+                                           "size":  6635,
+                                           "sha256":  "12CC7F3C88A536489BAE00E209772DF0846380B22241B260DC0B8E252086245B"
+                                       },
+    "src\\assets\\consoles\\gba.png":  {
+                                           "size":  41065,
+                                           "sha256":  "7166A334FEAE72CBFE38D67D43E7ACD28751616A02D2A94D2332F77F02FB5815"
+                                       },
+    "src\\assets\\consoles\\gc.png":  {
+                                          "size":  93653,
+                                          "sha256":  "577E7FB7B7766D6B8AC1201647F76E3753104EAE5BA720B07E4EAF349C509986"
+                                      },
+    "src\\assets\\consoles\\md.png":  {
+                                          "size":  96706,
+                                          "sha256":  "68F33D7AEC513CC5E7725AFC993DE71430DFFD65041723CFE0D68DAAC2DAD258"
+                                      },
+    "src\\assets\\consoles\\n64.png":  {
+                                           "size":  76666,
+                                           "sha256":  "573DCBE0D1D56782A6FBE377EFC38603723814F349FAADDFDD7DFDDDD3B65FB2"
+                                       },
+    "src\\assets\\consoles\\ps1.png":  {
+                                           "size":  62204,
+                                           "sha256":  "40CF776A1ED9532CA156062751E393E7996AEF7964D2C89E3DEE0631D4D80B62"
+                                       },
+    "src\\assets\\consoles\\ps2.png":  {
+                                           "size":  55311,
+                                           "sha256":  "F5999C390DA335818F2C1798E9EC9F3E959C7482C171F6DCE1BF3D8CE119B078"
+                                       },
+    "src\\assets\\consoles\\snes.png":  {
+                                            "size":  78360,
+                                            "sha256":  "0CD7391FD49EA1799509D040A80B3039A7CEF25B66AD50EA6003C7E297233600"
+                                        },
+    "src\\assets\\genres\\action.jpg":  {
+                                            "size":  47341,
+                                            "sha256":  "62ABAF86F049DA10EDF70362675D6A0232BBFA03776C7A381C59C41282883E1F"
+                                        },
+    "src\\assets\\genres\\animation.jpg":  {
+                                               "size":  65353,
+                                               "sha256":  "27AD60D6855CFA3C82236895F7C1A42A849AA073F075F16DFB28469B718C712A"
+                                           },
+    "src\\assets\\genres\\comedy.jpg":  {
+                                            "size":  82039,
+                                            "sha256":  "ABDF1427D425B9E7EB19BC3DA1980D7D581A16875AEF89A8827F166AD39632D5"
+                                        },
+    "src\\assets\\genres\\documentary.jpg":  {
+                                                 "size":  85122,
+                                                 "sha256":  "01D916D6DD796397D9C0E3F1591FD9263848FFD7465BC78FCD1514E6118C074D"
+                                             },
+    "src\\assets\\genres\\drama.jpg":  {
+                                           "size":  65350,
+                                           "sha256":  "A35AC07F381A35EA928373ADD48E3B45B40B5B88ACA776D069B199FF69F62891"
+                                       },
+    "src\\assets\\genres\\horror.jpg":  {
+                                            "size":  46788,
+                                            "sha256":  "3046396E049E0EA455A6285F8D6D85C615679DCF97DE21105B3E7AB6E4434ADD"
+                                        },
+    "src\\assets\\genres\\musical.jpg":  {
+                                             "size":  56822,
+                                             "sha256":  "CEDD5FD3EF9143D46BECAC5FD3B89826DE92F2D9D0A96232E1B0876E68E4A9D8"
+                                         },
+    "src\\assets\\genres\\romance.jpg":  {
+                                             "size":  52421,
+                                             "sha256":  "1692607C90BD9E7E8423AE844CE42D7F2FB37895C9626D989FEC108AA5DFA4A1"
+                                         },
+    "src\\assets\\genres\\sci-fi.jpg":  {
+                                            "size":  63254,
+                                            "sha256":  "77DE9655C8C1673B5F7B7E9B864DC89F2F029E9E658B69BC175756405897A213"
+                                        },
+    "src\\assets\\genres\\thriller.jpg":  {
+                                              "size":  54502,
+                                              "sha256":  "5B8CCC4D833289F6B955C3862D0CCE70BC82F0E29C01D6F170645C672C582E5B"
+                                          },
+    "src\\assets\\sports\\court.jpg":  {
+                                           "size":  182026,
+                                           "sha256":  "E392149F574CC3D543E208C09B891A0A32DAF30BFEF5A800B81E0691C49D2B5C"
+                                       },
+    "src\\assets\\sports\\pitch.jpg":  {
+                                           "size":  169438,
+                                           "sha256":  "DE9E38C9E4869A5E090513927478FB341FAE70237EE99C5944F30F4894D26E78"
+                                       },
+    "src\\assets\\trophies\\bra.1.png":  {
+                                             "size":  215106,
+                                             "sha256":  "5A0C33D74616A13B7A2C7216993AD5AAC22DA69F07CEE4FD7503E52ED20D8B56"
+                                         },
+    "src\\assets\\trophies\\bra.camp.gaucho.png":  {
+                                                       "size":  351152,
+                                                       "sha256":  "9D8E4DB535EC3BB129D2891795F14A41465B7A539D44E426E9F232A9CE1010E0"
+                                                   },
+    "src\\assets\\trophies\\bra.copa_do_brazil.png":  {
+                                                          "size":  222521,
+                                                          "sha256":  "EE6A867A104B1EB5B94CA8D8AFBC5D2FD75FE536B850B173692B7617A87B07BB"
+                                                      },
+    "src\\assets\\trophies\\conmebol.libertadores.png":  {
+                                                             "size":  491211,
+                                                             "sha256":  "70FF6513010D8A429E51656AC596FB10AAECE3F011C765168A6C780A8602C34D"
+                                                         },
+    "src\\assets\\trophies\\conmebol.sudamericana.png":  {
+                                                             "size":  390948,
+                                                             "sha256":  "7FC769408C1E0D8F3517B4A4D9FAAC57FBB5CE41225506341E3F469DB21222FC"
+                                                         },
+    "src\\assets\\trophies\\eng.1.png":  {
+                                             "size":  402952,
+                                             "sha256":  "F883673E7A9466FC54A324BEA3B1D33ECC06325778300AAB15F45A7D98212756"
+                                         },
+    "src\\assets\\trophies\\esp.1.png":  {
+                                             "size":  199313,
+                                             "sha256":  "83CCC74AD2B14F14D799E5E98481520073458591B449BB3E57B96B94FBCBE883"
+                                         },
+    "src\\assets\\trophies\\ger.1.png":  {
+                                             "size":  224741,
+                                             "sha256":  "03EFAE599BF09E6BB194A23829084655D676E23F36FCAF79C7BAE54982BFF387"
+                                         },
+    "src\\assets\\trophies\\ita.1.png":  {
+                                             "size":  230610,
+                                             "sha256":  "8227B81334C01AAA9B5A15853E4BF74E5BE7C2CE93D7378DB683969B2BCD846A"
+                                         },
+    "src\\assets\\trophies\\uefa.champions.png":  {
+                                                      "size":  254164,
+                                                      "sha256":  "6ADB625C1EF4DD1C27D23513BBCC6869A05BDBF14A29709561AC1FC372E40C83"
+                                                  },
+    "src\\assets\\twitch-wordmark.png":  {
+                                             "size":  2414,
+                                             "sha256":  "C9139782ED71247336E9B0F863B2CAE5CA082C555C2503D22770D5661EEC451E"
+                                         },
+    "src\\components\\home\\Editors.tsx":  {
+                                               "size":  25369,
+                                               "sha256":  "1138D1F19F3576871CC603FCFD41DDE0182E049DECE4749C8DA46CA4FEDD6E0F"
+                                           },
+    "src\\components\\home\\Rooms.tsx":  {
+                                             "size":  22504,
+                                             "sha256":  "6948D19508627F929F821D4FA9AA5C5FC4C6656A7B698340DC7D0DBF8DDAF92B"
+                                         },
+    "src\\components\\home\\Sheets.tsx":  {
+                                              "size":  25232,
+                                              "sha256":  "C0D32C903CBD7BB2B8839651CDB66D922495E79A6BC0F3388AF8C23C1555E276"
+                                          },
+    "src\\components\\home\\Tile.tsx":  {
+                                            "size":  14181,
+                                            "sha256":  "2954663D596F8D2ECBAD7876176308F89490C09E433527076D4283FE5323BAF1"
+                                        },
+    "src\\components\\Art.tsx":  {
+                                     "size":  857,
+                                     "sha256":  "8F0F69E60638125910E3915781A0D93A46F0281213DA66EF03B6EBBBDCFC10A7"
+                                 },
+    "src\\components\\Assistant.tsx":  {
+                                           "size":  13194,
+                                           "sha256":  "BB9078261E10440CFEE8C22375C3E158DF1B83A69D2D2E7F7A605377484A8741"
+                                       },
+    "src\\components\\AssistantMedia.tsx":  {
+                                                "size":  1373,
+                                                "sha256":  "922BD3A4A824AA2378353AF80E9559AA2F279527A5A2294799FE631AC88F75F1"
+                                            },
+    "src\\components\\CalendarReminder.tsx":  {
+                                                  "size":  2736,
+                                                  "sha256":  "EA8734A2F6C4BA65D2A6535C24B63066169F737CBC7409C20F07F61680ED7E81"
+                                              },
+    "src\\components\\ClockRing.tsx":  {
+                                           "size":  6430,
+                                           "sha256":  "53AAB441D7F281C6D3149F498DCFE953DEB43A41FB684CA669CB8857997A0C63"
+                                       },
+    "src\\components\\deviceInfo.tsx":  {
+                                            "size":  1540,
+                                            "sha256":  "7CB9467A0240FF8274194C1397D8B06BA2C75C5C4EDA267B1320C029AF8FE6D1"
+                                        },
+    "src\\components\\ErrorBoundary.tsx":  {
+                                               "size":  1653,
+                                               "sha256":  "8A155BEE1F0C35E1ABC9864B09F416A2B45309C9891308695A238116427FFF6B"
+                                           },
+    "src\\components\\FocusButton.tsx":  {
+                                             "size":  1291,
+                                             "sha256":  "424008FBC76519D190C7C446C7BF7258AF1A545821BB28EFF29C41E5F6B263D0"
+                                         },
+    "src\\components\\FocusGroup.tsx":  {
+                                            "size":  2883,
+                                            "sha256":  "9B722B0562B27F3838D555B6924883D05575CA42C93F16C4FFFEF93C86390024"
+                                        },
+    "src\\components\\FocusInput.tsx":  {
+                                            "size":  1287,
+                                            "sha256":  "146D2DB3740C02FD5121C80CAB85576E94B2F63F6625E52B00A4CEE7E59AE98F"
+                                        },
+    "src\\components\\FocusSlider.tsx":  {
+                                             "size":  3013,
+                                             "sha256":  "6DF21D4EDBF5FBF55B3808F81B47BE40686FFF55A2B8DD0F68DAC9A414C6009B"
+                                         },
+    "src\\components\\GenreCard.tsx":  {
+                                           "size":  1013,
+                                           "sha256":  "EDAF517F0FBB1388EE20FC72B350101CFE64727C9F09CE0A817DF97EF2CCF4C6"
+                                       },
+    "src\\components\\HoldRing.tsx":  {
+                                          "size":  820,
+                                          "sha256":  "119CA7D724B9D015FB42F319A3A4BDA6048AF82386EED3BD3D770ACA73EA3D25"
+                                      },
+    "src\\components\\Icon.tsx":  {
+                                      "size":  14323,
+                                      "sha256":  "05EB10C1416A7BAB2D9D87042C5D2FCA00A1297079D23DE18C1F5F728531AA89"
+                                  },
+    "src\\components\\LiveRow.tsx":  {
+                                         "size":  11699,
+                                         "sha256":  "0313F61918373161F142B724559395D0EA6045E5340B3B13E17EF506EE83C69E"
+                                     },
+    "src\\components\\MusicTile.tsx":  {
+                                           "size":  3117,
+                                           "sha256":  "5E8BD3882D6B958B1FA373FB7E1FD7E52DDD3DEC6CC3E7F9F0ACC41B766FBC9C"
+                                       },
+    "src\\components\\NowPlayingWidget.tsx":  {
+                                                  "size":  3054,
+                                                  "sha256":  "673D99C11F2B0E3C81754527D7B7053EDB9B456FE7A0C565E6DEEA0A6A58B96E"
+                                              },
+    "src\\components\\PhotoPicker.tsx":  {
+                                             "size":  2937,
+                                             "sha256":  "FB73928BA69004CE4A9A26809FB397B8BBF6420026545124B0749366A78893D1"
+                                         },
+    "src\\components\\RecCard.tsx":  {
+                                         "size":  2751,
+                                         "sha256":  "8B536926CBF50737A0FE9F677BC10DC12F9ECF9DEF09A2B756A8BBC4828180CC"
+                                     },
+    "src\\components\\RetroCurtain.tsx":  {
+                                              "size":  1257,
+                                              "sha256":  "18860ADF9318A04D3071A49DE3116CAF3AFCBC166242A05CB78DCE6575D830A0"
+                                          },
+    "src\\components\\RetroShot.tsx":  {
+                                           "size":  783,
+                                           "sha256":  "15A944FBCD9E96C1ABA4E9029A76D28174532E8225F647C1EF95716A37D55938"
+                                       },
+    "src\\components\\Screensaver.tsx":  {
+                                             "size":  6420,
+                                             "sha256":  "BB3517C73C9A11B16A9061C69A7D504B38E4DF2C08A0A5627A395391E415EA4A"
+                                         },
+    "src\\components\\SearchKeys.tsx":  {
+                                            "size":  6570,
+                                            "sha256":  "F57D6F8E996FD7381E6D91CD59F8ED795482235C3E30586D493343CCF25E5C48"
+                                        },
+    "src\\components\\Skeleton.tsx":  {
+                                          "size":  4947,
+                                          "sha256":  "3C11BB1DF9ACF2F28C94FAA44265A3364CAA9267376FF29C46495DCF4969F729"
+                                      },
+    "src\\components\\SportsParts.tsx":  {
+                                             "size":  15637,
+                                             "sha256":  "71A79E37DD9476707B23B674ED587A4D753538CBC21BBCEFFFD4293A2F4FA761"
+                                         },
+    "src\\components\\StreamingOverlay.tsx":  {
+                                                  "size":  1364,
+                                                  "sha256":  "AEA5DF01AC8503ABF5D72E00DA996BCAD8D3FCD4680053A1768232268F5889C1"
+                                              },
+    "src\\components\\SvcParts.tsx":  {
+                                          "size":  6409,
+                                          "sha256":  "7D7B83E2787D85FC7FB55936E493939E2D916E1ACE150A38E0D8D7FA00D9E896"
+                                      },
+    "src\\components\\TitleSearch.tsx":  {
+                                             "size":  6423,
+                                             "sha256":  "3896B926EE666309F47E43B44BFFD1AB83B9EECF1248D69816BC693A96CCDEB4"
+                                         },
+    "src\\components\\Toast.tsx":  {
+                                       "size":  269,
+                                       "sha256":  "08FD66C61B6E2C728EFA45E8FCADC7C9E2417BBA21E2815CBA9D13F2FBFB1C78"
+                                   },
+    "src\\components\\TopBar.tsx":  {
+                                        "size":  8306,
+                                        "sha256":  "5EF38214DED46910237FC6267597548F24BF874D5956278F51222B59164082DD"
+                                    },
+    "src\\components\\TwitchParts.tsx":  {
+                                             "size":  3625,
+                                             "sha256":  "E32F7B49DEB53F043CB12B356191E382761838AD121C7B1212E52AEDE313C3D4"
+                                         },
+    "src\\lib\\api.ts":  {
+                             "size":  93325,
+                             "sha256":  "5402E6D706C4996BEE0CE7D7E9CDBE4C10452E58828B94AEBA927FDE7FCFD5AA"
+                         },
+    "src\\lib\\assistant.ts":  {
+                                   "size":  8730,
+                                   "sha256":  "5717718F98BA552C7F607439272F51F866FA3E92EC1F5DD8EBA1801FD46C9454"
+                               },
+    "src\\lib\\brands.ts":  {
+                                "size":  16170,
+                                "sha256":  "6D8604C9870416E45408266B06617885424805737DE8A7A08A593FCF670FCF20"
+                            },
+    "src\\lib\\calendar.ts":  {
+                                  "size":  4990,
+                                  "sha256":  "ABCEC600775B1876D24FC9C9B290CE7E0A2DB8D1EC825495AEC2DCC425E6B6DA"
+                              },
+    "src\\lib\\calendarSample.ts":  {
+                                        "size":  9307,
+                                        "sha256":  "7E9392997BA79D19546C93DE30DA371E5941ED4AF4CB8C4C4BAF1AF5CE92164B"
+                                    },
+    "src\\lib\\clock.ts":  {
+                               "size":  4542,
+                               "sha256":  "4C5797E316DAB7172E9A76767B1B2290E6CB375D295EA453F87268490855B036"
+                           },
+    "src\\lib\\clockSample.ts":  {
+                                     "size":  6237,
+                                     "sha256":  "3F61F4ED3A42211811FD853091F086B5FB45C8ADE53926CAD6C4B9A799D71C15"
+                                 },
+    "src\\lib\\focus.ts":  {
+                               "size":  14895,
+                               "sha256":  "8D680CE97481EAC497C92896AA3A72BF3183B5A7E10F4A819A980329F79258F8"
+                           },
+    "src\\lib\\genres.ts":  {
+                                "size":  2683,
+                                "sha256":  "56231156EEED548617B7E13A199CAF8C2D033BE5320E76739265C9B2DCCCE2F0"
+                            },
+    "src\\lib\\input.ts":  {
+                               "size":  8072,
+                               "sha256":  "CF60DE53371C52D9B123184077EFFA03E92EAB3CAA9F7C3B4D507ED95C7CD12F"
+                           },
+    "src\\lib\\live.ts":  {
+                              "size":  10435,
+                              "sha256":  "98B64B68B003628ED0A4418360DAEC64A5879AF5D3CDF70C288610F8B00908A0"
+                          },
+    "src\\lib\\liveSample.ts":  {
+                                    "size":  5150,
+                                    "sha256":  "0392E71CCBED626102A6700C37C78AA85318CD1E6E23CBC7D24C40AFD786ECBB"
+                                },
+    "src\\lib\\nav.ts":  {
+                             "size":  4901,
+                             "sha256":  "8635E33FC1FD07F2593A8EDCDD8E2DC6EDDA8512D296CACD506EA3EB9B1B0C3B"
+                         },
+    "src\\lib\\photos.ts":  {
+                                "size":  1778,
+                                "sha256":  "8BC77197D0D5F8EE9C61871A798AB6A3DA936BF4CDF8EC5231634093BB7CC261"
+                            },
+    "src\\lib\\retro.ts":  {
+                               "size":  4334,
+                               "sha256":  "F5356B919F85898723C79C03B0BAE6ED6F588443ECE89AA268DAF5586AFE6863"
+                           },
+    "src\\lib\\retroSample.ts":  {
+                                     "size":  15351,
+                                     "sha256":  "4BF3CDC4B5376879D3E333D786A10A4748FB56BCADD35FFF8FD448B2F16DBA8F"
+                                 },
+    "src\\lib\\screensaver.ts":  {
+                                     "size":  2764,
+                                     "sha256":  "1F513A2247B2ED874EC1CCD3E364BE9D0C00AC592E2C6F7C5B83CE6396557BD3"
+                                 },
+    "src\\lib\\smarthome.ts":  {
+                                   "size":  17988,
+                                   "sha256":  "065334CBA9C844BC756886A8FC89D10513072A8004823ABED91ABCA5E6BCBDE8"
+                               },
+    "src\\lib\\sports.ts":  {
+                                "size":  8271,
+                                "sha256":  "1470EF640659971C74B288C1B6A4534FBDA4DD179759C9A1486A3E1A7EC02564"
+                            },
+    "src\\lib\\sportsSample.ts":  {
+                                      "size":  20487,
+                                      "sha256":  "594AB2471CD62E4A4CBF5F1FC1028CE50BABA2F2CDD419FB8DEA84EE9555DCDA"
+                                  },
+    "src\\lib\\spotify.ts":  {
+                                 "size":  11801,
+                                 "sha256":  "ECDBF7C0611DB3B24A33D32D683CFE9EB15E5AA0BB72E5AF1A88A42193250F3F"
+                             },
+    "src\\lib\\status.ts":  {
+                                "size":  1031,
+                                "sha256":  "EDF59213F1AD6D58CD3FE5EC31DAADE6B6DAA14FEA82FEED5B9DC7606616AD29"
+                            },
+    "src\\lib\\streaming.ts":  {
+                                   "size":  9106,
+                                   "sha256":  "18CA720F79B333CFE6FD4BE668CA08DEAF255DCCA756B9DA745D604C2601C21B"
+                               },
+    "src\\lib\\time.ts":  {
+                              "size":  882,
+                              "sha256":  "39CB3DBC257B0E6704F2434AD274F5BB5C7F3D050EA41A7B377584AF6473F9E9"
+                          },
+    "src\\lib\\toast.ts":  {
+                               "size":  404,
+                               "sha256":  "FE533B72C766CC12928B23A0ECCB467CB014BF39B277F7D678563FCF7342AF01"
+                           },
+    "src\\lib\\twitch.ts":  {
+                                "size":  4384,
+                                "sha256":  "2D6B3BC1F510DE071CD44C57EA5BC35C67B215BC41C07DF826B3C6B3228C8A97"
+                            },
+    "src\\lib\\twitchChat.ts":  {
+                                    "size":  3347,
+                                    "sha256":  "EF2C96C5F99A7B8FFEF8A6E5B1BA14116543E3AA7BC1E0EAB1DC8A96D177E1A5"
+                                },
+    "src\\lib\\twitchPlayer.ts":  {
+                                      "size":  7771,
+                                      "sha256":  "7044B1F763B5197BE25BA55C45CDC04C3789C9616A9DF215B9A9B3C24B8202F0"
+                                  },
+    "src\\lib\\youtubePlayer.ts":  {
+                                       "size":  6663,
+                                       "sha256":  "90FA6E2706363C9117AB9E2F631CA833BBA1C0A0D0AD564BA04EDFA25B2E1EF3"
+                                   },
+    "src\\routes\\svc\\SvcHome.tsx":  {
+                                          "size":  15523,
+                                          "sha256":  "08FEB0E7E5549BA7425732762834C4B016F08618C97080A76285429503E352A2"
+                                      },
+    "src\\routes\\svc\\SvcPerson.tsx":  {
+                                            "size":  14031,
+                                            "sha256":  "A63A4405C1E6F4A12524F2302487B4A69C5143D2342D7CF6DB4BD0C7ACF62943"
+                                        },
+    "src\\routes\\svc\\SvcSearch.tsx":  {
+                                            "size":  3375,
+                                            "sha256":  "0227E55D802A7D0676F401C20831C83ED148B3C5B6EF0A67FFD50D69CBDBC110"
+                                        },
+    "src\\routes\\svc\\SvcTitle.tsx":  {
+                                           "size":  20223,
+                                           "sha256":  "57C4EA9AB3FD47057229A91EFFC299C8A5DE2CA8D5B1ED3282BD84F3B11F62D5"
+                                       },
+    "src\\routes\\svc\\Trailer.tsx":  {
+                                          "size":  7770,
+                                          "sha256":  "6DAE6BD553EF6A1FEC743C0013BDA6766144A1B0B84D8171F12A9C44706986C7"
+                                      },
+    "src\\routes\\Artist.tsx":  {
+                                    "size":  20190,
+                                    "sha256":  "91AF6D2656DF8EAC87427F85D939BB2724427435F3E927BCF4270AFB598C1B9A"
+                                },
+    "src\\routes\\Calendar.tsx":  {
+                                      "size":  31324,
+                                      "sha256":  "17DFFEA6258EA3E027AA6A3C05DE665946D625D5E93B9246D03E4DA7F2C2EE94"
+                                  },
+    "src\\routes\\Clock.tsx":  {
+                                   "size":  21115,
+                                   "sha256":  "CAF9BAC4A9B1D080F1C58F615F7A85CF6661002318F81C04F9B59C232D5AC790"
+                               },
+    "src\\routes\\Games.tsx":  {
+                                   "size":  19957,
+                                   "sha256":  "7A191B1B6E63F95066BBC7E44F84B0252823F677BD52A837596D643BD1E56608"
+                               },
+    "src\\routes\\Genre.tsx":  {
+                                   "size":  5568,
+                                   "sha256":  "10EE3F3E95AACFE8682D08F03DFD4F5FC6480ED3DB1BFDEA563A2ACC6FA84870"
+                               },
+    "src\\routes\\Home.tsx":  {
+                                  "size":  20592,
+                                  "sha256":  "671B9ABDFB085E1286CF5CCE3BF2D72E9789889C8A93C8104C895D6B1C757D13"
+                              },
+    "src\\routes\\Live.tsx":  {
+                                  "size":  32270,
+                                  "sha256":  "AB5B7F3FBDB377C9095A27010ACD5D9297A5B12323595D2D71C376EF27A0CD2D"
+                              },
+    "src\\routes\\LiveChannels.tsx":  {
+                                          "size":  16849,
+                                          "sha256":  "E2238A276FC3EB623CEEAE572CC7353EF3B3217F7561E873DC6E33F90261439A"
+                                      },
+    "src\\routes\\Music.tsx":  {
+                                   "size":  9334,
+                                   "sha256":  "9290934285D4F50673564A223CDEB20F60A787B368F40D17C0B854AEAF184F72"
+                               },
+    "src\\routes\\MusicSearch.tsx":  {
+                                         "size":  5046,
+                                         "sha256":  "1E7CC5B5CD257FDC9E101F7259035F3373D0030E7BE12EEB930735B6A3C78C27"
+                                     },
+    "src\\routes\\NowPlaying.tsx":  {
+                                        "size":  7872,
+                                        "sha256":  "04800D575E7F0477815C7780A7BA6924E49D52B8167B58975087184EDAD81624"
+                                    },
+    "src\\routes\\Playlist.tsx":  {
+                                      "size":  5838,
+                                      "sha256":  "8D0FA15AC664430045A5A6CC223AC50E00AE894FAA6D4E40F124851CE175C02B"
+                                  },
+    "src\\routes\\Podcast.tsx":  {
+                                     "size":  10536,
+                                     "sha256":  "C570190E46BD3A23C99443A60D5F083CF672A18086FCBF614D75AE7CDCDBD4E0"
+                                 },
+    "src\\routes\\RetroLibrary.tsx":  {
+                                          "size":  12386,
+                                          "sha256":  "662FC0B7DE1150AC70EA42BACB1C8DEFBB1528A6E1AE23706C26D3950E73E9F3"
+                                      },
+    "src\\routes\\RetroLink.tsx":  {
+                                       "size":  19240,
+                                       "sha256":  "7330B5868FB443A3D3B5A131AC603CCC4FD00382488771961E3A1F625416E0D3"
+                                   },
+    "src\\routes\\RetroSetup.tsx":  {
+                                        "size":  17811,
+                                        "sha256":  "7FBD90EADE1283E23D199F4D7D45830AB275CCDDBD95F2BA3B85536E19EB0684"
+                                    },
+    "src\\routes\\Search.tsx":  {
+                                    "size":  6570,
+                                    "sha256":  "1C404408BFAE18388E58A6C1B3E45A1867351EAA419BBEE3EA6773D54967BC25"
+                                },
+    "src\\routes\\Settings.tsx":  {
+                                      "size":  35423,
+                                      "sha256":  "3FCF51967E972BD10CA5495A38E7DEBD16F75DBF26230609F4CCEB1ABDCC598B"
+                                  },
+    "src\\routes\\SmartHome.tsx":  {
+                                       "size":  41189,
+                                       "sha256":  "18CD7C8ECA9E7ED126ED7AB0A48BF1DB059EECCCA1414853EB1E701658553AC9"
+                                   },
+    "src\\routes\\Sports.tsx":  {
+                                    "size":  29189,
+                                    "sha256":  "21797C52DD23F3E2586E8C65B8908E15822E8752A19642A538A4C0A0CA99DF38"
+                                },
+    "src\\routes\\SportsCompetition.tsx":  {
+                                               "size":  22557,
+                                               "sha256":  "60458AE8A54C03946C93E056171A7038CDD33042644F04196DBE48025FA1C9AB"
+                                           },
+    "src\\routes\\SportsGame.tsx":  {
+                                        "size":  44825,
+                                        "sha256":  "9C03E104B652FF53D7DA503CD5AC77DC8A5838780A4C5E029CC01EED779B738B"
+                                    },
+    "src\\routes\\SportsGuide.tsx":  {
+                                         "size":  14585,
+                                         "sha256":  "8FCD36FEA9475F524851817D0A3F0CE39A0F028BB77CD3F8659E458F3953DA1E"
+                                     },
+    "src\\routes\\Twitch.tsx":  {
+                                    "size":  12177,
+                                    "sha256":  "1B34BD87A4AFAB78FF1204C052FA29563E81DF8D282FDE9FCB4A70844B73C271"
+                                },
+    "src\\routes\\TwitchSearch.tsx":  {
+                                          "size":  8509,
+                                          "sha256":  "F0FF5D6B5EA518BDADD8792721997D0988D314281C5D87BC21C174EDCA4A50E3"
+                                      },
+    "src\\routes\\TwitchWatch.tsx":  {
+                                         "size":  12905,
+                                         "sha256":  "3C915B5F40521705B89895766FC0D3804C422FDE535C62DEAC69C560A22550DC"
+                                     },
+    "src\\styles\\app.css":  {
+                                 "size":  90107,
+                                 "sha256":  "B30EF628E09B70D5ECC66B9968BEDDD728ABBA0C6E4B579D8A0CFA1D67362D0A"
+                             },
+    "src\\styles\\calendar.css":  {
+                                      "size":  20095,
+                                      "sha256":  "B0CBA857AB093BADE7F20993AEFB76DD15D930FBBA30E4197A3B96E04931F45A"
+                                  },
+    "src\\styles\\clock.css":  {
+                                   "size":  20167,
+                                   "sha256":  "2277F78AD544A8FFC1E7118E5EF39D3635CEB4E994D5293C302FC223E69A394A"
+                               },
+    "src\\styles\\live.css":  {
+                                  "size":  23945,
+                                  "sha256":  "2BAD40BBDA5397847778499282F13BD1236C7988FC83F616E3582A6F1E9E32A5"
+                              },
+    "src\\styles\\retro.css":  {
+                                   "size":  39081,
+                                   "sha256":  "98390835FC443355230FF49E64D46D62790070A0C1DA4F888E38690DB976D78C"
+                               },
+    "src\\styles\\rooms.css":  {
+                                   "size":  13482,
+                                   "sha256":  "B795D06CEEC49AE596997E0954C63C60559FC6908EA1648BDDF03D50D9BCC7D3"
+                               },
+    "src\\styles\\smarthome.css":  {
+                                       "size":  44558,
+                                       "sha256":  "1DC23AEFEC1282C28E8994EE024A6DC9777D3C07D426C1305976F7B69962EFAE"
+                                   },
+    "src\\styles\\sports.css":  {
+                                    "size":  65406,
+                                    "sha256":  "401620E2C30190C9CF5B1E0A3E92EE4E33115D2120ED03AC6B4D0896EA9D9E14"
+                                },
+    "src\\styles\\streaming.css":  {
+                                       "size":  29761,
+                                       "sha256":  "BF8D8507112D7734CF271E5B1323C7A10A57D52C1F0DE55A70FCE34CA83AB062"
+                                   },
+    "src\\styles\\tokens.css":  {
+                                    "size":  827,
+                                    "sha256":  "D1E0E17986BA325D71F42A3CA72A91DE8BDC120BB5825EF1EEDB0F3F257C5C63"
+                                },
+    "src\\styles\\twitch.css":  {
+                                    "size":  22565,
+                                    "sha256":  "31EC8A81A7EBE6D256DA898F826E9B155C2C5B2D51DB69DE1337C1F323CEB331"
+                                },
+    "src\\App.tsx":  {
+                         "size":  9402,
+                         "sha256":  "40CD64AAF89D9B0A334F6A1FC753CCE5CB6818FDEFF16DDC76A037532DDC167B"
+                     },
+    "src\\main.tsx":  {
+                          "size":  1145,
+                          "sha256":  "08F18B24C3A35A626E331E670F96639925A44FB2ED67CEDFB4C751F864B9C31A"
+                      },
+    "src-tauri\\capabilities\\default.json":  {
+                                                  "size":  180,
+                                                  "sha256":  "AAD5FADF0068D98DE15499CC731CC99BCACF9230B5451C3F88674AD91FF73AB0"
+                                              },
+    "src-tauri\\defaults\\apps.toml":  {
+                                           "size":  3145,
+                                           "sha256":  "8703D4B4B850387C92374FE89722D679A6FE4B17A3FD0B2877671F2C54367BD0"
+                                       },
+    "src-tauri\\icons\\128x128.png":  {
+                                          "size":  1967,
+                                          "sha256":  "13C1A7070AC64C99705C42E6F247BEA65EE0872D86344C3FCF74C3A150400BC5"
+                                      },
+    "src-tauri\\icons\\128x128@2x.png":  {
+                                             "size":  3969,
+                                             "sha256":  "0ED2D56E2158348FEC91D632E2CCE82F16544A41C1BA278882557DAF640FA94C"
+                                         },
+    "src-tauri\\icons\\32x32.png":  {
+                                        "size":  593,
+                                        "sha256":  "2F5041E7A5EB33F127127B62140A6F7A9BA12A80B189FFDD680DB0797DAC3039"
+                                    },
+    "src-tauri\\icons\\64x64.png":  {
+                                        "size":  1048,
+                                        "sha256":  "F57A18D312B24E08B555B6C808C4A116F7C24A5D3E8203EDF649F749F7084496"
+                                    },
+    "src-tauri\\icons\\icon.icns":  {
+                                        "size":  48016,
+                                        "sha256":  "307DD3D2F80D639A0E4DACC33CD982947AAC2367B346B9645E79EB60600CA84E"
+                                    },
+    "src-tauri\\icons\\icon.ico":  {
+                                       "size":  8107,
+                                       "sha256":  "3BB183EF9637409C80AE32F29E06582FEBF2567DB2D3714B48801B6B4799DCFA"
+                                   },
+    "src-tauri\\icons\\icon.png":  {
+                                       "size":  7950,
+                                       "sha256":  "BA8F9B655A8C6F4F4ABE1D81DD9FA3E36CF7076B3518EA56778972F65D81A5AB"
+                                   },
+    "src-tauri\\icons\\Square107x107Logo.png":  {
+                                                    "size":  1697,
+                                                    "sha256":  "1647C52DD4FC63A6CDE32D5254B788D855369A02866725E335881D396912315A"
+                                                },
+    "src-tauri\\icons\\Square142x142Logo.png":  {
+                                                    "size":  2203,
+                                                    "sha256":  "E48762D05E5104084F3EFB0227043B0F0899D2BB45C3078C819D9CE44553928C"
+                                                },
+    "src-tauri\\icons\\Square150x150Logo.png":  {
+                                                    "size":  2385,
+                                                    "sha256":  "980299613B73B159E3E19F75C2D8E381FACCAB93D943DAE983006CEEA6ED491B"
+                                                },
+    "src-tauri\\icons\\Square284x284Logo.png":  {
+                                                    "size":  4412,
+                                                    "sha256":  "E322F5BEB5E61CD3F8AF01E92252A42C35ADB1EA3F2EBD072E9F1954DB003F8F"
+                                                },
+    "src-tauri\\icons\\Square30x30Logo.png":  {
+                                                  "size":  558,
+                                                  "sha256":  "96236C2D3A16BEA3E316E1C30767EE21168FD9F4FE4D7821E005272F8F876D4F"
+                                              },
+    "src-tauri\\icons\\Square310x310Logo.png":  {
+                                                    "size":  4704,
+                                                    "sha256":  "E05341F568038A0556CBDB6704FD839CC52E686CCC980C7C4C7AB8221C039467"
+                                                },
+    "src-tauri\\icons\\Square44x44Logo.png":  {
+                                                  "size":  777,
+                                                  "sha256":  "BC427869FD08E4E8A338BB3027F284FE0561E70BC5D7D11155C5ACF746FB7152"
+                                              },
+    "src-tauri\\icons\\Square71x71Logo.png":  {
+                                                  "size":  1142,
+                                                  "sha256":  "BDE45A4B59215A28065E903C45D6153FF23A3B6D4A1FD6D693B35AD0600FCA36"
+                                              },
+    "src-tauri\\icons\\Square89x89Logo.png":  {
+                                                  "size":  1431,
+                                                  "sha256":  "158F27C50A254DBA67D83C3BDE3E197EA2CB284A5AA9D1A330DE83AF121E87CC"
+                                              },
+    "src-tauri\\icons\\StoreLogo.png":  {
+                                            "size":  845,
+                                            "sha256":  "7CF8EC10C5E691AB197977EEE7D5CC80F055FA1DF591FF37C50FEE39D3A6444B"
+                                        },
+    "src-tauri\\src\\assistant\\llm.rs":  {
+                                              "size":  5130,
+                                              "sha256":  "8921032FA85C2791E1DAA90944903ABDE3B7531F53B298A98C4249320ACA9D1B"
+                                          },
+    "src-tauri\\src\\assistant\\mod.rs":  {
+                                              "size":  15486,
+                                              "sha256":  "2D136A99B9B2DB5952E111DE8E0A38C59D6603A072564358010CBAD033DDBD17"
+                                          },
+    "src-tauri\\src\\assistant\\news.rs":  {
+                                               "size":  4594,
+                                               "sha256":  "D458E601D84120F617D4E873B75CEEE4857466B882EEAA9D01694079F8F132B0"
+                                           },
+    "src-tauri\\src\\assistant\\speech.rs":  {
+                                                 "size":  28660,
+                                                 "sha256":  "67139BE78D7A2890E604BF977ABDBC0A371EFE4F92BF00815F9FCF9807C336A4"
+                                             },
+    "src-tauri\\src\\assistant\\system.rs":  {
+                                                 "size":  4713,
+                                                 "sha256":  "33C424E76C9257E016954CE93BA40A13C16A0BF639FD51423ED13CE47E3EB525"
+                                             },
+    "src-tauri\\src\\assistant\\tools.rs":  {
+                                                "size":  40741,
+                                                "sha256":  "3AC4B33E8EE7F849BC365DBD3AD2F18A1A9D04F6080430B98CB70DF395F8C6B6"
+                                            },
+    "src-tauri\\src\\assistant\\voice.rs":  {
+                                                "size":  17483,
+                                                "sha256":  "11B271F9A6029252096B655FFF1C845EAB09E39CE0FC499F8AE7977C0B99C2EA"
+                                            },
+    "src-tauri\\src\\assistant\\weather.rs":  {
+                                                  "size":  8003,
+                                                  "sha256":  "0BB9A97E61BF6FE1D81BCFF17454BE29CCF467F761E727C950C461CF426F26B5"
+                                              },
+    "src-tauri\\src\\calendar\\card.js":  {
+                                              "size":  1845,
+                                              "sha256":  "22BFAB75B77A9340E4FF26902318740F08E1AC83204C4AC4ACA986F1ACF2AE86"
+                                          },
+    "src-tauri\\src\\calendar\\mod.rs":  {
+                                             "size":  37714,
+                                             "sha256":  "46996F17A2CECB18EAE7682A338AB2342CCA7FBDA5A234F690F96AD29AE36027"
+                                         },
+    "src-tauri\\src\\calendar\\travel.rs":  {
+                                                "size":  6447,
+                                                "sha256":  "75E29D10C916016D9D9992DEE86260CAA83A97D49FC31D94D19CDCCF22A2FF61"
+                                            },
+    "src-tauri\\src\\clock\\local.rs":  {
+                                            "size":  4769,
+                                            "sha256":  "5A67F073A691AA2B78E38349D8A041FF6A5BA121C5F3F14CE6A1F850A800B38A"
+                                        },
+    "src-tauri\\src\\clock\\mod.rs":  {
+                                          "size":  51580,
+                                          "sha256":  "50199D713AE8427D67CCB74E5470BF9F2B5B49F165967FEC795BA779AEE2F44D"
+                                      },
+    "src-tauri\\src\\clock\\parse.rs":  {
+                                            "size":  34626,
+                                            "sha256":  "52DD7EE6BB3B955B384A00A5058C88124D04C8A6A2989095A8E89FB706A29F5D"
+                                        },
+    "src-tauri\\src\\clock\\ring.js":  {
+                                           "size":  7858,
+                                           "sha256":  "DCCE125532A00A729B23BA6AEC871187201093C7F4F78572541AE72A7BF0D37D"
+                                       },
+    "src-tauri\\src\\clock\\sound.rs":  {
+                                            "size":  5265,
+                                            "sha256":  "F2F0220DC1EB7CDF92FAB83E0A737C50EAEA0DC38FF6ADA36B38480837C4DAE3"
+                                        },
+    "src-tauri\\src\\companion\\api.rs":  {
+                                              "size":  10948,
+                                              "sha256":  "9D8E368A83A917A4D77FCCED9FDB8D8830B4587D53259F61F98C028FF105FDB4"
+                                          },
+    "src-tauri\\src\\companion\\hub.rs":  {
+                                              "size":  4448,
+                                              "sha256":  "D59044CAF6903C5C9AAAC350D4AEEA3A62FCE01D7F2C119F7CFBB1FA6B4841AF"
+                                          },
+    "src-tauri\\src\\companion\\mod.rs":  {
+                                              "size":  13361,
+                                              "sha256":  "D1F155B6A893EBF4F4AFF5A5E9BD94A5986D5D5CA8B8302C4E9F9F0CB1C22DA9"
+                                          },
+    "src-tauri\\src\\companion\\tls.rs":  {
+                                              "size":  12057,
+                                              "sha256":  "47B0167060A9F3F0696BC6A58FCE7C9C4FD1CECD338CA53E737BCBDC514AECFD"
+                                          },
+    "src-tauri\\src\\companion\\tv.rs":  {
+                                             "size":  5880,
+                                             "sha256":  "1E8BF4692FBC47CC06319A1F027BAB3C9A817AE569D40152A2C1D93B0469BF79"
+                                         },
+    "src-tauri\\src\\games\\epic.rs":  {
+                                           "size":  3228,
+                                           "sha256":  "A72991D8BDBEF8B53FADE1C06465534936A13630EF8DA42C66B2C860D0695842"
+                                       },
+    "src-tauri\\src\\games\\mod.rs":  {
+                                          "size":  18633,
+                                          "sha256":  "851A3BC7C2A9554290F606E2D99F647ACE489BC18AE796AEF9E6B5D9641B3F56"
+                                      },
+    "src-tauri\\src\\games\\sgdb.rs":  {
+                                           "size":  2691,
+                                           "sha256":  "CB955E3E71CC515EA3A9CBC9C76C74DAB6EAB7926966A268DF676068F0D26B25"
+                                       },
+    "src-tauri\\src\\games\\steam.rs":  {
+                                            "size":  9572,
+                                            "sha256":  "7FE4D6C64B077A6EEBEDC0A1A07E6AE3E99FD0A71977E83D81B6160CFA969A2C"
+                                        },
+    "src-tauri\\src\\livetv\\mod.rs":  {
+                                           "size":  13251,
+                                           "sha256":  "5BD6744E67332C8734CD9EBF6626E01A3BEB271FA6C2210C436B90CCB28BE7AD"
+                                       },
+    "src-tauri\\src\\livetv\\news.rs":  {
+                                            "size":  17032,
+                                            "sha256":  "E04A73F7E9FB75A46F4C7FFB00AD1AEA0A4409D330D6FE0D88BE6E7A6169F672"
+                                        },
+    "src-tauri\\src\\photos\\folder.rs":  {
+                                              "size":  2294,
+                                              "sha256":  "18DCEE2C5EE39F90A05E9FA2BAE6412F5527A74743F30FDC55F1C3A225008A8A"
+                                          },
+    "src-tauri\\src\\photos\\google.rs":  {
+                                              "size":  22432,
+                                              "sha256":  "53653602987A24D927A326AAFA3732F149BA24396B6371F3124E82BCCF6AFEE9"
+                                          },
+    "src-tauri\\src\\photos\\mod.rs":  {
+                                           "size":  12315,
+                                           "sha256":  "99D3474D0B6D7C5BCD5667A6F344D63512BFFC6146C75060DB5E8B91FE6F7C44"
+                                       },
+    "src-tauri\\src\\player\\disney.js":  {
+                                              "size":  6702,
+                                              "sha256":  "5CFBB9E8DB49E9ADDF8FA058AD49D940748A113F19F6A5C595C71C84B8ECD5EF"
+                                          },
+    "src-tauri\\src\\player\\fullscreen.js":  {
+                                                  "size":  4939,
+                                                  "sha256":  "22369FEBE92AB909174B74B7F95E35413A1BF66BBA8B179ABE619ED1E0868F37"
+                                              },
+    "src-tauri\\src\\player\\hbomax.js":  {
+                                              "size":  7558,
+                                              "sha256":  "C6096CDE6FDED5EAA424AB2C6C6484B71527169E8CD6D1434027F8017FDB83B2"
+                                          },
+    "src-tauri\\src\\player\\livetv.js":  {
+                                              "size":  24918,
+                                              "sha256":  "904DFC7083DEDC945C6E82BD2FBE5E38132D3059F61E4264195E85A423EF7767"
+                                          },
+    "src-tauri\\src\\player\\netflix.js":  {
+                                               "size":  6237,
+                                               "sha256":  "FEA53F15DA473C693020CB84C8196089DCA15003DB2A077421025ACAF034F2BC"
+                                           },
+    "src-tauri\\src\\player\\overlay.js":  {
+                                               "size":  47210,
+                                               "sha256":  "216358A38D75B07AA253108F10386D9EE4B585F2FBBEBC714B286C473F62D000"
+                                           },
+    "src-tauri\\src\\player\\prime.js":  {
+                                             "size":  4962,
+                                             "sha256":  "FF90E8C81E7621AF22EC4F28A854F37F52101B599658EF9B8BA4A20A27FD921C"
+                                         },
+    "src-tauri\\src\\recs\\mod.rs":  {
+                                         "size":  21801,
+                                         "sha256":  "D924E33716CD8B17FB9D2184725BDFC597D2B1E04CBEEAB02072A49F71096AEF"
+                                     },
+    "src-tauri\\src\\recs\\profile.rs":  {
+                                             "size":  26833,
+                                             "sha256":  "C69360CACD502BD158D398E165AD051FA68729F1C4E8C7AEA9C9CC02A200A352"
+                                         },
+    "src-tauri\\src\\recs\\ratings.rs":  {
+                                             "size":  2939,
+                                             "sha256":  "57BEBD579779C7A455D178DC93BEA858632D377651D192549B6A1F0CB4A8E14B"
+                                         },
+    "src-tauri\\src\\retro\\bios.rs":  {
+                                           "size":  3951,
+                                           "sha256":  "7ABE861DEEE67481302843ED38B62AC6896C720A042005546E3B58185607DF5F"
+                                       },
+    "src-tauri\\src\\retro\\browse.rs":  {
+                                             "size":  21121,
+                                             "sha256":  "FA3A297CF8E6C048E15B720B9F1150C493AE587CE28AA72991EFA3EE62636E09"
+                                         },
+    "src-tauri\\src\\retro\\emu.rs":  {
+                                          "size":  21391,
+                                          "sha256":  "4FCFD3DC8E647778E25B2D8F53796D2BD453213EFD85D61538F3304A588CE21A"
+                                      },
+    "src-tauri\\src\\retro\\install.rs":  {
+                                              "size":  21598,
+                                              "sha256":  "F8107E8E59B8E98FEF51A4DDA08CC045D0084693278125757E6AF417254EA09D"
+                                          },
+    "src-tauri\\src\\retro\\mod.rs":  {
+                                          "size":  29034,
+                                          "sha256":  "2540CACF9A57419E8CFD4968FE6D017375B1339FD5BD2F1B99D7A4C41B829EDE"
+                                      },
+    "src-tauri\\src\\retro\\play.rs":  {
+                                           "size":  10665,
+                                           "sha256":  "4B51C5AE543F4367AD42BC439748100320482698063D5D7A1706A5BA384A24B6"
+                                       },
+    "src-tauri\\src\\retro\\scan.rs":  {
+                                           "size":  6597,
+                                           "sha256":  "410273B289F9B370055586A9544C709B2F2F5DA1A53029EB7A5D2CFAEEB3B537"
+                                       },
+    "src-tauri\\src\\retro\\states.rs":  {
+                                             "size":  8376,
+                                             "sha256":  "ABB90365CFA27914E6183841967A9A1A4EAF863D02B6716F828AE0041029EFAC"
+                                         },
+    "src-tauri\\src\\retro\\systems.rs":  {
+                                              "size":  4571,
+                                              "sha256":  "7D71839FE4F15D406FD6426E518F53420BB49105CB14F454FA3E908D17505068"
+                                          },
+    "src-tauri\\src\\retro\\thumbs.rs":  {
+                                             "size":  7160,
+                                             "sha256":  "F43F442E59B2A46A43D8B16175528B04DA11E854ED73D41771DD72CA4147FC33"
+                                         },
+    "src-tauri\\src\\retro\\win.rs":  {
+                                          "size":  9238,
+                                          "sha256":  "92A6F3273745768EDC297E7D8D0503EF44C1AF19EDFF6475040E0D1F943A14FB"
+                                      },
+    "src-tauri\\src\\smarthome\\local\\ewelink_lan.rs":  {
+                                                             "size":  29042,
+                                                             "sha256":  "15147C06527B501F93D33BA14F97A8734B14F12ED7A18B645ECE93D2F178E232"
+                                                         },
+    "src-tauri\\src\\smarthome\\local\\mod.rs":  {
+                                                     "size":  36756,
+                                                     "sha256":  "2518727534562CD5A5C8167BD826285FF4A07917B0C734FB827E92117FA54450"
+                                                 },
+    "src-tauri\\src\\smarthome\\local\\tuya_lan.rs":  {
+                                                          "size":  38019,
+                                                          "sha256":  "BBE3748139D84FE43CA27857A45A686EB78C889280BC13676CD36BE4E87AC532"
+                                                      },
+    "src-tauri\\src\\smarthome\\ewelink.rs":  {
+                                                  "size":  40213,
+                                                  "sha256":  "39AA5C0FDDE4F8582DEE25224B2ED1E21E100D053CAEFBBC99DDE437B7A6F5BE"
+                                              },
+    "src-tauri\\src\\smarthome\\layout.rs":  {
+                                                 "size":  7513,
+                                                 "sha256":  "D4D75816A3B1755BC20A6B28DEDCAAC0396BF894103F51931AE797F5EE0BF1F8"
+                                             },
+    "src-tauri\\src\\smarthome\\mod.rs":  {
+                                              "size":  16488,
+                                              "sha256":  "E8F8CD084B04A029F7018C5A98FC33EE3F9EC8ED6951AC166DDC0F461C027190"
+                                          },
+    "src-tauri\\src\\smarthome\\rooms.rs":  {
+                                                "size":  17642,
+                                                "sha256":  "BD6BE76CEF6803082F73411F1FD0533A77621A00CCBCA65FC0E1E92D2AADEAC7"
+                                            },
+    "src-tauri\\src\\smarthome\\scenes.rs":  {
+                                                 "size":  18676,
+                                                 "sha256":  "EC00E64AFC995D209FC7255BD1336E05CC486FEE16F6C6B3317A92485AA5EB88"
+                                             },
+    "src-tauri\\src\\smarthome\\tuya.rs":  {
+                                               "size":  45496,
+                                               "sha256":  "01FFC692906506109B0A75C3FFCAE74F504D182C745CC820A6D3FC22D62911CD"
+                                           },
+    "src-tauri\\src\\sports\\cazetv.rs":  {
+                                              "size":  12421,
+                                              "sha256":  "4A5AD371F3A27357D1BF4C6B4E91932ED9B7B19FCE3DB303E71E84BFF8A04C6B"
+                                          },
+    "src-tauri\\src\\sports\\channels.rs":  {
+                                                "size":  6945,
+                                                "sha256":  "2C1458CEED24B5EE0F848DE2F16EC5E324A60C503F854DBB3D77D3CAB41A7B7A"
+                                            },
+    "src-tauri\\src\\sports\\dates.rs":  {
+                                             "size":  5632,
+                                             "sha256":  "64DD6A808351F2F6C81375DD3E8A2545CC477FA8EE26894B86FD1C11AAC5C404"
+                                         },
+    "src-tauri\\src\\sports\\espn.rs":  {
+                                            "size":  45232,
+                                            "sha256":  "532C2D01E29BF8E78FDE1C70E4D825C14AEADAD336E70F91CA1E9B65EFDEBC16"
+                                        },
+    "src-tauri\\src\\sports\\ge.rs":  {
+                                          "size":  11528,
+                                          "sha256":  "20B2883F7606A103504044EF92C8A3DA8D0BEB2C982535995ACE26C61EE6E0E5"
+                                      },
+    "src-tauri\\src\\sports\\mod.rs":  {
+                                           "size":  99422,
+                                           "sha256":  "0BE7215BA600AE9E1B4CD339C02B0E9A13553AB4B1F0857977980C49F330830C"
+                                       },
+    "src-tauri\\src\\sports\\nba_br.rs":  {
+                                              "size":  6876,
+                                              "sha256":  "BEA7727E529B8A7585C06AE8E6DB804202EBF3542C45EBCC968D742489DC0672"
+                                          },
+    "src-tauri\\src\\sports\\tv.rs":  {
+                                          "size":  52093,
+                                          "sha256":  "589A25E504E36FE9810B3B073637DBBB793D3A21F4FF1A681C550B869B6DA7CB"
+                                      },
+    "src-tauri\\src\\sports\\youtube.rs":  {
+                                               "size":  8627,
+                                               "sha256":  "09096ECDE5F4197BE93E5C5463201B8626C33ECBEC5A682D279C3B49A8917E24"
+                                           },
+    "src-tauri\\src\\spotify\\library.rs":  {
+                                                "size":  20044,
+                                                "sha256":  "393FE247763E718669A95A92B33AC835A61EA05AE4A0ED34D87FEF2804E6EF0B"
+                                            },
+    "src-tauri\\src\\spotify\\mod.rs":  {
+                                            "size":  36210,
+                                            "sha256":  "813F8F08F361D22CF4324D3FA002C8ED627EF3249F872E71F463DDAD088EEA3E"
+                                        },
+    "src-tauri\\src\\spotify\\pages.rs":  {
+                                              "size":  16617,
+                                              "sha256":  "502CED4C2FCD9459204B959DA53FD8B36A8745A70EBF956ECB5C768E4DC218C3"
+                                          },
+    "src-tauri\\src\\spotify\\plays.rs":  {
+                                              "size":  11461,
+                                              "sha256":  "C30074DC78BBECEA7C0871F69B4BB5B929436E748C5568A4EAFF700FC06FD2E4"
+                                          },
+    "src-tauri\\src\\spotify\\popular.rs":  {
+                                                "size":  4084,
+                                                "sha256":  "38E80422CD1F655AABD0900DE63EABEA48E5C2AD2FA02736F9ADDA4D16030019"
+                                            },
+    "src-tauri\\src\\watch\\ids.rs":  {
+                                          "size":  20256,
+                                          "sha256":  "C4B1951BBF85C6790693C78EEC2A050B775BECFCC2CF318C95C4D19984A16873"
+                                      },
+    "src-tauri\\src\\watch\\justwatch.rs":  {
+                                                "size":  7107,
+                                                "sha256":  "A4E5AADE74B89055077B196CE7FA214FF487BBE73940FC21F9C47FBB15D333B8"
+                                            },
+    "src-tauri\\src\\watch\\mod.rs":  {
+                                          "size":  24193,
+                                          "sha256":  "67703A3115C31FD586E7B971219592706AB5C0182BF20BDF33625FD58514B5AA"
+                                      },
+    "src-tauri\\src\\watch\\profiles.rs":  {
+                                               "size":  5036,
+                                               "sha256":  "9DCF5C0CE7662AD2FC7D030B5EFC5872C679862E1D4B8006FBD052EA8CDCF78C"
+                                           },
+    "src-tauri\\src\\watch\\session.rs":  {
+                                              "size":  16728,
+                                              "sha256":  "2D7D426DF21E2F3693CFFC7A84245FFA11BD7BB442BFB9DCE78002DB2E68925D"
+                                          },
+    "src-tauri\\src\\watch\\store.rs":  {
+                                            "size":  23953,
+                                            "sha256":  "8A70BF7B73C7F018188410BF9B9E955A867B710F03A7AAE64D8105B2DCE40625"
+                                        },
+    "src-tauri\\src\\watch\\sync.js":  {
+                                           "size":  10168,
+                                           "sha256":  "EFBCEFBD58C7B8B59F6A2100B480664D71E92644E56E3CF31C47A57F728459B3"
+                                       },
+    "src-tauri\\src\\watch\\sync.rs":  {
+                                           "size":  25658,
+                                           "sha256":  "D3C78DC954464FAD6C70A9036E1B14594A2D629505E57C63454F80D921CB87ED"
+                                       },
+    "src-tauri\\src\\watch\\watch.js":  {
+                                            "size":  30134,
+                                            "sha256":  "5B33C3FB406E3210F981AB3E9EA6489BD04879C3AA07887E9EA7378FE27C8B4D"
+                                        },
+    "src-tauri\\src\\bridge.rs":  {
+                                      "size":  2613,
+                                      "sha256":  "95DCB188714AC141DD68AF693CF827DBC5C33413CDD8A6C5FF582E69514F2270"
+                                  },
+    "src-tauri\\src\\cdp.rs":  {
+                                   "size":  35040,
+                                   "sha256":  "E2D58F5902452C7A215860D379E79F6CC368C6765FB85D2982E028305DA7441E"
+                               },
+    "src-tauri\\src\\commands.rs":  {
+                                        "size":  36362,
+                                        "sha256":  "2350DE7137ABEA1D761E0A1A62715C056F11AA99A595ACA76306BDBC28144207"
+                                    },
+    "src-tauri\\src\\config.rs":  {
+                                      "size":  15251,
+                                      "sha256":  "1D2BFA5E67CB934FC6906BC6069E7B9877D558514C09162F56ADC078DE8144F0"
+                                  },
+    "src-tauri\\src\\cursor.rs":  {
+                                      "size":  7242,
+                                      "sha256":  "A5DEBD59C256BF55207E02A11D9C794CCFF16347D1B19155EF4F3A23A417894C"
+                                  },
+    "src-tauri\\src\\error.rs":  {
+                                     "size":  871,
+                                     "sha256":  "31B5AB462DA1B3FE53E951968F37DB44BFD045F8705623849204990F86727645"
+                                 },
+    "src-tauri\\src\\focus_win.rs":  {
+                                         "size":  7698,
+                                         "sha256":  "3B7355EED0FEE51CACEA533F29619F12CC7609AAFBF6126BA27D7C04FEABDE24"
+                                     },
+    "src-tauri\\src\\guide_guard.rs":  {
+                                           "size":  8785,
+                                           "sha256":  "0358E84B000B4E72BFCA795A62B1BA2E1A5A1DADA87FE952480675270B223477"
+                                       },
+    "src-tauri\\src\\history.rs":  {
+                                       "size":  3453,
+                                       "sha256":  "BA401FAC385EEB7F708FBD6BEF05926A9237FEE1B58D4FF7829027DDC027D552"
+                                   },
+    "src-tauri\\src\\input.rs":  {
+                                     "size":  21322,
+                                     "sha256":  "A3B797F10440D0F419E87AD78F7420E7285A526FE2D870BB17BFE6810F915A65"
+                                 },
+    "src-tauri\\src\\launcher.rs":  {
+                                        "size":  14428,
+                                        "sha256":  "AADD820F483141334E4EAC9BE761DE253064E570D9166F34F02D70596FE37011"
+                                    },
+    "src-tauri\\src\\lib.rs":  {
+                                   "size":  9272,
+                                   "sha256":  "7BF59FE82AC084AABB446A2ACB4DF30E45DC57AABBCF2B046E18502B4ADBF663"
+                               },
+    "src-tauri\\src\\live.rs":  {
+                                    "size":  2067,
+                                    "sha256":  "F4FCCD67127D6BAC36F164C67DFF528D4900BEE5BC17F2F0301AEC65E4F1741C"
+                                },
+    "src-tauri\\src\\loopback.rs":  {
+                                        "size":  4641,
+                                        "sha256":  "ED9172A7E04BE1BF8BF6E546E357A89DE9FACCA955F07E5DCA56D5DE42C35E93"
+                                    },
+    "src-tauri\\src\\main.rs":  {
+                                    "size":  168,
+                                    "sha256":  "E907428701A7E3D9E4EBC4F47B6FED715CA545730ACEB5EF554DB255CD46B7F3"
+                                },
+    "src-tauri\\src\\state.rs":  {
+                                     "size":  3727,
+                                     "sha256":  "0B0FCEB1D826A36CF285AEB2B0FB885B7AE875114C001859DEA0BE0C6EF43EED"
+                                 },
+    "src-tauri\\src\\tmdb.rs":  {
+                                    "size":  57320,
+                                    "sha256":  "7AF54AA5536E6CCCAC68CEBD2E4480D9016328D17AC95A1FBE3B3B3265582E06"
+                                },
+    "src-tauri\\src\\tvnav.js":  {
+                                     "size":  21404,
+                                     "sha256":  "CCC72F7072ED371CC66F516CAECF1CE94CEF54D2A81514794042180F139395D3"
+                                 },
+    "src-tauri\\src\\twitch.rs":  {
+                                      "size":  24600,
+                                      "sha256":  "17F08901764983F253D131043DD258DF98A8F3219392B8143F039D2EFC3B8CDA"
+                                  },
+    "src-tauri\\src\\vdf.rs":  {
+                                   "size":  5305,
+                                   "sha256":  "E220E90076630C2B2F8FFAE74E53E7ECD0FFBF855FC5C9AEBD7CE08147B62D04"
+                               },
+    "src-tauri\\src\\youtube.rs":  {
+                                       "size":  18240,
+                                       "sha256":  "C3D12E3D26362293BC775FFE8C0DA07F5800521032E891DF3EDB399A754E6628"
+                                   },
+    "src-tauri\\build.rs":  {
+                                "size":  39,
+                                "sha256":  "487059EAF8A947B80F20A9AACAC038A5047B2AD69D2401B827376C67D6FE847F"
+                            },
+    "src-tauri\\Cargo.lock":  {
+                                  "size":  169388,
+                                  "sha256":  "4C8B007E028A0F9365FF5F7ED0A9206FCBD2D7A961F6A32B25FF82AECD3A3B78"
+                              },
+    "src-tauri\\Cargo.toml":  {
+                                  "size":  3890,
+                                  "sha256":  "73DE04B579261B7E2B9B7E8A35E48F264319B6A5EB7D18C156551764E1FD21C0"
+                              },
+    "src-tauri\\tauri.conf.json":  {
+                                       "size":  1165,
+                                       "sha256":  "829D3CCD099D0B84FD2E6932375EA30415CF05FE527871D6C0F63B79331C0C7E"
+                                   },
+    ".env":  {
+                 "size":  2160,
+                 "sha256":  "EBADF705516F762C7DCA4112060F2B3B2E5DBF99FC7775DDD48A62B882972239"
+             },
+    ".env.example":  {
+                         "size":  2926,
+                         "sha256":  "112BF5147C6C8E201694D8DEC2444CF8E993ED3AC7B57D731831993787E8A623"
+                     },
+    ".gitignore":  {
+                       "size":  64,
+                       "sha256":  "E7825F5AAEA7DDEEEE52002508005D7A47E5F3763BFA4043069E90FAB288AC5F"
+                   },
+    "app-icon.svg":  {
+                         "size":  401,
+                         "sha256":  "3479B21CAB95E3C810208A9D3BF1B01A79F2A53F4507464D1AD5AABF849C48B4"
+                     },
+    "index.html":  {
+                       "size":  298,
+                       "sha256":  "D7AECC2570BA007825F8FFDDEF50BB2D0FDF7ED2EEDF995D769C0D8392D367EB"
+                   },
+    "package-lock.json":  {
+                              "size":  53019,
+                              "sha256":  "F075FD13980004AC74A2683D7A321A03C81D3EAEA2492E307F290E88C52297FA"
+                          },
+    "package.json":  {
+                         "size":  870,
+                         "sha256":  "08D291095F0CE89D321644CCF2BADF8F20DC479FC65F49771502D8C3ECFDD230"
+                     },
+    "tsconfig.json":  {
+                          "size":  448,
+                          "sha256":  "54151FF4CEC8D842F59A61AAECA09BB25BB12BC289FCFA37D71CFD557C358660"
+                      },
+    "vite.config.ts":  {
+                           "size":  443,
+                           "sha256":  "E831A9C0F85B516C280C7713F94A1A2D68E5D4EBB347011E8A72FC9163A233CB"
+                       }
+}

@@ -1,0 +1,1213 @@
+/* ---------- Alarms & timers (canvas: Clock) ---------- */
+
+.clk {
+  background: var(--bg);
+  overflow: hidden;
+}
+
+.clk-glow {
+  position: absolute;
+  border-radius: 999px;
+  pointer-events: none;
+}
+
+.clk-glow-blue {
+  top: -300px;
+  left: -220px;
+  width: 1200px;
+  height: 900px;
+  background: #0149b2;
+  filter: blur(220px);
+  opacity: 0.45;
+  animation: breathe 10s ease-in-out infinite;
+}
+
+.clk-glow-orange {
+  bottom: -360px;
+  right: -200px;
+  width: 1000px;
+  height: 800px;
+  background: #e8590c;
+  filter: blur(240px);
+  opacity: 0.16;
+}
+
+.clk-head {
+  position: absolute;
+  top: 48px;
+  left: var(--gutter);
+  right: var(--gutter);
+  height: 64px;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  animation: fadeIn 0.5s var(--ease) both;
+}
+
+.clk-head-left,
+.clk-head-right {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.clk-title {
+  margin: 0;
+  font-size: 30px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.clk-cal {
+  height: 52px;
+  padding: 0 24px 0 18px;
+  font-size: 18px;
+}
+
+.clk-ask {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 52px;
+  padding: 0 22px 0 8px;
+  border-radius: var(--r-pill);
+  border: 1px solid rgba(76, 141, 255, 0.5);
+  background: rgba(1, 73, 178, 0.25);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 18px;
+  font-weight: 500;
+  transition:
+    transform 0.2s var(--ease),
+    box-shadow 0.2s var(--ease);
+}
+
+.clk-ask.is-focused {
+  transform: scale(1.05);
+  box-shadow: var(--focus-ring);
+}
+
+.clk-ask-badge,
+.clk-tip-badge {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #ffffff;
+  box-shadow: 0 0 24px rgba(1, 73, 178, 0.7);
+}
+
+/* The big clock. */
+
+.clk-time {
+  position: absolute;
+  top: 150px;
+  left: var(--gutter);
+  width: 820px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  animation: fadeUp 0.7s var(--ease) 0.05s both;
+}
+
+.clk-hm {
+  display: flex;
+  align-items: baseline;
+  gap: 18px;
+  font-variant-numeric: tabular-nums;
+}
+
+.clk-hm-big {
+  font-size: 220px;
+  line-height: 0.95;
+  font-weight: 700;
+  letter-spacing: -0.05em;
+}
+
+.clk-colon {
+  color: var(--accent-2);
+  animation: clkColon 1s steps(1) infinite;
+}
+
+@keyframes clkColon {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0.25;
+  }
+}
+
+.clk-ss {
+  font-size: 56px;
+  font-weight: 300;
+  color: #8a8a94;
+}
+
+.clk-date {
+  font-size: 30px;
+  font-weight: 500;
+  color: var(--text-2);
+}
+
+.clk-next {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  align-self: flex-start;
+  margin-top: 14px;
+  height: 48px;
+  padding: 0 20px 0 14px;
+  border-radius: var(--r-pill);
+  background: rgba(255, 255, 255, 0.07);
+  font-size: 19px;
+  color: #e0e0e4;
+}
+
+.clk-next > svg {
+  color: #ffd36b;
+}
+
+.clk-next b {
+  font-weight: 600;
+}
+
+.clk-next-in {
+  color: #ffd36b;
+  font-weight: 600;
+}
+
+/* Panels. */
+
+.clk-panel {
+  position: absolute;
+  box-sizing: border-box;
+  padding: 22px 24px;
+  border-radius: 26px;
+  background: rgba(24, 24, 30, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  backdrop-filter: blur(24px);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.clk-timers {
+  top: 540px;
+  left: var(--gutter);
+  width: 820px;
+  height: 504px;
+  animation: fadeUp 0.7s var(--ease) 0.15s both;
+}
+
+.clk-alarms {
+  top: 150px;
+  left: 948px;
+  right: var(--gutter);
+  height: 894px;
+  gap: 12px;
+  animation: fadeUp 0.7s var(--ease) 0.1s both;
+}
+
+.clk-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.clk-panel-head h2 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 600;
+}
+
+.clk-count {
+  font-size: 16px;
+  color: #8a8a94;
+}
+
+.clk-kicker {
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #8a8a94;
+}
+
+.clk-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 128px;
+  flex: none;
+  border-radius: 20px;
+  border: 2px dashed var(--border);
+  font-size: 19px;
+  color: #8a8a94;
+}
+
+/* Timers. */
+
+.clk-timer-list,
+.clk-alarm-list {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: -8px -12px;
+  padding: 8px 12px;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+
+.clk-alarm-list {
+  gap: 8px;
+}
+
+.clk-timer {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  height: 128px;
+  box-sizing: border-box;
+  padding: 0 18px 0 14px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid transparent;
+}
+
+.clk-timer.is-running {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.clk-ring {
+  position: relative;
+  flex: 0 0 104px;
+  width: 104px;
+  height: 104px;
+}
+
+.clk-ring svg {
+  transform: rotate(-90deg);
+}
+
+.clk-ring-track,
+.clk-ring-fill {
+  fill: none;
+  stroke-width: 8;
+}
+
+.clk-ring-track {
+  stroke: rgba(255, 255, 255, 0.1);
+}
+
+.clk-ring-fill {
+  stroke: var(--color);
+  stroke-linecap: round;
+  transition: stroke-dashoffset 1s linear;
+}
+
+.clk-ring-emoji {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+}
+
+.clk-timer-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.clk-timer-name {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.clk-timer-left {
+  font-size: 56px;
+  line-height: 1.05;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.clk-timer-left.is-paused {
+  color: var(--muted);
+}
+
+.clk-timer-left.is-done {
+  color: var(--color);
+}
+
+.clk-timer-sub {
+  font-size: 15px;
+  color: #8a8a94;
+}
+
+.clk-timer-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.clk-round,
+.clk-plus {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 60px;
+  border-radius: 999px;
+  font-family: inherit;
+  cursor: pointer;
+  transition:
+    transform 0.2s var(--ease),
+    box-shadow 0.2s var(--ease);
+}
+
+.clk-round {
+  width: 60px;
+  padding: 0;
+}
+
+.clk-toggle {
+  border: 0;
+  background: var(--color);
+  color: #ffffff;
+}
+
+.clk-plus,
+.clk-cancel {
+  border: 1px solid var(--border);
+  background: rgba(35, 35, 40, 0.9);
+  color: var(--text);
+}
+
+.clk-plus {
+  padding: 0 20px;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.clk-cancel {
+  color: var(--text-2);
+}
+
+.clk-round.is-focused,
+.clk-plus.is-focused,
+.clk-new.is-focused {
+  transform: scale(1.06);
+  box-shadow: var(--focus-ring);
+}
+
+.clk-quick {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.clk-presets {
+  display: flex;
+  gap: 10px;
+}
+
+.clk-preset {
+  flex: 1 1 0;
+  min-width: 0;
+  height: 54px;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: rgba(35, 35, 40, 0.8);
+  color: #dedee3;
+  font-family: inherit;
+  font-size: 19px;
+  font-weight: 600;
+  white-space: nowrap;
+  transition:
+    border-color 0.15s var(--ease),
+    color 0.15s var(--ease),
+    box-shadow 0.2s var(--ease);
+}
+
+.clk-preset.is-focused {
+  border-color: var(--ring);
+  color: var(--text);
+  box-shadow: 0 0 0 2px var(--ring);
+}
+
+/* Alarms. */
+
+.clk-new {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 46px;
+  padding: 0 20px 0 14px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #ffffff;
+  font-family: inherit;
+  font-size: 18px;
+  font-weight: 600;
+  transition:
+    transform 0.2s var(--ease),
+    box-shadow 0.2s var(--ease);
+}
+
+.clk-alarm {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  height: 116px;
+  box-sizing: border-box;
+  padding: 0 22px 0 0;
+  border-radius: 20px;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.clk-alarm.is-on {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.clk-alarm-main {
+  flex: 1 1 auto;
+  min-width: 0;
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  padding: 0 22px;
+  border: 0;
+  border-radius: 20px;
+  background: transparent;
+  color: inherit;
+  font-family: inherit;
+  text-align: left;
+  transition:
+    background-color 0.2s var(--ease),
+    box-shadow 0.2s var(--ease);
+}
+
+.clk-alarm-main.is-focused {
+  background: rgba(255, 255, 255, 0.06);
+  box-shadow: 0 0 0 3px var(--ring);
+}
+
+.clk-alarm-time {
+  font-size: 60px;
+  line-height: 1.05;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  color: #5c5c66;
+}
+
+.clk-alarm.is-on .clk-alarm-time {
+  color: var(--text);
+}
+
+.clk-alarm-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  font-size: 17px;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.clk-alarm-label {
+  font-weight: 600;
+  color: #6c6c76;
+}
+
+.clk-alarm.is-on .clk-alarm-label {
+  color: #ffd36b;
+}
+
+.clk-dots {
+  display: flex;
+  gap: 6px;
+}
+
+.clk-dot {
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: #3a3a42;
+}
+
+.clk-dot.is-on {
+  background: rgba(255, 255, 255, 0.06);
+  color: #6c6c76;
+}
+
+.clk-alarm.is-on .clk-dot.is-on {
+  background: rgba(76, 141, 255, 0.25);
+  color: #9cc0ff;
+}
+
+.clk-switch {
+  position: relative;
+  flex: 0 0 76px;
+  width: 76px;
+  height: 42px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: #3a3a42;
+  cursor: pointer;
+  transition:
+    background-color 0.2s var(--ease),
+    box-shadow 0.2s var(--ease);
+}
+
+.clk-switch.is-on {
+  background: var(--accent);
+}
+
+.clk-switch.is-focused {
+  box-shadow: var(--focus-ring);
+}
+
+.clk-knob {
+  position: absolute;
+  top: 5px;
+  left: 5px;
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  background: #ffffff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+  transition: left 0.2s var(--ease);
+}
+
+.clk-switch.is-on .clk-knob {
+  left: 39px;
+}
+
+.clk-tip {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 18px 20px;
+  border-radius: 20px;
+  background: rgba(1, 73, 178, 0.14);
+  border: 1px solid rgba(76, 141, 255, 0.3);
+}
+
+.clk-tip-badge {
+  width: 48px;
+  height: 48px;
+  box-shadow: none;
+}
+
+.clk-tip-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.clk-tip-title {
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.clk-tip-sub {
+  font-size: 16px;
+  color: var(--muted);
+}
+
+/* The alarm and timer sheets. */
+
+.clk-sheet {
+  gap: 26px;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+
+.clk-ed-time {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.clk-ed-colon {
+  font-size: 72px;
+  font-weight: 700;
+  color: var(--muted);
+  padding-bottom: 28px;
+}
+
+.clk-ed-hint {
+  margin-left: 12px;
+  padding-bottom: 28px;
+  font-size: 17px;
+  color: var(--muted);
+}
+
+.clk-spin {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 150px;
+  padding: 6px 0 10px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  cursor: ns-resize;
+  transition:
+    border-color 0.15s var(--ease),
+    box-shadow 0.2s var(--ease);
+}
+
+.clk-spin.is-focused {
+  border-color: var(--ring);
+  box-shadow: 0 0 0 2px var(--ring);
+}
+
+.clk-spin-arrow {
+  display: flex;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.clk-spin-arrow:first-child svg {
+  transform: rotate(180deg);
+}
+
+.clk-spin.is-focused .clk-spin-arrow {
+  color: var(--text);
+}
+
+.clk-spin-value {
+  font-size: 72px;
+  line-height: 1.05;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.clk-spin-label {
+  margin-top: 2px;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #8a8a94;
+}
+
+.clk-ed-row {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.clk-ed-row .setting-input {
+  flex-basis: 360px;
+  width: 360px;
+}
+
+.clk-ed-days {
+  display: flex;
+  gap: 12px;
+}
+
+.clk-day {
+  width: 64px;
+  height: 64px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--muted);
+  font-family: inherit;
+  font-size: 20px;
+  font-weight: 700;
+  transition:
+    background-color 0.2s var(--ease),
+    box-shadow 0.2s var(--ease);
+}
+
+.clk-day.is-on {
+  background: rgba(76, 141, 255, 0.25);
+  border-color: rgba(76, 141, 255, 0.6);
+  color: #9cc0ff;
+}
+
+.clk-day.is-focused {
+  box-shadow: var(--focus-ring);
+}
+
+.clk-ed-pills {
+  display: flex;
+  gap: 12px;
+  margin: -8px;
+  padding: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.clk-ed-pills .pill {
+  flex: none;
+}
+
+.clk-ed-actions {
+  display: flex;
+  gap: 16px;
+  margin-top: auto;
+}
+
+/* ---------- Home: the timer and alarm chips under the clock ---------- */
+
+.clock-chips {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  display: flex;
+  gap: 10px;
+}
+
+.clock-chips .cal-next {
+  position: static;
+}
+
+.clk-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  height: 38px;
+  padding: 0 14px 0 6px;
+  box-sizing: border-box;
+  border-radius: var(--r-pill);
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  white-space: nowrap;
+  backdrop-filter: blur(16px);
+  cursor: pointer;
+  transition:
+    transform 0.2s var(--ease),
+    box-shadow 0.2s var(--ease);
+}
+
+.clk-chip.is-focused {
+  transform: scale(1.05);
+  box-shadow: var(--focus-ring);
+}
+
+.clk-chip-timer {
+  background: var(--wash);
+  border: 1px solid var(--edge);
+  color: #ffe2cf;
+}
+
+.clk-chip-ring {
+  transform: rotate(-90deg);
+}
+
+.clk-chip-track,
+.clk-chip-fill {
+  fill: none;
+  stroke-width: 3;
+}
+
+.clk-chip-track {
+  stroke: rgba(255, 255, 255, 0.18);
+}
+
+.clk-chip-fill {
+  stroke: var(--color);
+  stroke-linecap: round;
+}
+
+.clk-chip-left {
+  font-variant-numeric: tabular-nums;
+  color: #ffffff;
+}
+
+.clk-chip-alarm {
+  gap: 8px;
+  padding: 0 14px 0 10px;
+  background: rgba(35, 35, 40, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  color: #ffd36b;
+}
+
+/* ---------- The assistant's timer and alarm cards ---------- */
+
+.asst-clock {
+  font-family: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  border-color: color-mix(in srgb, var(--color, #ffd36b) 55%, transparent);
+  transition:
+    transform 0.2s var(--ease),
+    box-shadow 0.2s var(--ease);
+}
+
+.asst-clock.is-alarm {
+  border-color: rgba(255, 211, 107, 0.45);
+}
+
+.asst-clock.is-focused {
+  transform: scale(1.04);
+  box-shadow: var(--focus-ring);
+}
+
+.asst-clock-ring {
+  position: relative;
+  flex: none;
+  width: 56px;
+  height: 56px;
+}
+
+.asst-clock-ring svg {
+  transform: rotate(-90deg);
+}
+
+.asst-clock-track,
+.asst-clock-fill {
+  fill: none;
+  stroke-width: 5;
+}
+
+.asst-clock-track {
+  stroke: rgba(255, 255, 255, 0.12);
+}
+
+.asst-clock-fill {
+  stroke: var(--color);
+  stroke-linecap: round;
+  transition: stroke-dashoffset 1s linear;
+}
+
+.asst-clock-emoji {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+}
+
+.asst-clock-left {
+  font-variant-numeric: tabular-nums;
+}
+
+.asst-clock-bell {
+  flex: none;
+  width: 56px;
+  height: 56px;
+  border-radius: 999px;
+  background: rgba(255, 211, 107, 0.16);
+  color: #ffd36b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ---------- Ringing (canvas: Overlay · timer finished / alarm ringing) ---------- */
+
+.clk-ring-screen {
+  position: absolute;
+  inset: 0;
+  z-index: 60;
+  overflow: hidden;
+  color: var(--text);
+  animation: fadeIn 0.3s var(--ease) both;
+}
+
+/* Whatever was on screen stays behind it, dimmed. */
+.clk-ring-screen.is-timer {
+  backdrop-filter: blur(14px) saturate(0.8);
+}
+
+.clk-rs-dim {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 60% 70% at 50% 45%, rgba(232, 89, 12, 0.35) 0%, rgba(8, 8, 14, 0.9) 70%);
+}
+
+.clk-rs-dawn {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, #070a18 0%, #101a3a 45%, #3a2a4a 75%, #a8553a 100%);
+}
+
+.clk-rs-sun {
+  position: absolute;
+  left: 50%;
+  bottom: -520px;
+  width: 1400px;
+  height: 900px;
+  margin-left: -700px;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(255, 190, 110, 0.75) 0%, rgba(255, 140, 70, 0.35) 40%, rgba(255, 140, 70, 0) 70%);
+  animation: clkSun 6s ease-in-out infinite;
+}
+
+@keyframes clkSun {
+  0%,
+  100% {
+    opacity: 0.7;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.clk-rs-body {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 26px;
+}
+
+.clk-rs-disc-wrap {
+  --ripple: rgba(255, 140, 70, 0.8);
+  position: relative;
+  width: 300px;
+  height: 300px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: clkPop 0.6s var(--ease) both;
+}
+
+.is-alarm .clk-rs-disc-wrap {
+  --ripple: rgba(255, 200, 120, 0.75);
+}
+
+@keyframes clkPop {
+  0% {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.03);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.clk-rs-ripple {
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  border: 3px solid var(--ripple);
+  animation: clkRipple 2s cubic-bezier(0.2, 0.6, 0.4, 1) infinite;
+}
+
+.clk-rs-ripple:nth-child(2) {
+  animation-delay: 0.66s;
+}
+
+.clk-rs-ripple:nth-child(3) {
+  animation-delay: 1.33s;
+}
+
+@keyframes clkRipple {
+  from {
+    transform: scale(1);
+    opacity: 0.6;
+  }
+  to {
+    transform: scale(2.1);
+    opacity: 0;
+  }
+}
+
+.clk-rs-disc {
+  position: relative;
+  width: 300px;
+  height: 300px;
+  border-radius: 999px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  background: radial-gradient(circle at 35% 30%, #ff8a4a 0%, #e8590c 55%, #a33a06 100%);
+  box-shadow:
+    0 0 120px rgba(232, 89, 12, 0.6),
+    inset 0 0 0 10px rgba(255, 255, 255, 0.14);
+  animation: clkThrob 1s ease-in-out infinite;
+}
+
+.is-alarm .clk-rs-disc {
+  background: radial-gradient(circle at 35% 30%, #ffc477 0%, #f08c3c 55%, #b5532a 100%);
+  box-shadow:
+    0 0 120px rgba(255, 170, 90, 0.55),
+    inset 0 0 0 10px rgba(255, 255, 255, 0.14);
+}
+
+@keyframes clkThrob {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+.clk-rs-emoji {
+  font-size: 96px;
+  line-height: 1;
+}
+
+.clk-rs-over {
+  font-size: 34px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.clk-rs-text {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-align: center;
+}
+
+.clk-rs-kicker {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: #ffa36b;
+}
+
+.is-alarm .clk-rs-kicker {
+  color: #ffd36b;
+}
+
+.clk-rs-title {
+  font-size: 120px;
+  line-height: 1;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+
+.is-alarm .clk-rs-title {
+  font-size: 200px;
+}
+
+.clk-rs-sub {
+  font-size: 26px;
+  font-weight: 500;
+  color: #dedee3;
+}
+
+.clk-rs-chips {
+  display: flex;
+  gap: 14px;
+}
+
+.clk-rs-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  height: 48px;
+  padding: 0 20px 0 14px;
+  border-radius: 999px;
+  background: rgba(12, 12, 20, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  font-size: 18px;
+  color: #e0e0e4;
+  backdrop-filter: blur(16px);
+}
+
+.clk-rs-chip-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  background: var(--dot);
+}
+
+.clk-rs-actions {
+  display: flex;
+  gap: 18px;
+  margin-top: 8px;
+}
+
+.clk-rs-key {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  height: 76px;
+  padding: 0 34px 0 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(20, 20, 28, 0.7);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 24px;
+  font-weight: 600;
+}
+
+.clk-rs-key.is-primary {
+  border: 0;
+  background: #f2f2f3;
+  color: #0c0c14;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.45);
+}
+
+.clk-rs-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  color: #ffffff;
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.clk-rs-note {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 4px;
+  font-size: 18px;
+  color: var(--muted);
+}

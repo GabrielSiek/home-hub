@@ -1,0 +1,12 @@
+target/
+node_modules/
+dist/
+*.log
+*.tsbuildinfo
+.env
+
+# Real household data never gets committed: import bundles, copied data folders, and fixtures
+# holding device keys or tokens (smarthome-local.json holds the Tuya local keys).
+*.bundle.zip
+/data/
+**/fixtures/private/

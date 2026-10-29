@@ -74,8 +74,18 @@ Step 'Registering it with GitHub, as a Windows service (NETWORK SERVICE)'
 Push-Location $RunnerDir
 try {
   .\config.cmd --unattended --url $Repo --token $Token --name $Name --labels home-hub --runasservice --replace
-  if ($LASTEXITCODE -ne 0) { throw 'config.cmd failed (see above).' }
 } finally { Pop-Location }
+$runner = Get-CimInstance Win32_Service -Filter "Name LIKE 'actions.runner.%'" | Select-Object -First 1
+if (-not $runner) { throw 'config.cmd failed (see above).' }
+
+# On a non-English Windows, config.cmd saves the account by its translated name (e.g.
+# AUTORIDADE NT\SERVIÇO DE REDE) and the service then won't start (error 1068): set it by the
+# name every Windows understands, then start it.
+Step "Starting $($runner.Name)"
+$r = Invoke-CimMethod -InputObject $runner -MethodName Change -Arguments @{ StartName = 'NT AUTHORITY\NetworkService'; StartPassword = '' }
+if ($r.ReturnValue -ne 0) { throw "Couldn't set the runner's account (error $($r.ReturnValue))." }
+if ((Get-Service $runner.Name).Status -ne 'Running') { Start-Service $runner.Name }
+Write-Host '  Running.'
 
 Write-Host ''
 Write-Host 'Done. Each push to main that touches the server or the companion now deploys here.' -ForegroundColor Green

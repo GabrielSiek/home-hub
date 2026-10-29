@@ -47,14 +47,15 @@ function Copy-Parts($src, $dst) {
   }
 }
 
-# Up, with its data loaded (/ca.crt) and the companion's page served (/).
+# Up, with its data loaded (/ca.crt) and the companion's page served (/). 127.0.0.1, not
+# localhost: the server listens on IPv4 only, and PowerShell tries ::1 first and stalls.
 function Test-Server {
   for ($i = 0; $i -lt 30; $i++) {
     Start-Sleep -Seconds 2
     if ((Get-Service $service).Status -ne 'Running') { continue }
     try {
-      $ca = Invoke-WebRequest 'http://localhost:47960/ca.crt' -UseBasicParsing -TimeoutSec 3
-      $page = Invoke-WebRequest 'http://localhost:47960/' -UseBasicParsing -TimeoutSec 3
+      $ca = Invoke-WebRequest 'http://127.0.0.1:47960/ca.crt' -UseBasicParsing -TimeoutSec 3
+      $page = Invoke-WebRequest 'http://127.0.0.1:47960/' -UseBasicParsing -TimeoutSec 3
       if ($ca.StatusCode -eq 200 -and $page.StatusCode -eq 200) { return $true }
     } catch {}
   }

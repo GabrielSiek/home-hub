@@ -91,22 +91,41 @@ export function Toggle({
   );
 }
 
+/** Renders in a row that each move the box before a read after a render stops taking it. */
+const BOX_CHAIN = 4;
+
 /** The box an element has: read after each render, as the window changes (Safari 12 has no
  *  ResizeObserver) and once the font is in, which moves the rows around it. For layouts sized
- *  from the room they get, where old Safari's grids size rows from their content instead. */
+ *  from the room they get, where old Safari's grids size rows from their content instead.
+ *  There the box moves with the rows sized from it, and can keep moving: a render that changes
+ *  it again and again would never end (React gives up at 50, error #185), so a run of reads
+ *  after renders stops after a few. The window, the font and the timer always read. */
 export function useBox<T extends HTMLElement>() {
   const ref = useRef<T>(null);
   const [box, setBox] = useState<{ w: number; h: number } | null>(null);
-  const read = () => {
+  const held = useRef(box);
+  const chain = useRef(0);
+  const read = (rendered: boolean) => {
     const el = ref.current;
-    if (el) setBox((b) => (b && b.w === el.clientWidth && b.h === el.clientHeight ? b : { w: el.clientWidth, h: el.clientHeight }));
+    if (!el) return;
+    const w = el.clientWidth;
+    const h = el.clientHeight;
+    const b = held.current;
+    if (b && b.w === w && b.h === h) {
+      if (rendered) chain.current = 0;
+      return;
+    }
+    if (!rendered) chain.current = 0;
+    else if (++chain.current > BOX_CHAIN) return;
+    held.current = { w, h };
+    setBox(held.current);
   };
   const latest = useRef(read);
   latest.current = read;
-  useLayoutEffect(read);
+  useLayoutEffect(() => read(true));
   useLayoutEffect(() => {
     let alive = true;
-    const again = () => alive && latest.current();
+    const again = () => alive && latest.current(false);
     // iOS reports the new size a moment after it turns.
     const later = () => window.setTimeout(again, 300);
     window.addEventListener('resize', again);

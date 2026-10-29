@@ -30,14 +30,20 @@ function Stop-Server {
   (Get-Service $service).WaitForStatus('Stopped', [TimeSpan]::FromSeconds(30))
 }
 
-# Copies retry for a few seconds: Windows can hold the exe for a moment after the service stops.
+# The companion is mirrored (robocopy /MIR: the files an older build had go), the exe copied. Both
+# retry for a few seconds: Windows can hold the exe for a moment after the service stops.
 function Copy-Parts($src, $dst) {
   foreach ($p in $parts) {
+    $from = Join-Path $src $p
     $target = Join-Path $dst $p
+    if (Test-Path -LiteralPath $from -PathType Container) {
+      robocopy $from $target /MIR /R:10 /W:1 /NFL /NDL /NJH /NJS /NP | Out-Null
+      if ($LASTEXITCODE -ge 8) { throw "robocopy $p failed (exit $LASTEXITCODE)" }
+      continue
+    }
     for ($try = 1; ; $try++) {
       try {
-        if (Test-Path -LiteralPath $target) { Remove-Item -LiteralPath $target -Recurse -Force }
-        Copy-Item -LiteralPath (Join-Path $src $p) $target -Recurse -Force
+        Copy-Item -LiteralPath $from $target -Force
         break
       } catch {
         if ($try -ge 10) { throw }

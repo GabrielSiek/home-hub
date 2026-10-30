@@ -4,6 +4,7 @@ import { Assistant } from './components/Assistant';
 import { CalendarReminder } from './components/CalendarReminder';
 import { ClockRing } from './components/ClockRing';
 import { PhotoPicker } from './components/PhotoPicker';
+import { Player } from './components/Player';
 import { Screensaver } from './components/Screensaver';
 import { RetroCurtain } from './components/RetroCurtain';
 import { ServerBanner } from './components/ServerBanner';
@@ -195,6 +196,7 @@ export default function App() {
   useEffect(syncServer, []);
   // A game the user asked to be reminded of starts in 15 minutes.
   useEffect(() => on<string>('sports-reminder', toast), []);
+  useEffect(() => on<string>('player-error', toast), []);
   // Y on a live channel's overlay: the match on air, in the match center.
   useEffect(() => on<SportsMatch>('sports-open-game', (game) => nav.push({ name: 'sportsgame', game })), []);
   useIdlePlayer();
@@ -216,6 +218,11 @@ export default function App() {
   const assistantOpen = useAssistant((s) => s.open);
   // Playing from a service's screens: the curtain stands in for the "app is open" card.
   const watching = useWatch((s) => s.current);
+  // The launcher's own player is showing: mpv's picture comes through the window from here on.
+  const playing = mode === 'player' && watching?.phase === 'playing';
+  useEffect(() => {
+    document.documentElement.classList.toggle('player-on', playing);
+  }, [playing]);
   const pick = usePhotos((s) => s.pick);
   const saver = useScreensaver((s) => s.on);
 
@@ -237,7 +244,8 @@ export default function App() {
         {/* Outside the keyed host: stays put while the screens below it change. The full-screen
             player and the Twitch screens have a header of their own. */}
         {!OWN_HEADER.has(top.name) && <TopBar active={section} />}
-        {watching && <PlayCurtain watch={watching} />}
+        {watching && !playing && <PlayCurtain watch={watching} />}
+        {playing && <Player />}
         {mode === 'game' && <RetroCurtain />}
         {mode === 'streaming' && !watching && (
           <StreamingOverlay

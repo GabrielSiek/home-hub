@@ -14,6 +14,7 @@ import {
   type WatchProgress,
 } from './api';
 import { episodeLabel, type Brand, type RowSpec } from './brands';
+import { LIBRARY, libraryRow } from './library';
 import { toast } from './toast';
 
 /**
@@ -50,6 +51,11 @@ export const cachedRow = (service: string, key: string) => rows.get(`${service}:
 
 /** One row of a service's home; a row asking for movies and series mixes them. */
 export async function loadRow(service: string, spec: RowSpec): Promise<Title[]> {
+  if (service === LIBRARY) {
+    const out = await libraryRow(spec.key);
+    rows.set(`${service}:${spec.key}`, out);
+    return out;
+  }
   const queries = Array.isArray(spec.query) ? spec.query : [spec.query];
   const lists = await Promise.all(queries.map((q) => api.discover(service, q)));
   const seen = new Set<string>();

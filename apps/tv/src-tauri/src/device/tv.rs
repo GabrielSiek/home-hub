@@ -49,7 +49,8 @@ pub fn now(app: &AppHandle) -> TvNow {
     let running = st.running.lock().unwrap().as_ref().map(|r| r.app_id.clone());
     let app_name = running.as_ref().and_then(|id| {
         let cfg = st.config.read().unwrap();
-        cfg.apps.iter().find(|a| &a.id == id).map(|a| a.name.clone())
+        let name = cfg.apps.iter().find(|a| &a.id == id).map(|a| a.name.clone());
+        name.or_else(|| (id == crate::watch::library::SERVICE).then(|| "Library".to_string()))
     });
     let (volume, muted) = match system::volume(|_| {}) {
         Ok(v) => (Some(v.level), v.muted),
@@ -140,6 +141,10 @@ pub fn key(app: &AppHandle, key: Key) -> Result<()> {
         Key::ChannelUp => Remote::Extra(Extra::Rb),
         Key::ChannelDown => Remote::Extra(Extra::Lb),
         Key::PlayPause if mode == Mode::Streaming => Remote::Extra(Extra::X),
+        Key::PlayPause if mode == Mode::Player => {
+            crate::mpv::control(app, crate::mpv::Control::Toggle);
+            return Ok(());
+        }
         Key::PlayPause => return system::media_key(system::MediaKey::PlayPause),
     };
     if input::remote(r) {

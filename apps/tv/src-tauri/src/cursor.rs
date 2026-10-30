@@ -85,7 +85,8 @@ pub fn spawn(app: AppHandle) {
             std::thread::sleep(POLL);
             let state = app.state::<AppState>();
             let enabled = state.config.read().unwrap().settings.hide_cursor;
-            let active = enabled && state.mode() == Mode::Launcher && win::is_foreground(hwnd);
+            // The player's window may hold the foreground; the launcher is in front of it anyway.
+            let active = enabled && (state.mode() == Mode::Player || (state.mode() == Mode::Launcher && win::is_foreground(hwnd)));
             match tracker.update(active, win::cursor_pos(), Instant::now()) {
                 Some(Step::Park) => {
                     win::park(hwnd);

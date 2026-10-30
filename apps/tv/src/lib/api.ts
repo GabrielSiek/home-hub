@@ -48,7 +48,7 @@ export type Action =
   | 'Options'
   /** X: opens the assistant. */
   | 'Assistant';
-export type Mode = 'launcher' | 'streaming' | 'game';
+export type Mode = 'launcher' | 'streaming' | 'game' | 'player';
 
 export interface AppEntry {
   id: string;
@@ -258,8 +258,9 @@ export interface TitleWatch {
 
 /** Playing from a service's screens: "watch" events from the backend. */
 export interface WatchEvent {
-  /** opening: curtain up; playing: the browser shows; reveal: shown before the video started; closed: back. */
-  phase: 'opening' | 'playing' | 'reveal' | 'closed';
+  /** opening: curtain up; preparing: and the player is being fetched; playing: the browser or the
+   * launcher's player shows; reveal: shown before the video started; closed: back. */
+  phase: 'opening' | 'preparing' | 'playing' | 'reveal' | 'closed';
   service: string;
   media_type: Title['media_type'];
   id: number;
@@ -268,6 +269,82 @@ export interface WatchEvent {
   season: number;
   episode: number;
 }
+
+/** How a title stands in the house's library. */
+export type LibraryState = 'absent' | 'wanted' | 'downloading' | 'ready';
+
+export interface LibraryTitle {
+  /** Radarr or Sonarr is set up for this kind of title. */
+  configured: boolean;
+  state: LibraryState;
+  /** Something can be played, even with more on its way. */
+  ready: boolean;
+  progress: number;
+  speed: number;
+  eta_s: number | null;
+  note: string | null;
+  /** A series' episodes, by "s1e3". */
+  episodes: Record<string, { state: LibraryState; progress: number }>;
+}
+
+export interface LibraryListing {
+  configured: boolean;
+  titles: (Title & { added: string })[];
+  free_bytes: number | null;
+  problems: string[];
+}
+
+export interface Download {
+  title: string;
+  media_type: Title['media_type'];
+  id: number;
+  season: number;
+  episode: number;
+  progress: number;
+  speed: number;
+  eta_s: number | null;
+  paused: boolean;
+  hash: string | null;
+  note: string | null;
+}
+
+export interface Downloads {
+  items: Download[];
+  speed: number;
+  problems: string[];
+}
+
+export interface PlayerTrack {
+  id: number;
+  name: string;
+  on: boolean;
+}
+
+/** What the launcher's own player reports. */
+export interface PlayerState {
+  title: string;
+  subtitle: string | null;
+  position: number;
+  duration: number;
+  paused: boolean;
+  buffering: boolean;
+  /** Seconds fetched ahead of the position. */
+  cached: number;
+  volume: number;
+  ended: boolean;
+  audio: PlayerTrack[];
+  subtitles: PlayerTrack[];
+  /** The next episode the library has. */
+  next: string | null;
+}
+
+export type PlayerControl =
+  | { kind: 'toggle' | 'next' | 'close' }
+  | { kind: 'seek'; by: number }
+  | { kind: 'seek_to'; at: number }
+  | { kind: 'volume'; by: number }
+  | { kind: 'audio'; id: number }
+  | { kind: 'subtitle'; id: number | null };
 
 /** The service profile Play opens, for a service's header. */
 export interface WatchProfile {
@@ -324,6 +401,18 @@ export interface Settings {
   calendar_reminders: boolean;
   /** Where the drive to an event's place starts. Empty: no travel times. */
   home_address: string;
+  /** The home server has a library. */
+  library_on: boolean;
+  /** The house's library: kept by the server, its keys masked. */
+  radarr_url: string;
+  radarr_api_key: string;
+  sonarr_url: string;
+  sonarr_api_key: string;
+  qbittorrent_url: string;
+  qbittorrent_username: string;
+  qbittorrent_password: string;
+  /** The quality profile new titles get, by name. */
+  library_quality: string;
 }
 
 export interface PhotoAlbum {
@@ -2225,6 +2314,19 @@ export const api = {
   /** Plays a movie, or an episode (none given: wherever the user is), on the service's website. */
   watchPlay: (service: string, mediaType: Title['media_type'], id: number, season?: number | null, episode?: number | null) =>
     insideApp(() => invoke<void>('watch_play', { service, mediaType, id, season: season ?? null, episode: episode ?? null })),
+  /** What the house's library holds. */
+  libraryGet: () =>
+    call<LibraryListing>('library_get', undefined, () => ({ configured: false, titles: [], free_bytes: null, problems: [] })),
+  libraryTitle: (mediaType: Title['media_type'], id: number) => insideApp(() => invoke<LibraryTitle>('library_title', { mediaType, id })),
+  /** Asks for a movie, or for a series' season or episode (none: all of it). */
+  libraryRequest: (mediaType: Title['media_type'], id: number, season?: number | null, episode?: number | null) =>
+    insideApp(() => invoke<LibraryTitle>('library_request', { mediaType, id, season: season ?? null, episode: episode ?? null })),
+  /** Takes a title out of the library, its files too. */
+  libraryRemove: (mediaType: Title['media_type'], id: number) => insideApp(() => invoke<void>('library_remove', { mediaType, id })),
+  libraryDownloads: () => call<Downloads>('library_downloads', undefined, () => ({ items: [], speed: 0, problems: [] })),
+  libraryDownloadControl: (hash: string, action: 'pause' | 'resume') => call<void>('library_download_control', { hash, action }),
+  playerControl: (control: PlayerControl) => call<void>('player_control', { control }),
+  playerState: () => invoke<PlayerState>('player_state'),
   /** Reads, in the background, what was watched on these services outside the launcher. */
   watchSync: (services: string[]) => call<void>('watch_sync', { services }),
   /** The service profile Play opens. */
@@ -2294,6 +2396,15 @@ export const api = {
       hide_cursor: true,
       calendar_reminders: true,
       home_address: '',
+      library_on: false,
+      radarr_url: '',
+      radarr_api_key: '',
+      sonarr_url: '',
+      sonarr_api_key: '',
+      qbittorrent_url: '',
+      qbittorrent_username: '',
+      qbittorrent_password: '',
+      library_quality: '',
     })),
   saveSettings: (settings: Settings) => call<void>('save_settings', { settings }),
   reloadConfig: () => call<void>('reload_config'),

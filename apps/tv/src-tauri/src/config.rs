@@ -142,6 +142,17 @@ pub struct Settings {
     pub calendar_reminders: bool,
     /// Where the drive to an event's place starts. Empty: no travel times.
     pub home_address: String,
+    /// The home server has a library (its keys stay there).
+    pub library_on: bool,
+    /// The house's library, in Settings only: kept by the server, its keys masked.
+    pub radarr_url: String,
+    pub radarr_api_key: String,
+    pub sonarr_url: String,
+    pub sonarr_api_key: String,
+    pub qbittorrent_url: String,
+    pub qbittorrent_username: String,
+    pub qbittorrent_password: String,
+    pub library_quality: String,
 }
 
 /// The assistant's spoken replies.
@@ -190,6 +201,15 @@ impl Default for Settings {
             hide_cursor: true,
             calendar_reminders: true,
             home_address: String::new(),
+            library_on: false,
+            radarr_url: String::new(),
+            radarr_api_key: String::new(),
+            sonarr_url: String::new(),
+            sonarr_api_key: String::new(),
+            qbittorrent_url: String::new(),
+            qbittorrent_username: String::new(),
+            qbittorrent_password: String::new(),
+            library_quality: String::new(),
         }
     }
 }
@@ -271,6 +291,26 @@ impl Config {
     pub fn save_settings(dir: &Path, settings: &Settings) -> Result<()> {
         fs::write(dir.join("settings.toml"), toml::to_string_pretty(settings)?)?;
         Ok(())
+    }
+}
+
+/// The house's library as a Home tile. It isn't in apps.toml: it's there when the server has one.
+pub fn library_app() -> AppEntry {
+    AppEntry {
+        id: crate::watch::library::SERVICE.to_string(),
+        name: "Library".to_string(),
+        kind: AppKind::Web,
+        url: None,
+        search_url: None,
+        exec: None,
+        args: Vec::new(),
+        icon: None,
+        color: Some("#6d5dfc".to_string()),
+        user_agent: None,
+        nav: Nav::Tv,
+        tmdb_providers: Vec::new(),
+        emulate: None,
+        profile: None,
     }
 }
 

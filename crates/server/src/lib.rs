@@ -16,6 +16,7 @@ pub mod handlers;
 pub mod http;
 pub mod hub;
 pub mod import;
+pub mod library;
 pub mod oauth;
 pub mod router;
 #[cfg(windows)]

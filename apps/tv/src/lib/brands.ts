@@ -3,6 +3,7 @@ import type { CSSProperties } from 'react';
 import disneyLogo from '../assets/brands/disney.png';
 import globoplayLogo from '../assets/brands/globoplay.png';
 import hbomaxLogo from '../assets/brands/hbomax.png';
+import libraryLogo from '../assets/brands/library.svg';
 import netflixLogo from '../assets/brands/netflix.png';
 import primeLogo from '../assets/brands/prime.png';
 import type { AppEntry, DiscoverQuery, RecShelf } from './api';
@@ -12,7 +13,7 @@ import type { AppEntry, DiscoverQuery, RecShelf } from './api';
  * shared screens plus one row per service). Keyed by the app id in apps.toml.
  */
 
-export type TabKind = 'home' | 'tv' | 'movie' | 'list' | 'soap';
+export type TabKind = 'home' | 'tv' | 'movie' | 'list' | 'soap' | 'downloads';
 
 interface Words {
   search: string;
@@ -350,6 +351,24 @@ export const BRANDS: Record<string, Brand> = {
       ['list', 'Minha lista'],
     ],
   }),
+  // The house's own: what the home server keeps (Radarr, Sonarr, qBittorrent). Its rows are what's
+  // there, and its search is the whole catalog, since it can get anything.
+  library: brand({
+    id: 'library',
+    name: 'Library',
+    logo: libraryLogo,
+    logoH: 34,
+    accent: '#6D5DFC',
+    on: '#ffffff',
+    bg: '#0c0c14',
+    tabs: [
+      ['home', 'Home'],
+      ['tv', 'Series'],
+      ['movie', 'Movies'],
+      ['list', 'My list'],
+      ['downloads', 'Downloads'],
+    ],
+  }),
 };
 
 /** The launcher's own details screen ("Where to watch"), in the launcher's colors. */
@@ -447,6 +466,14 @@ const recent = (years: number, votes = 50) => ({ since_years: years, min_votes: 
 /** The catalog rows of a tab, top to bottom. Continue watching and My list come from elsewhere. */
 export function rowsFor(b: Brand, tab: TabKind): RowSpec[] {
   const w = b.words;
+  if (b.id === 'library') {
+    const series = { key: 'series', title: w.series, query: [] };
+    const movies = { key: 'movies', title: w.movies, query: [] };
+    if (tab === 'tv') return [series];
+    if (tab === 'movie') return [movies];
+    return tab === 'home' ? [{ key: 'recent', title: 'Recently added', query: [] }, series, movies] : [];
+  }
+  if (tab === 'downloads') return [];
   const pt = w === PT;
   const genreRows = (list: Genre[], make: (g: number) => DiscoverQuery, prefix: string): RowSpec[] =>
     list.map((g) => ({ key: `${prefix}-${g.id}`, title: pt ? g.pt : g.en, query: make(g.id) }));

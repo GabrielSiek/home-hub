@@ -34,7 +34,12 @@ pub struct Config {
     pub trust_loopback: bool,
     /// How long a TV PC that dropped its socket still shows as on, in case it's straight back.
     pub offline_grace: Duration,
+    /// TMDB's address (tests point it at a fake one).
+    pub tmdb_url: String,
 }
+
+/// TMDB's API: the library asks it for a series' TVDB id, which is how Sonarr finds a series.
+const TMDB_URL: &str = "https://api.themoviedb.org/3";
 
 /// The fields `server.toml` may set.
 #[derive(Debug, Default, Deserialize)]
@@ -83,6 +88,7 @@ impl Config {
             force_lan: false,
             trust_loopback: false,
             offline_grace: Duration::from_millis(50),
+            tmdb_url: TMDB_URL.into(),
         }
     }
 
@@ -99,6 +105,7 @@ impl Config {
             force_lan: false,
             trust_loopback: true,
             offline_grace: Duration::from_secs(5),
+            tmdb_url: TMDB_URL.into(),
         }
     }
 

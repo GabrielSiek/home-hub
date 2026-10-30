@@ -11,6 +11,7 @@ use crate::admin::UnlockError;
 use crate::calendar;
 use crate::clock;
 use crate::hub;
+use crate::library;
 use crate::smarthome::{self, rooms, scenes};
 use crate::ctx::Ctx;
 use crate::router::{Caller, Failure};
@@ -220,6 +221,19 @@ pub async fn run(ctx: &Ctx, caller: &Caller, cmd: &str, a: Value) -> Answer {
                 .decode(arg::<String>(&a, "wav")?)
                 .map_err(|_| Failure::Failed("Not a recording".into()))?;
             json(crate::assistant::transcribe::transcribe_wav(ctx, wav).await?)
+        }
+
+        // ---------- The house's library ----------
+        "library_get" => json(library::list(ctx).await),
+        "library_title" => json(library::title(ctx, &arg::<String>(&a, "mediaType")?, arg(&a, "id")?).await?),
+        "library_request" => {
+            json(library::request(ctx, &arg::<String>(&a, "mediaType")?, arg(&a, "id")?, arg(&a, "season")?, arg(&a, "episode")?).await?)
+        }
+        "library_remove" => json(library::remove(ctx, &arg::<String>(&a, "mediaType")?, arg(&a, "id")?).await?),
+        "library_downloads" => json(library::downloads(ctx).await),
+        "library_download_control" => json(library::control(ctx, &arg::<String>(&a, "hash")?, arg(&a, "action")?).await?),
+        "library_stream" => {
+            json(library::stream(ctx, &arg::<String>(&a, "mediaType")?, arg(&a, "id")?, arg(&a, "season")?, arg(&a, "episode")?).await?)
         }
 
         // ---------- The companion's Hub ----------

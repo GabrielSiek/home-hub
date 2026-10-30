@@ -185,6 +185,12 @@ fn spawn_browser(app: &AppHandle, settings: &Settings, page: cdp::Page, app_id: 
     Ok(())
 }
 
+/// Starts the launcher's own player: the running app makes way, as for any other.
+pub fn spawn_player(app: &AppHandle, cmd: Command) -> Result<u32> {
+    stop_running(&app.state::<AppState>());
+    spawn_as(app, cmd, crate::watch::library::SERVICE, Mode::Player)
+}
+
 pub fn is_running(app: &AppHandle, id: &str) -> bool {
     app.state::<AppState>()
         .running
@@ -201,7 +207,11 @@ pub fn close_if(app: &AppHandle, id: &str) {
     }
 }
 
-fn spawn_tracked(app: &AppHandle, mut cmd: Command, app_id: &str) -> Result<u32> {
+fn spawn_tracked(app: &AppHandle, cmd: Command, app_id: &str) -> Result<u32> {
+    spawn_as(app, cmd, app_id, Mode::Streaming)
+}
+
+fn spawn_as(app: &AppHandle, mut cmd: Command, app_id: &str, mode: Mode) -> Result<u32> {
     let mut child = cmd.spawn()?;
     let pid = child.id();
     let (exited_tx, exited) = mpsc::channel();
@@ -210,7 +220,7 @@ fn spawn_tracked(app: &AppHandle, mut cmd: Command, app_id: &str) -> Result<u32>
         app_id: app_id.to_string(),
         exited,
     });
-    set_mode(app, Mode::Streaming);
+    set_mode(app, mode);
 
     // When the app exits by itself, come back to the launcher. A pid that was already
     // taken out of `running` was closed by us, and `close` handles the return.

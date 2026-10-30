@@ -97,7 +97,8 @@ pub async fn dispatch(app: &AppHandle, cmd: &str, a: Value) -> Answer {
 
         // ---------- What's on, apps, the catalog ----------
         "get_status" => json(c::get_status(st())),
-        "list_apps" => json(c::list_apps(st())),
+        // The library's tile opens a TV screen; a phone plays from it through its titles.
+        "list_apps" => json(c::list_apps(st()).into_iter().filter(|a| a.id != crate::watch::library::SERVICE).collect::<Vec<_>>()),
         "launch_app" => json(c::launch_app(h(), arg(&a, "id")?, arg(&a, "title")?, arg(&a, "backdrop")?).await?),
         "launch_app_at" => {
             let (id, url): (String, String) = (arg(&a, "id")?, arg(&a, "url")?);

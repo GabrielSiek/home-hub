@@ -67,6 +67,32 @@ pub fn uncover_when_game_fullscreen(app: &AppHandle, pid: u32, alive: impl Fn(&A
     uncover_when_shown(app, pid, alive, true);
 }
 
+/// How long to wait for the player's window before giving up on it.
+#[cfg(windows)]
+const PLAYER_WINDOW: std::time::Duration = std::time::Duration::from_secs(10);
+
+/// Keeps the launcher on top of the player `pid`, and gives it back the focus the player's window
+/// takes on opening: the launcher's window is the player's controls.
+#[cfg(windows)]
+pub fn stay_over(app: &AppHandle, pid: u32) {
+    use std::time::Instant;
+
+    let app = app.clone();
+    let _ = std::thread::Builder::new().name("player-window".into()).spawn(move || {
+        let until = Instant::now() + PLAYER_WINDOW;
+        while Instant::now() < until && win::browser_window(pid).is_none() {
+            std::thread::sleep(POLL);
+        }
+        if let Some(w) = app.get_webview_window("main") {
+            let _ = w.set_always_on_top(true);
+            let _ = w.set_focus();
+        }
+    });
+}
+
+#[cfg(not(windows))]
+pub fn stay_over(_app: &AppHandle, _pid: u32) {}
+
 #[cfg(windows)]
 fn uncover_when_shown(app: &AppHandle, pid: u32, alive: impl Fn(&AppHandle) -> bool + Send + 'static, focus: bool) {
     use std::time::Instant;

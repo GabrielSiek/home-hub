@@ -40,6 +40,18 @@ pub struct House {
     pub calendar_reminders: bool,
     /// Where the drive to an event's place starts. Empty: no travel times.
     pub home_address: String,
+    /// Radarr (movies) and Sonarr (series), usually on this machine. No key: not set up.
+    pub radarr_url: String,
+    pub radarr_api_key: String,
+    pub sonarr_url: String,
+    pub sonarr_api_key: String,
+    /// qBittorrent's Web UI. Radarr and Sonarr hand it their downloads; the hub reads it for speeds
+    /// and to pause them. Empty: not set up, the library still works from their queues.
+    pub qbittorrent_url: String,
+    pub qbittorrent_username: String,
+    pub qbittorrent_password: String,
+    /// The Radarr and Sonarr quality profile new titles get, by name. Not found: their first.
+    pub library_quality: String,
 }
 
 impl Default for House {
@@ -61,6 +73,14 @@ impl Default for House {
             google_client_secret: String::new(),
             calendar_reminders: true,
             home_address: String::new(),
+            radarr_url: "http://localhost:7878".into(),
+            radarr_api_key: String::new(),
+            sonarr_url: "http://localhost:8989".into(),
+            sonarr_api_key: String::new(),
+            qbittorrent_url: String::new(),
+            qbittorrent_username: String::new(),
+            qbittorrent_password: String::new(),
+            library_quality: "HD-1080p".into(),
         }
     }
 }
@@ -77,6 +97,9 @@ pub const KEYS: &[(&str, &str)] = &[
     ("twitch_client_id", "TWITCH_CLIENT_ID"),
     ("google_client_id", "GOOGLE_CLIENT_ID"),
     ("google_client_secret", "GOOGLE_CLIENT_SECRET"),
+    ("radarr_api_key", "RADARR_API_KEY"),
+    ("sonarr_api_key", "SONARR_API_KEY"),
+    ("qbittorrent_password", "QBITTORRENT_PASSWORD"),
 ];
 
 impl House {
@@ -92,6 +115,9 @@ impl House {
             "twitch_client_id" => &mut self.twitch_client_id,
             "google_client_id" => &mut self.google_client_id,
             "google_client_secret" => &mut self.google_client_secret,
+            "radarr_api_key" => &mut self.radarr_api_key,
+            "sonarr_api_key" => &mut self.sonarr_api_key,
+            "qbittorrent_password" => &mut self.qbittorrent_password,
             _ => return None,
         })
     }
@@ -136,7 +162,8 @@ impl House {
 }
 
 /// What a TV PC's media modules need (TMDB, Steam, YouTube, Spotify, Last.fm, Twitch, and the
-/// Google client its Photos and YouTube sign-ins use), unmasked: TV PCs only, never a page.
+/// Google client its Photos and YouTube sign-ins use), unmasked: TV PCs only, never a page. The
+/// library's keys stay here: a TV PC only hears whether there is a library.
 pub fn for_tvs(h: &House) -> serde_json::Value {
     serde_json::json!({
         "tmdb_api_key": h.tmdb_api_key,
@@ -151,6 +178,7 @@ pub fn for_tvs(h: &House) -> serde_json::Value {
         "google_client_id": h.google_client_id,
         "google_client_secret": h.google_client_secret,
         "assistant_location": h.assistant_location,
+        "library_on": !h.radarr_api_key.trim().is_empty() || !h.sonarr_api_key.trim().is_empty(),
     })
 }
 

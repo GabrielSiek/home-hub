@@ -207,6 +207,12 @@ impl Link {
         *self.0.online.borrow()
     }
 
+    /// The server's host and HTTP port, as last known.
+    pub fn server_http(&self) -> Option<(String, u16)> {
+        let saved = self.0.saved.get();
+        saved.address.as_deref().and_then(parse_address).or(saved.found.map(|f| (f.host, f.http)))
+    }
+
     /// The address typed in Settings, if any.
     pub fn address(&self) -> Option<String> {
         self.0.saved.read(|s| s.address.clone())

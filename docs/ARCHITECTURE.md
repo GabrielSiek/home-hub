@@ -5,7 +5,7 @@ splits into:
 
 - **The server** (`crates/server`, `tvl-server`): a systemd service on an always-on old laptop.
   It keeps the household's state and integrations, serves the companion, and **passes commands
-  between devices**. It never plays video or audio.
+  between devices**. It never plays video or audio; the library's files only pass through it.
 - **The TV app** (`apps/tv`): the desktop app on each TV PC. Its Rust side is the **agent**: it
   keeps everything tied to that PC (the pad, Edge and its streaming sign-ins, games, emulators,
   volume, microphone, voice, the alarm chime) and connects to the server.
@@ -43,6 +43,7 @@ splits into:
 | Streaming sign-ins, watch sessions, profile links | M2: progress per device | **stay on the PC** | – |
 | TMDB, recommendations, sports, live TV, Spotify, Twitch, YouTube, photos | M2 | as before, until M2 | through the router |
 | Games, emulators | – | stay on the PC | – |
+| The library (movies and series of our own) | talks to Radarr, Sonarr and qBittorrent, holds their keys, hands out the files | plays them (mpv), keeps progress | – for now |
 
 ## Devices, rooms and following
 
@@ -120,6 +121,40 @@ had). Each entry has:
 | `mode`, `tv`, `watch`, `watch-sync`, `spotify`, `mic-ready` | agent | the screens following it |
 | `device.context`, `ring.note`, `feed.sports` | agent | server only |
 | `input`, `cursor`, `pad`, `games-*`, `retro-*`, `voice-*`, `twitch`, `youtube`, `photos`, `sports-*` | agent | its own webview only |
+
+## The library
+
+For what the streaming services don't have. It's one more service to the TV app, id `library`: a
+Home tile, the same details screen, curtain, progress, Continue watching and My list. Only the last
+step of playing differs. Its tile shows once the server has a Radarr or Sonarr key (`library_on`).
+
+```
+  TV PC                              Server                        On the server too
+  SvcTitle: Download ──library_request──▶ library/                ──▶ Radarr, Sonarr ──▶ qBittorrent
+  SvcHome, Downloads ──library_get, _downloads──▶ (keys stay here) ◀── what's there, the queues
+  Play ──library_stream──▶ a token for the file
+  mpv ◀──GET /api/media/<token>, Range── the file, over plain HTTP
+```
+
+- **Finding titles**: everything goes by TMDB id, as in the rest of the hub. Sonarr goes by TVDB, so
+  the server asks TMDB for a series' TVDB id. A series is added with nothing monitored, and only the
+  episodes asked for are fetched: one, a season, or all of it. Radarr and Sonarr own the files and
+  their names; the hub never moves or renames anything. Removing a title deletes its files (admin).
+- **Downloads**: Radarr and Sonarr drive qBittorrent. The hub reads their queues, and qBittorrent
+  directly for speeds and to pause. Without qBittorrent's address it still works, without those.
+- **Serving**: `GET /api/media/<token>`. A token opens one file for 12 hours and is only made for a
+  TV PC's `library_stream`, for a file inside Radarr's or Sonarr's root folders. Seeking is plain
+  Range requests. Subtitles next to the file ("<name>.pt-BR.srt", as Bazarr leaves them) get tokens
+  too. The server doesn't transcode: this laptop couldn't for long, and mpv doesn't need it.
+- **Playing**: mpv on the TV PC, fetched the first time something plays into the app's data folder.
+  A browser can't play most of these files (MKV, HEVC, DTS, image subtitles), and would need the
+  server to transcode.
+- **The player's window**: mpv runs behind the launcher's window, which is transparent. While it
+  plays (`Mode::Player`) the page's background goes away, and `Player.tsx` draws the controls as an
+  ordinary screen. So the pad, the mouse, the assistant, toasts and the ring screen need nothing of
+  their own there. The running app is mpv as far as the launcher goes: Home, a game or a service
+  starting, and mpv exiting all take the paths a browser does.
+- **Progress** is the same `Session` and store as the services', fed by mpv's position every 250 ms.
 
 ## Timers and alarms across devices
 

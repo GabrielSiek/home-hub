@@ -1,6 +1,6 @@
-//! Reads the controller on its own thread and routes it by mode: to the launcher UI,
-//! to the browser (DevTools, else the keyboard/mouse bridge) while a web app is open,
-//! or nowhere during a game. A timer or alarm ringing over a web app takes it first.
+//! Reads the controller on its own thread and routes it by mode: to the launcher UI (the player's
+//! controls are part of it), to the browser (DevTools, else the keyboard/mouse bridge) while a web
+//! app is open, or nowhere during a game. A timer or alarm ringing over a web app takes it first.
 
 use std::sync::{mpsc, Mutex, OnceLock};
 use std::time::{Duration, Instant};
@@ -375,7 +375,7 @@ impl Router {
         }
         if !pressed {
             // Y released: ends push-to-talk in the assistant.
-            if b == Button::North && self.mode() == Mode::Launcher {
+            if b == Button::North && matches!(self.mode(), Mode::Launcher | Mode::Player) {
                 let _ = self.app.emit("talk-release", ());
             }
             // A released: ends a hold (e.g. removing from Continue watching), or makes it a press.
@@ -463,7 +463,12 @@ impl Router {
             return;
         }
         match self.mode() {
-            Mode::Launcher => {
+            // Home lands on Home, as from a streaming service's player.
+            Mode::Player if a == Action::Home => {
+                launcher::close(&self.app);
+                let _ = self.app.emit("input", a);
+            }
+            Mode::Launcher | Mode::Player => {
                 let _ = self.app.emit("input", a);
             }
             // Playing from the launcher's service screens, Home lands on Home rather than
@@ -508,7 +513,7 @@ impl Router {
                     self.bridge.action(a);
                 }
             }
-            Mode::Launcher => {
+            Mode::Launcher | Mode::Player => {
                 let _ = self.app.emit("input", if up { "StickUp" } else { "StickDown" });
             }
             Mode::Game => {}
@@ -525,7 +530,7 @@ impl Router {
             return;
         }
         match self.mode() {
-            Mode::Launcher => {
+            Mode::Launcher | Mode::Player => {
                 if let Some(a) = launcher_action(e) {
                     self.dispatch(a);
                 }

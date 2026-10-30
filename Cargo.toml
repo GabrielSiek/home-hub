@@ -41,6 +41,7 @@ cbc = { version = "0.1", features = ["alloc"] }
 md-5 = "0.10"
 crc32fast = "1"
 axum = { version = "0.8", features = ["ws"] }
+tower = { version = "0.5", default-features = false, features = ["util"] }
 tower-http = { version = "0.6", features = ["fs"] }
 rcgen = { version = "0.14", default-features = false, features = ["crypto", "pem", "ring"] }
 rustls = { version = "0.23", default-features = false, features = ["ring", "std", "tls12"] }

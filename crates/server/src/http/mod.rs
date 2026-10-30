@@ -76,6 +76,7 @@ fn router(ctx: Ctx) -> Router {
         .route("/api/events", get(events::socket))
         .route("/api/agent", get(crate::agents::socket))
         .route("/api/file", get(files::file))
+        .route("/api/media/{token}", get(crate::library::stream::serve))
         .route("/api/assistant_transcribe", post(transcribe).layer(DefaultBodyLimit::max(10 * 1024 * 1024)))
         .route("/api/{cmd}", post(call))
         .route("/ca.crt", get(ca_certificate))

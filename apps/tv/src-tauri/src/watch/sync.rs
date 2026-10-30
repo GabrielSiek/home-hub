@@ -61,7 +61,9 @@ pub struct SyncEvent {
 
 /// Reads `services` one after another, in the background; skips those read lately. Asked while
 /// a read is under way, they are read after it.
-pub fn request(app: &AppHandle, services: Vec<String>) {
+pub fn request(app: &AppHandle, mut services: Vec<String>) {
+    // The library's progress is all here: there's no site to read it from.
+    services.retain(|s| s != super::library::SERVICE);
     let st = app.state::<AppState>();
     {
         let mut queued = st.watch.sync.queued.lock().unwrap();

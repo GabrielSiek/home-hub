@@ -6,10 +6,11 @@ import { FocusButton } from '../../components/FocusButton';
 import { FocusGroup } from '../../components/FocusGroup';
 import { Icon } from '../../components/Icon';
 import { BrandLogo, ProgressBar, SvcHeader } from '../../components/SvcParts';
-import { api, type AppEntry, type Score, type Title, type TitleDetails, type TitleWatch, type TvEpisode } from '../../lib/api';
+import { api, type AppEntry, type LibraryTitle, type Score, type Title, type TitleDetails, type TitleWatch, type TvEpisode } from '../../lib/api';
 import { BRANDS, brandOf, brandStyle, isEmulated, type Brand } from '../../lib/brands';
 import { focusFirst, scrollBehavior } from '../../lib/focus';
 import { onAction } from '../../lib/input';
+import { getLabel, hasEpisode, LIBRARY } from '../../lib/library';
 import { nav } from '../../lib/nav';
 import {
   cachedDetails,
@@ -65,8 +66,13 @@ function RateButtons({ brand, score, onRate, onFocus }: { brand: Brand; score: S
 /** Where the page scrolls to as focus moves down it: the top, the episodes, the cast. */
 type Part = 'top' | 'episodes' | 'cast';
 
+/** How often a title on its way to the library is read again. */
+const LIBRARY_EVERY_MS = 5000;
+
 export function SvcTitle({ service, title }: Props) {
   const launcher = !BRANDS[service];
+  const library = service === LIBRARY;
+  const [held, setHeld] = useState<LibraryTitle | null>(null);
   const brand = brandOf(service);
   const w = brand.words;
   const [d, setD] = useState<TitleDetails | null>(() => cachedDetails(title));
@@ -125,6 +131,27 @@ export function SvcTitle({ service, title }: Props) {
       .catch(() => setWhere([]));
   }, [launcher, title.media_type, title.id]);
 
+  // Where the title stands in the library, followed while it's on its way there.
+  useEffect(() => {
+    if (!library) return;
+    let alive = true;
+    let timer: ReturnType<typeof setTimeout>;
+    const read = () =>
+      api
+        .libraryTitle(title.media_type, title.id)
+        .then((x) => {
+          if (!alive) return;
+          setHeld(x);
+          if (x.state === 'wanted' || x.state === 'downloading') timer = setTimeout(read, LIBRARY_EVERY_MS);
+        })
+        .catch((e) => alive && setError(String(e)));
+    read();
+    return () => {
+      alive = false;
+      clearTimeout(timer);
+    };
+  }, [library, title.media_type, title.id, version, held?.state]);
+
   // The season shown: where the user is, else the first.
   const seasons = d?.seasons ?? [];
   const shownSeason = season ?? (p?.confirmed && p.season > 0 ? p.season : (seasons[0]?.number ?? null));
@@ -141,8 +168,8 @@ export function SvcTitle({ service, title }: Props) {
   }, [series, title.id, shownSeason]);
 
   useEffect(() => {
-    focusFirst('svc-play', 'svc-list', 'svc-trailer', 'svc-where-0', 'svc-back');
-  }, [!!d, where?.length]);
+    focusFirst('svc-play', 'svc-get', 'svc-list', 'svc-trailer', 'svc-where-0', 'svc-back');
+  }, [!!d, where?.length, held?.ready]);
 
   // Down from the header and Up from the buttons: the page is a full-screen layer under the
   // header, so the D-pad library finds nothing between the two and focus would stay put.
@@ -185,6 +212,9 @@ export function SvcTitle({ service, title }: Props) {
   // Launcher view: the services that stream it, emulated ones first.
   const byId = new Map(apps.map((a) => [a.id, a]));
   const providerApps = (where ?? []).map((id) => byId.get(id)).filter((a): a is AppEntry => !!a);
+  // The house's library can get what the services don't have; it's always a place to look.
+  const libraryApp = launcher ? byId.get(LIBRARY) : undefined;
+  const whereApps = libraryApp ? [...providerApps, libraryApp] : providerApps;
   // Straight to playing on the service; closing it comes back to these details, not the
   // service's own copy of them.
   const openOn = (a: AppEntry, season?: number, episode?: number) => {
@@ -228,7 +258,31 @@ export function SvcTitle({ service, title }: Props) {
   if (launcher) playLabel = providerApps[0] ? `${w.play} · ${providerApps[0].name}` : w.play;
   else if (resumeEpisode) playLabel = `${w.resume} ${resumeEpisode}`;
   else if (resumeable) playLabel = w.resume;
+  // Asking the library for it: a movie, a season, or the episode picked.
+  const download = (season?: number, episode?: number) => {
+    api
+      .libraryRequest(t.media_type, t.id, season, episode)
+      .then((x) => {
+        setHeld(x);
+        toast(x.state === 'wanted' ? 'Searching for it…' : 'Added to the library');
+      })
+      .catch(toast);
+  };
+  const remove = () => {
+    api
+      .libraryRemove(t.media_type, t.id)
+      .then(() => {
+        setHeld(null);
+        toast('Removed from the library');
+        nav.pop();
+      })
+      .catch(toast);
+  };
   const onPlay = (season?: number, episode?: number) => {
+    if (library && season !== undefined && episode !== undefined && !hasEpisode(held, season, episode)) {
+      download(season, episode);
+      return;
+    }
     if (launcher) {
       if (providerApps[0]) openOn(providerApps[0], season, episode);
       return;
@@ -299,10 +353,21 @@ export function SvcTitle({ service, title }: Props) {
             <MetaLine brand={brand} t={t} d={d} />
             <p className="svc-overview svc-overview-long">{t.overview || error || ''}</p>
             <FocusGroup className="svc-actions" focusKey="svc-actions" preferredChildFocusKey="svc-play">
-              {(!launcher || providerApps.length > 0) && (
+              {(library ? !!held?.ready : !launcher || providerApps.length > 0) && (
                 <FocusButton focusKey="svc-play" className="btn btn-primary" onFocus={() => scrollTo('top')} onSelect={() => onPlay()}>
                   <Icon name="play" />
                   {playLabel}
+                </FocusButton>
+              )}
+              {library && held?.configured && (series || !held.ready) && (
+                <FocusButton
+                  focusKey="svc-get"
+                  className={held.ready ? 'btn btn-secondary svc-btn-glass' : 'btn btn-primary'}
+                  onFocus={() => scrollTo('top')}
+                  onSelect={() => (!series && held.state === 'downloading' ? toast('Already on its way') : download(series ? (shownSeason ?? undefined) : undefined))}
+                >
+                  <Icon name="download" />
+                  {getLabel(held, series ? `${w.season.toLowerCase()} ${shownSeason ?? ''}` : '')}
                 </FocusButton>
               )}
               {listTargets.length > 0 && (
@@ -328,8 +393,21 @@ export function SvcTitle({ service, title }: Props) {
                   {w.trailer}
                 </FocusButton>
               )}
+              {library && held && held.state !== 'absent' && (
+                <FocusButton
+                  className="btn btn-secondary svc-btn-glass"
+                  aria-label="Hold to remove from the library"
+                  onFocus={() => scrollTo('top')}
+                  onSelect={() => toast('Hold A to remove it, files included')}
+                  hold={{ label: 'Remove from the library', run: remove }}
+                >
+                  <Icon name="trash" />
+                </FocusButton>
+              )}
               {t.title && <RateButtons brand={brand} score={score} onRate={rate} onFocus={() => scrollTo('top')} />}
             </FocusGroup>
+            {library && held?.note && <span className="svc-resume-note">{held.note}</span>}
+            {library && held && !held.configured && <span className="svc-resume-note">Set up Radarr and Sonarr in Settings › Movies & TV.</span>}
             {!launcher && resumeEpisode && p && (
               <span className="svc-resume-note">
                 {w.episode} {p.episode} · {w.season} {p.season}
@@ -340,9 +418,9 @@ export function SvcTitle({ service, title }: Props) {
             {launcher && where && (
               <div className="svc-where">
                 <span className="svc-where-label">WHERE TO WATCH</span>
-                {providerApps.length ? (
+                {whereApps.length ? (
                   <FocusGroup className="svc-where-list">
-                    {providerApps.map((a, i) => {
+                    {whereApps.map((a, i) => {
                       const b = BRANDS[a.id];
                       return (
                         <FocusButton
@@ -350,7 +428,7 @@ export function SvcTitle({ service, title }: Props) {
                           focusKey={`svc-where-${i}`}
                           className="svc-where-item"
                           onFocus={() => scrollTo('top')}
-                          onSelect={() => openOn(a)}
+                          onSelect={() => (a.id === LIBRARY ? nav.push({ name: 'svctitle', service: LIBRARY, title: t }) : openOn(a))}
                         >
                           <span className="svc-where-tile" style={b ? { background: b.bg } : undefined}>
                             {b ? <BrandLogo brand={b} className="svc-where-logo" /> : a.name}
@@ -396,6 +474,7 @@ export function SvcTitle({ service, title }: Props) {
                   const share = launcher ? 0 : episodeShare(p, e.season, e.number);
                   const current = !!p && p.confirmed && !p.finished && p.season === e.season && p.episode === e.number;
                   const minLeft = current ? minutesLeft(p) : null;
+                  const here = held?.episodes[`s${e.season}e${e.number}`];
                   return (
                     <FocusButton
                       key={e.number}
@@ -418,10 +497,16 @@ export function SvcTitle({ service, title }: Props) {
                       <span className="svc-episode-title">
                         {e.number}. {e.name}
                       </span>
-                      <span className={current ? 'svc-episode-meta is-current' : 'svc-episode-meta'}>
-                        {e.runtime ? `${e.runtime} ${w.min}` : (e.air_date ?? '')}
-                        {minLeft ? ` · ${minLeft} ${w.minLeft}` : ''}
-                      </span>
+                      {library && here?.state !== 'ready' ? (
+                        <span className="svc-episode-meta is-missing">
+                          {here?.state === 'downloading' ? `Downloading ${Math.round(here.progress * 100)}%` : here?.state === 'wanted' ? 'Searching…' : 'A to download'}
+                        </span>
+                      ) : (
+                        <span className={current ? 'svc-episode-meta is-current' : 'svc-episode-meta'}>
+                          {e.runtime ? `${e.runtime} ${w.min}` : (e.air_date ?? '')}
+                          {minLeft ? ` · ${minLeft} ${w.minLeft}` : ''}
+                        </span>
+                      )}
                       <span className="svc-episode-overview">{e.overview}</span>
                     </FocusButton>
                   );

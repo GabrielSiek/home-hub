@@ -35,9 +35,12 @@ pub struct Status {
 #[tauri::command]
 pub fn list_apps(state: State<'_, AppState>) -> Vec<AppEntry> {
     let cfg = state.config.read().unwrap();
+    // The house's library, once the server has one, is a tile like the services'.
+    let library = cfg.settings.library_on.then(crate::config::library_app);
     cfg.apps
         .iter()
         .cloned()
+        .chain(library)
         .map(|mut a| {
             a.icon = crate::config::tile_image(&state.data_dir, &a)
                 .map(|p| p.to_string_lossy().into_owned());
@@ -255,6 +258,14 @@ pub async fn tmdb_search_on(
     query: String,
     page: Option<u32>,
 ) -> Result<tmdb::SearchPage> {
+    // The library can get anything: its search is the whole catalog.
+    if service == watch::library::SERVICE {
+        if query.trim().is_empty() {
+            return Ok(tmdb::SearchPage { results: Vec::new(), next: None });
+        }
+        let settings = state.config.read().unwrap().settings.clone();
+        return tmdb::search_page(&state.http, &settings, &[], &query, page.unwrap_or(1), false).await;
+    }
     let (settings, app) = {
         let cfg = state.config.read().unwrap();
         let app = cfg
@@ -316,6 +327,18 @@ pub async fn watch_play(
 #[tauri::command]
 pub fn watch_sync(app: AppHandle, services: Vec<String>) {
     watch::sync::request(&app, services);
+}
+
+/// What the screen asks of the launcher's own player.
+#[tauri::command]
+pub fn player_control(app: AppHandle, control: crate::mpv::Control) {
+    crate::mpv::control(&app, control);
+}
+
+/// How the launcher's own player is doing, for a screen that just opened.
+#[tauri::command]
+pub fn player_state(app: AppHandle) -> crate::mpv::PlayerState {
+    crate::mpv::snapshot(&app)
 }
 
 /// Opens the service's "Who's watching?" for the user to pick the profile Play uses.

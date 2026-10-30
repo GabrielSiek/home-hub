@@ -48,6 +48,8 @@ struct Effects {
     on: bool,
     /// The web app whose video was paused.
     video: Option<String>,
+    /// The launcher's own player was paused.
+    player: bool,
     /// Spotify's music was paused.
     music: bool,
     /// The speakers before they were unmuted or turned up.
@@ -416,9 +418,15 @@ fn begin(app: &AppHandle, playlist: bool) {
             v.level = v.level.max(30);
         });
     }
+    // Over the launcher's own player the ring screen is the launcher's: only the video stops.
+    let video = crate::mpv::pause_for_ring(app);
     let mut inner = st.inner.lock().unwrap();
     inner.fx.music = music;
     inner.fx.speakers = speakers;
+    inner.fx.player = video;
+    if video {
+        inner.fx.video = Some("The video".into());
+    }
 }
 
 /// Puts back what ringing changed.
@@ -431,7 +439,9 @@ fn finish(app: &AppHandle) {
         std::mem::replace(&mut inner.fx, Effects { generation, ..Default::default() })
     };
     // The page takes its overlay away and plays the video it paused.
-    if fx.video.is_some() {
+    if fx.player {
+        crate::mpv::resume_after_ring(app);
+    } else if fx.video.is_some() {
         cdp::send(app, Cmd::Eval(format!("{RING_SCRIPT}(null)")));
     }
     if let Some(v) = fx.speakers {

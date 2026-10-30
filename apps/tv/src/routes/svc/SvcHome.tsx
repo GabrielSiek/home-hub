@@ -5,12 +5,14 @@ import { Art } from '../../components/Art';
 import { FocusButton } from '../../components/FocusButton';
 import { FocusGroup } from '../../components/FocusGroup';
 import { Icon } from '../../components/Icon';
+import { LibraryDownloads } from '../../components/LibraryDownloads';
 import { busy, FocusSkel } from '../../components/Skeleton';
 import { PosterCard, SvcHeader, WideCard } from '../../components/SvcParts';
 import { api, type Title, type TitleDetails, type WatchProgress } from '../../lib/api';
 import { BRANDS, brandStyle, rowsFor, shelfTitle, type Brand, type RowSpec, type TabKind } from '../../lib/brands';
 import { focusFirst, scrollRows } from '../../lib/focus';
 import { useTabKeys } from '../../lib/input';
+import { LIBRARY } from '../../lib/library';
 import { nav } from '../../lib/nav';
 import {
   cachedDetails,
@@ -131,7 +133,7 @@ export function SvcHome({ service }: { service: string }) {
   const version = useWatch((s) => s.version);
   const rowsRef = useRef<HTMLDivElement>(null);
   // Picked for the user from what they watched and rated; a different mix each run.
-  const { shelves, items: recs } = useShelves(service, version, tab === 'home');
+  const { shelves, items: recs } = useShelves(service, version, tab === 'home' && service !== LIBRARY);
 
   useEffect(() => {
     lastTab.set(service, tab);
@@ -409,17 +411,26 @@ export function SvcHome({ service }: { service: string }) {
               </FocusButton>
             </FocusGroup>
           </>
+        ) : service === LIBRARY && tab !== 'downloads' && specs.every((s) => rows[s.key]) ? (
+          <>
+            <h1 className="svc-hero-title">{brand.name}</h1>
+            <p className="svc-overview">Nothing here yet. Search for any movie or series to download it.</p>
+          </>
         ) : null}
       </section>
 
-      <div className="svc-rows scroller fade-top" ref={rowsRef}>
-        {rowBlocks.map((r, i) => (
-          <section key={r.key} className={r.key === 'continue' ? 'svc-row svc-row-wide' : 'svc-row'} aria-label={r.title}>
-            <h2>{r.title}</h2>
-            {rowItems(r.render(i), () => reveal(i))}
-          </section>
-        ))}
-      </div>
+      {tab === 'downloads' ? (
+        <LibraryDownloads />
+      ) : (
+        <div className="svc-rows scroller fade-top" ref={rowsRef}>
+          {rowBlocks.map((r, i) => (
+            <section key={r.key} className={r.key === 'continue' ? 'svc-row svc-row-wide' : 'svc-row'} aria-label={r.title}>
+              <h2>{r.title}</h2>
+              {rowItems(r.render(i), () => reveal(i))}
+            </section>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

@@ -9,6 +9,7 @@ import './styles/tokens.css';
 import './styles/app.css';
 import './styles/twitch.css';
 import './styles/streaming.css';
+import './styles/player.css';
 import './styles/sports.css';
 import './styles/calendar.css';
 import './styles/live.css';

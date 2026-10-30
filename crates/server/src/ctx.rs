@@ -20,6 +20,7 @@ use crate::assistant::Assistant;
 use crate::calendar;
 use crate::clock;
 use crate::hub::Hub;
+use crate::library::Library;
 use crate::settings::Settings;
 use crate::smarthome::SmartHome;
 use crate::http::security::Names;
@@ -44,6 +45,7 @@ pub struct Server {
     pub calendar: calendar::State,
     pub assistant: Assistant,
     pub settings: Settings,
+    pub library: Library,
     pub started: Instant,
     /// The HTTPS port, once it's listening (TV PCs are told it).
     pub https_port: OnceLock<u16>,
@@ -77,6 +79,7 @@ impl Server {
             calendar: calendar::State::new(&config.data_dir),
             assistant: Assistant::default(),
             settings: Settings::open(&config.data_dir)?,
+            library: Library::default(),
             macs: JsonStore::open(config.data_dir.join("wake.json")),
             agent_events: Mutex::default(),
             started: Instant::now(),

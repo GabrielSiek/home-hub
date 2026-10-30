@@ -54,7 +54,7 @@ export function SvcSearch({ service }: { service: string }) {
 
       <section className="search-results svc-results" aria-label="Results">
         <div className="svc-results-head">
-          <h2>{query ? `${w.results} “${query}”` : `${w.popularOn} ${brand.name}`}</h2>
+          <h2>{query ? `${w.results} “${query}”` : service === 'library' ? 'Search for any movie or series' : `${w.popularOn} ${brand.name}`}</h2>
           <FocusGroup className="pills" aria-label="Type">
             {kinds.map(([k, label]) => (
               <FocusButton

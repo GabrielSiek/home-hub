@@ -37,7 +37,7 @@ export function ClockRing() {
   }, [id]);
 
   useEffect(() => {
-    if (!id || mode !== 'launcher') return;
+    if (!id || (mode !== 'launcher' && mode !== 'player')) return;
     return onAction((a) => {
       if (a === 'Home') return false;
       if (kind === 'timer') {

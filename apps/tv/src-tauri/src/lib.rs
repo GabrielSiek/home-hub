@@ -15,6 +15,7 @@ mod input;
 mod launcher;
 mod live;
 mod livetv;
+mod mpv;
 mod overlay;
 mod photos;
 mod recs;
@@ -86,6 +87,8 @@ pub fn run() {
         commands::tmdb_person,
         commands::tmdb_person_services,
         commands::watch_play,
+        commands::player_control,
+        commands::player_state,
         commands::watch_pick_profile,
         commands::watch_profile,
         commands::watch_progress,

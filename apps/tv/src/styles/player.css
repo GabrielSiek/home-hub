@@ -1,0 +1,356 @@
+/* While the launcher's own player is on, mpv shows through the window (Player.tsx). */
+html.player-on,
+html.player-on body,
+html.player-on #root,
+html.player-on .viewport {
+  background: transparent;
+}
+
+html.player-on .screen-host,
+html.player-on .topbar {
+  visibility: hidden;
+}
+
+.pl {
+  position: absolute;
+  inset: 0;
+  z-index: 40;
+  color: #fff;
+}
+
+.pl.is-open {
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.72) 0%, transparent 26%, transparent 58%, rgba(0, 0, 0, 0.84) 100%);
+}
+
+.pl-wait {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  margin: -32px 0 0 -32px;
+}
+
+.pl-top {
+  position: absolute;
+  top: 48px;
+  left: var(--gutter);
+  right: var(--gutter);
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.pl-name {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.pl-name strong {
+  font-size: 34px;
+  font-weight: 600;
+}
+
+.pl-name span {
+  font-size: 22px;
+  color: var(--text-2);
+}
+
+.pl-bottom {
+  position: absolute;
+  left: var(--gutter);
+  right: var(--gutter);
+  bottom: 48px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pl-seek {
+  display: block;
+  width: 100%;
+  padding: 14px 0;
+  border: 0;
+  border-radius: var(--r-pill);
+  background: none;
+  cursor: pointer;
+}
+
+.pl-rail {
+  position: relative;
+  display: block;
+  height: 8px;
+  border-radius: var(--r-pill);
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.24);
+}
+
+.pl-seek.is-focused .pl-rail {
+  height: 12px;
+}
+
+.pl-cached,
+.pl-played {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+}
+
+.pl-cached {
+  background: rgba(255, 255, 255, 0.34);
+}
+
+.pl-played {
+  background: var(--accent);
+}
+
+.pl-times {
+  display: flex;
+  justify-content: space-between;
+  font-size: 22px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-2);
+}
+
+.pl-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 12px;
+}
+
+.pl-gap {
+  flex: 1;
+}
+
+.pl-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-width: 68px;
+  height: 68px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-pill);
+  color: #fff;
+  font: inherit;
+  font-size: 22px;
+  background: rgba(255, 255, 255, 0.14);
+  cursor: pointer;
+}
+
+.pl-btn-main {
+  min-width: 84px;
+  height: 84px;
+}
+
+.pl-btn-word {
+  padding: 0 28px;
+}
+
+.pl-btn.is-focused {
+  color: var(--on-accent);
+  background: var(--accent);
+  box-shadow: var(--focus-ring);
+}
+
+.pl-volume {
+  min-width: 72px;
+  text-align: center;
+  font-size: 22px;
+  font-variant-numeric: tabular-nums;
+}
+
+.pl-panel {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 760px;
+  padding: 72px 56px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  background: rgba(10, 10, 14, 0.94);
+}
+
+.pl-panel-lists {
+  flex: 1;
+  display: flex;
+  gap: 32px;
+  min-height: 0;
+}
+
+.pl-tracks {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  overflow-y: auto;
+}
+
+.pl-tracks h3 {
+  margin: 0 0 8px;
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--text-2);
+}
+
+.pl-track {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 56px;
+  padding: 10px 16px;
+  border: 0;
+  border-radius: var(--r-key);
+  color: var(--text-2);
+  font: inherit;
+  font-size: 20px;
+  text-align: left;
+  background: none;
+  cursor: pointer;
+}
+
+.pl-track.is-on {
+  color: #fff;
+}
+
+.pl-track.is-focused {
+  color: var(--on-accent);
+  background: var(--accent);
+}
+
+.pl-none {
+  font-size: 20px;
+  color: var(--muted);
+}
+
+.pl-done {
+  align-self: flex-start;
+}
+
+.pl-next {
+  position: absolute;
+  right: var(--gutter);
+  bottom: 96px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 32px 40px;
+  border-radius: var(--r-card);
+  background: rgba(10, 10, 14, 0.88);
+}
+
+.pl-next strong {
+  font-size: 30px;
+  font-weight: 600;
+}
+
+.pl-next span {
+  font-size: 22px;
+  color: var(--text-2);
+}
+
+.pl-next-logo {
+  height: 32px;
+  align-self: flex-start;
+}
+
+/* ---------- The library's own parts of the service screens ---------- */
+
+.lib-downloads {
+  position: absolute;
+  top: 150px;
+  left: var(--gutter);
+  right: var(--gutter);
+  bottom: 48px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.lib-downloads h2 {
+  display: flex;
+  align-items: baseline;
+  gap: 18px;
+  font-size: 36px;
+  font-weight: 600;
+}
+
+.lib-speed {
+  font-size: 22px;
+  font-weight: 400;
+  color: var(--text-2);
+}
+
+.lib-note {
+  font-size: 22px;
+  color: var(--bad);
+}
+
+.lib-list {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 8px;
+}
+
+.lib-item {
+  display: grid;
+  grid-template-columns: 1fr 420px 40px;
+  align-items: center;
+  gap: 28px;
+  padding: 18px 24px;
+  border: 0;
+  border-radius: var(--r-card);
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  background: var(--surface-glass);
+  cursor: pointer;
+}
+
+.lib-item.is-focused {
+  box-shadow: var(--focus-ring);
+}
+
+.lib-item-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.lib-item-text strong {
+  font-size: 24px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.lib-item-text span {
+  font-size: 20px;
+  color: var(--muted);
+}
+
+.lib-bar {
+  border-radius: var(--r-pill);
+  overflow: hidden;
+}
+
+.lib-state {
+  font-size: 22px;
+  color: var(--text-2);
+}
+
+.svc-episode-meta.is-missing {
+  color: var(--muted);
+  font-style: italic;
+}

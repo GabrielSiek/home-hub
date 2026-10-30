@@ -66,6 +66,36 @@ Check: on the laptop, `curl -I http://localhost:47960`; on a phone, `http://serv
   `sudo -u tvl-runner scripts/deploy-server.sh <folder>`.
 - **Remove**: `sudo systemctl disable --now tvl-server`; the data folder stays.
 
+## The library (Radarr, Sonarr, qBittorrent)
+
+Optional: without it the Library tile just doesn't show. All of this runs on the laptop, next to the
+hub; only the player (mpv) runs on the TV PCs, and it fetches itself the first time something plays.
+
+1. **A disk for the media.** The laptop's C: is too small for this (a 1080p film is 2 to 15 GB, a 4K
+   one up to 60 GB). Use an external USB 3 drive, say `D:\Media`, with `Movies`, `Series` and
+   `Downloads` folders inside. Keep it NTFS, and keep downloads on the same drive as the library, or
+   every finished title is copied instead of moved.
+2. **Radarr, Sonarr and Prowlarr**: their Windows installers, each as a Windows service. Prowlarr
+   holds the indexers and feeds the other two. In Radarr add the root folder `D:\Media\Movies`, in
+   Sonarr `D:\Media\Series`. Keep the quality profile the hub uses (Settings › Movies & TV, by
+   default `HD-1080p`): "Any" takes whatever turns up, however big.
+3. **qBittorrent**: its Windows installer. Turn on the Web UI (Tools › Options › Web UI), set a
+   username and password, and set the default save path to `D:\Media\Downloads`. It has no Windows
+   service of its own: start it at boot with a Task Scheduler task. Add it as the download client in
+   Radarr and Sonarr.
+4. **Let the hub read the files** (*admin*): the hub's service account hands them to the TVs.
+   ```powershell
+   icacls D:\Media /grant "NT SERVICE\tvl-server:(OI)(CI)RX"
+   ```
+5. **Connect them**: on a TV PC, Settings › Movies & TV › Library, enter the addresses and the API
+   keys (Settings › General in Radarr and Sonarr). The keys stay on the server. The tile appears.
+
+Optional: **Bazarr** fetches subtitles and leaves them next to the files, where the player finds
+them; pt-BR subtitles rarely come with the file.
+
+The laptop has 8 GB of memory and Wi-Fi: Radarr, Sonarr, Prowlarr and qBittorrent take about 1 GB
+between them, and a cable to the router helps the film as much as the rest of the house.
+
 ## Deploys on push
 
 `.github/workflows/deploy-server.yml` runs on each push to main that touches `crates/`,

@@ -167,7 +167,7 @@ export function PlayCurtain({ watch }: { watch: WatchEvent }) {
         <span className="svc-curtain-title">{watch.title}</span>
         {what && <span className="svc-curtain-meta">{what}</span>}
         <span className="svc-curtain-note">
-          {b.words.opening} {b.name}…
+          {watch.phase === 'preparing' ? 'Getting the player ready…' : `${b.words.opening} ${b.name}…`}
         </span>
       </div>
     </div>

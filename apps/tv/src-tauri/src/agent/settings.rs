@@ -29,6 +29,15 @@ const HOUSE: &[&str] = &[
     "google_client_secret",
     "calendar_reminders",
     "home_address",
+    "library_on",
+    "radarr_url",
+    "radarr_api_key",
+    "sonarr_url",
+    "sonarr_api_key",
+    "qbittorrent_url",
+    "qbittorrent_username",
+    "qbittorrent_password",
+    "library_quality",
 ];
 
 /// `base` with `house`'s household fields over it.

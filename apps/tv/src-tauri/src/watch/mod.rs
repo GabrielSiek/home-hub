@@ -8,6 +8,7 @@
 
 pub mod ids;
 pub mod justwatch;
+pub mod library;
 pub mod profiles;
 pub mod session;
 pub mod store;
@@ -50,6 +51,8 @@ pub struct WatchState {
     live: Mutex<Option<Session>>,
     /// The service whose "Who's watching?" is open for the user to pick on (`pick_profile`).
     picking: Mutex<Option<String>>,
+    /// The library's next episode, after the one playing.
+    next: Mutex<Option<(u32, u32)>>,
     /// Tells a reveal timer whether its session is still the current one.
     nonce: AtomicU64,
     pub sync: sync::SyncState,
@@ -62,6 +65,7 @@ impl WatchState {
             profiles: Mutex::new(profiles::Links::load(dir)),
             live: Mutex::new(None),
             picking: Mutex::new(None),
+            next: Mutex::new(None),
             nonce: AtomicU64::new(0),
             sync: sync::SyncState::default(),
         }
@@ -71,8 +75,9 @@ impl WatchState {
 /// Sent to the UI as "watch".
 #[derive(Debug, Clone, Serialize)]
 pub struct WatchEvent {
-    /// opening: the curtain is up; playing: the browser is shown; reveal: shown without the
-    /// video having started; closed: back in the launcher.
+    /// opening: the curtain is up; preparing: and the player is being fetched; playing: the browser
+    /// (or the launcher's player) is shown; reveal: shown without the video having started; closed:
+    /// back in the launcher.
     pub phase: &'static str,
     pub service: String,
     pub media_type: String,
@@ -142,6 +147,9 @@ pub async fn play(
     season: Option<u32>,
     episode: Option<u32>,
 ) -> Result<()> {
+    if service == library::SERVICE {
+        return library::play(app, media_type, id, season, episode).await;
+    }
     let pressed = now_secs();
     let st = app.state::<AppState>();
     let (settings, apps, entry) = {
@@ -444,12 +452,25 @@ pub fn on_report(app: &AppHandle, text: &str) {
     let Ok(sample) = serde_json::from_str::<session::Sample>(text) else {
         return;
     };
+    let (outcome, started) = take_sample(app, sample);
+    if let Some(ev) = started {
+        step_aside(app);
+        let _ = app.emit("watch", ev);
+    }
+    if outcome == session::Outcome::Close {
+        close_soon(app);
+    }
+}
+
+/// A sample of what's playing: the session moves on and, every so often, the store. Says what to
+/// do next, and the event to send if the video just started.
+fn take_sample(app: &AppHandle, sample: session::Sample) -> (session::Outcome, Option<WatchEvent>) {
     let st = app.state::<AppState>();
     let now = now_secs();
     let (outcome, started, update) = {
         let mut live = st.watch.live.lock().unwrap();
         let Some(s) = live.as_mut() else {
-            return;
+            return (session::Outcome::Nothing, None);
         };
         let outcome = s.on_sample(sample, now);
         if outcome == session::Outcome::Started {
@@ -468,13 +489,7 @@ pub fn on_report(app: &AppHandle, text: &str) {
         store.record(u, now_ms());
         let _ = store.save(&st.data_dir);
     }
-    if let Some(ev) = started {
-        step_aside(app);
-        let _ = app.emit("watch", ev);
-    }
-    if outcome == session::Outcome::Close {
-        close_soon(app);
-    }
+    (outcome, started)
 }
 
 /// The profile a video plays on: a pick on "Who's watching?" is kept for next time; without one,

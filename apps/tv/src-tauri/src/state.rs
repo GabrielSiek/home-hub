@@ -30,6 +30,9 @@ pub enum Mode {
     Streaming,
     /// A game is running; only Home is acted on.
     Game,
+    /// The launcher's own player has a video on, under the launcher's window. The pad works as on
+    /// any screen; Home closes it.
+    Player,
 }
 
 pub struct Running {
@@ -56,6 +59,7 @@ pub struct AppState {
     pub twitch: twitch::State,
     pub assistant: AssistantState,
     pub watch: WatchState,
+    pub player: crate::mpv::State,
     pub recs: RecsState,
     pub photos: photos::State,
     pub sports: sports::State,
@@ -78,6 +82,7 @@ impl AppState {
             twitch: twitch::State::new(&data_dir),
             assistant: AssistantState::default(),
             watch: WatchState::new(&data_dir),
+            player: crate::mpv::State::default(),
             recs: RecsState::new(&data_dir),
             photos: photos::State::new(&data_dir),
             sports: sports::State::new(&data_dir),

@@ -512,6 +512,30 @@ export function Settings({ tab: initialTab, focus }: { tab?: SettingsTab; focus?
                   onChange={(v) => patch({ tmdb_api_key: v })}
                 />
               </Section>
+              <Section title="Library">
+                <p className="settings-note">
+                  Movies and series kept on the home server, for what your services don't have. Radarr and Sonarr find them, qBittorrent fetches them. Set up
+                  on the server; their API keys are under Settings › General in each.
+                </p>
+                <FocusInput label="Radarr address" hint="As the server reaches it, e.g. http://localhost:7878." value={s.radarr_url} onChange={(v) => patch({ radarr_url: v })} />
+                <FocusInput label="Radarr API key" type="password" value={s.radarr_api_key} onChange={(v) => patch({ radarr_api_key: v })} />
+                <FocusInput label="Sonarr address" hint="As the server reaches it, e.g. http://localhost:8989." value={s.sonarr_url} onChange={(v) => patch({ sonarr_url: v })} />
+                <FocusInput label="Sonarr API key" type="password" value={s.sonarr_api_key} onChange={(v) => patch({ sonarr_api_key: v })} />
+                <FocusInput
+                  label="qBittorrent Web UI address"
+                  hint="Optional: for speeds and pausing, e.g. http://localhost:8080. Radarr and Sonarr drive it either way."
+                  value={s.qbittorrent_url}
+                  onChange={(v) => patch({ qbittorrent_url: v })}
+                />
+                <FocusInput label="qBittorrent username" value={s.qbittorrent_username} onChange={(v) => patch({ qbittorrent_username: v })} />
+                <FocusInput label="qBittorrent password" type="password" value={s.qbittorrent_password} onChange={(v) => patch({ qbittorrent_password: v })} />
+                <FocusInput
+                  label="Quality"
+                  hint="The Radarr and Sonarr quality profile new titles get, by name, e.g. HD-1080p. A 4K film can be 60 GB."
+                  value={s.library_quality}
+                  onChange={(v) => patch({ library_quality: v })}
+                />
+              </Section>
               <Section title="YouTube">
                 <Account
                   label="YouTube account"

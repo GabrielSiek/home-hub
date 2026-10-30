@@ -238,6 +238,19 @@ pub static COMMANDS: &[CommandSpec] = &[
     tv("photos_add_folder").waits(SLOW),
     tv("photos_set_enabled"),
     tv("photos_remove"),
+    // ---------- The house's library (Radarr, Sonarr, qBittorrent on the server; mpv on a TV PC) ----------
+    server("library_get").read().waits(SLOW),
+    server("library_title").read().waits(SLOW),
+    // Sonarr needs a moment to read a series it has just been given.
+    server("library_request").waits(SLOW),
+    // Deletes the files too.
+    server("library_remove").admin().waits(SLOW),
+    server("library_downloads").read().waits(SLOW),
+    server("library_download_control"),
+    // The address of a file a TV PC is about to play.
+    server("library_stream").tv_only().waits(SLOW),
+    tv("player_control").ordered(),
+    tv("player_state").read(),
     // ---------- Sports ----------
     device("sports_home").read().waits(SLOW),
     tv("sports_game").read().waits(SLOW),
@@ -387,7 +400,19 @@ mod tests {
         // Removing a screen now needs the admin PIN (the user's choice).
         assert!(before.remove("smarthome_forget_screen"));
         let new: BTreeSet<String> =
-            ["devices_get", "screen_follow", "device_wake", "server_status", "admin_unlock", "admin_check"]
+            [
+                "devices_get",
+                "screen_follow",
+                "device_wake",
+                "server_status",
+                "admin_unlock",
+                "admin_check",
+                "library_get",
+                "library_title",
+                "library_request",
+                "library_downloads",
+                "library_download_control",
+            ]
                 .into_iter()
                 .map(String::from)
                 .collect();

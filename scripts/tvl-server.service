@@ -1,0 +1,22 @@
+# The home server on Ubuntu. Installed by scripts/setup-server.sh into /etc/systemd/system.
+[Unit]
+Description=TV Launcher home server
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+User=tvl-server
+Group=tvl-server
+ExecStart=/opt/tvl-server/tvl-server run
+Restart=always
+RestartSec=5
+# What it writes (keys included) stays readable by its own account only.
+UMask=0077
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadWritePaths=/var/lib/tvl-server
+
+[Install]
+WantedBy=multi-user.target

@@ -1,111 +1,94 @@
 # Running the home server
 
-The server runs on the old laptop as a Windows service, from boot, with nobody signed in. These
-steps set it up; you do them once. Commands run in a PowerShell window; the ones marked *admin*
-need "Run as administrator".
+The server runs on the old laptop under Ubuntu Server, as a systemd service, from boot, with nobody
+signed in. These steps set it up; you do them once.
 
 ## 1. Prepare the laptop
 
-1. **Name it `tvl`** (Settings › System › About › Rename this PC), then restart. iPhones, iPads
-   and Windows PCs then reach it at `tvl.local`; Android phones may need its IP address.
-2. **Home network = Private** (Settings › Network › your Wi-Fi or Ethernet › Network profile type).
-   The firewall rule the install adds is for Private networks only.
-3. **Never sleep** while plugged in, and keep running with the lid closed (*admin*):
-   ```powershell
-   powercfg /change standby-timeout-ac 0
-   powercfg /change hibernate-timeout-ac 0
-   powercfg /setacvalueindex SCHEME_CURRENT SUB_BUTTONS LIDACTION 0
-   powercfg /setactive SCHEME_CURRENT
-   ```
-4. **Fixed address**: in the Deco app, reserve the laptop's IP (Network › the laptop › Reserve
+1. **Install Ubuntu Server** (latest LTS) with the host name `server`, and turn OpenSSH on in the
+   installer. iPhones, iPads and Windows PCs then reach it at `server.local`; Android phones may
+   need its IP address. If the installer finds no disk, set the BIOS's SATA Operation to AHCI:
+   Intel RST hides the drive from Linux.
+2. **Fixed address**: in the Deco app, reserve the laptop's IP (Network › the laptop › Reserve
    IP). Bookmarks, home-screen icons and the HTTPS certificates are tied to it. A cable is better
    than Wi-Fi if the router is near.
-5. Windows keeps its clock in sync by itself (alarms depend on it); leave "Set time automatically"
-   on.
 
-## 2. Build it (on the dev PC)
+## 2. A build
 
-```powershell
-cd refactor
-cargo build --release -p tvl-server
-npm install; npm run companion:build
+Download the `tvl-server` artifact from the repo's Actions tab (any run of Deploy server) and unzip
+it: `tvl-server` and `companion/`. Or build on any Linux PC:
+
+```bash
+CARGO_TARGET_DIR=target cargo build --release -p tvl-server
+npm install && npm run companion:build
 ```
 
-Copy to the laptop, e.g. into `C:\Program Files\TVLauncher\`:
-- `C:\TVLauncher\build\refactor\release\tvl-server.exe`
-- the folder `refactor\apps\companion\dist`, renamed `companion`, next to the exe.
+and put `target/release/tvl-server` and `apps/companion/dist`, renamed `companion`, in one folder.
 
-## 3. Bring the household over
+## 3. Set it up
 
-The old launcher's data is on the TV PC. Copy `tvl-server.exe` there too and, with the old
-launcher **closed**, run on the TV PC:
+Needs a backup of the old server: `tvl-server/`, its data folder, and `adguard/`, AdGuard Home's.
 
-```powershell
-tvl-server import --env "<repo>\.env" --out bundle.zip
+```bash
+sudo scripts/setup-server.sh <backup folder> <build folder>
+sudo -u tvl-server /opt/tvl-server/tvl-server pin
 ```
 
-It reads `%APPDATA%\dev.tvlauncher.app` (never changing it) and packs the smart home's keys and IR
-codes, rooms, tasks, the Hub, timers and alarms, the calendar, the home certificate authority and
-the household's settings and keys. Carry `bundle.zip` to the laptop, then (*admin*):
+`setup-server.sh` sets the time zone and clock (alarms depend on them), keeps the laptop running
+with the lid closed, frees port 53, installs AdGuard Home with its old settings, then the hub in
+`/opt/tvl-server` as the service `tvl-server`, under its own account, with the data in
+`/var/lib/tvl-server` (nobody else can read the keys there). Data already there is kept. `pin` shows
+the admin PIN: phones and tablets need it for settings and sign-ins; paired TV PCs show it too.
 
-```powershell
-tvl-server import --bundle bundle.zip
+Keeping the host name, the address and the data folder keeps everything that knows the server: the
+home certificate authority (iPads that trust it need nothing new), bookmarks and paired TV PCs.
+
+Then Tailscale, which must never replace the local DNS:
+
+```bash
+curl -fsSL https://tailscale.com/install.sh | sh
+sudo tailscale up --accept-dns=false
 ```
 
-Delete `bundle.zip` afterwards from both machines: it holds the keys. Importing **before** the
-first start keeps the old home certificate authority, so iPads that trust it need nothing new.
-
-## 4. Install the service (*admin*)
-
-```powershell
-tvl-server install
-tvl-server pin
-```
-
-`install` registers the service `tvl-server` (automatic, delayed start, restarted if it fails)
-under its own account `NT SERVICE\tvl-server`, gives that account the data folder
-`C:\ProgramData\TVLauncher\server` (nobody else can read the keys there), adds the firewall rule,
-and starts it. `pin` shows the admin PIN: phones and tablets need it for settings and sign-ins;
-paired TV PCs show it too.
-
-Check: on the laptop, open `http://localhost:47960`; on a phone, `http://tvl.local:47960`.
+Check: on the laptop, `curl -I http://localhost:47960`; on a phone, `http://server.local:47960`.
 
 ## Day to day
 
-- **Logs**: `C:\ProgramData\TVLauncher\server\logs\server.<date>.log`, two weeks kept. More detail:
-  set `TVL_LOG=debug` for the service and restart it.
-- **Restart**: `Restart-Service tvl-server` (*admin*).
+- **Status**: `systemctl status tvl-server AdGuardHome`.
+- **Logs**: `/var/lib/tvl-server/logs/server.<date>.log` (as root), two weeks kept;
+  `journalctl -u tvl-server` for what happened before logging started. More detail: add
+  `Environment=TVL_LOG=debug` with `sudo systemctl edit tvl-server` and restart it.
+- **Restart**: `sudo systemctl restart tvl-server`.
 - **Settings without a PIN**: `http://localhost:47960` on the laptop itself counts as admin.
-- **Backups**: copy `C:\ProgramData\TVLauncher\server` somewhere safe and private: it holds the
-  household's keys, the devices' local keys and the home CA's key.
-- **Update**: pushes to main deploy by themselves (below). By hand: stop the service, replace
-  `tvl-server.exe` (and `companion`), start it, or (*admin*) `scripts\deploy-server.ps1 -From <folder>`.
-- **Remove**: `tvl-server uninstall` (*admin*); the data folder stays.
+- **Backups**: copy `/var/lib/tvl-server` somewhere safe and private: it holds the household's keys,
+  the devices' local keys and the home CA's key.
+- **Update**: pushes to main deploy by themselves (below). By hand:
+  `sudo -u tvl-runner scripts/deploy-server.sh <folder>`.
+- **Remove**: `sudo systemctl disable --now tvl-server`; the data folder stays.
 
 ## Deploys on push
 
 `.github/workflows/deploy-server.yml` runs on each push to main that touches `crates/`,
 `apps/companion/`, the lock files or the deploy itself (or by hand: Actions › Deploy server › Run
 workflow). GitHub tests the crates and builds the server and the companion; then the laptop, a
-self-hosted runner labelled `home-hub`, runs `scripts\deploy-server.ps1`: stop the service, keep
-the running build in `TVLauncher\previous`, copy the new one in, start it, and check that
+self-hosted runner labelled `home-hub`, runs `scripts/deploy-server.sh`: stop the service, keep the
+running build in `/opt/tvl-server/previous`, copy the new one in, start it, and check that
 `http://localhost:47960` answers. If it doesn't within a minute, the previous build goes back and
-the run fails. `TVLauncher\deployed.txt` holds the commit that's running.
+the run fails. `/opt/tvl-server/deployed.txt` holds the commit that's running.
 
-The household's data never goes through GitHub: it stays in `C:\ProgramData\TVLauncher\server`.
+The household's data never goes through GitHub: it stays in `/var/lib/tvl-server`.
 
-Set the laptop up once, after step 4 (*admin*):
+Set the laptop up once, after step 3, with a token from the repo's Settings › Actions › Runners ›
+New self-hosted runner:
 
-```powershell
-$token = gh api -X POST repos/GabrielSiek/home-hub/actions/runners/registration-token --jq .token
-scripts\setup-deploy-runner.ps1 -Repo https://github.com/GabrielSiek/home-hub -Token $token
+```bash
+sudo scripts/setup-deploy-runner.sh https://github.com/GabrielSiek/home-hub <token>
 ```
 
-It installs the service if it isn't yet, lets the runner's account (`NETWORK SERVICE`) replace the
-files in `C:\Program Files\TVLauncher` and stop/start `tvl-server` (it still can't read the data
-folder), and registers the runner in `C:\actions-runner` as a Windows service. Check it under the
-repo's Settings › Actions › Runners. Since the runner acts on the laptop, the workflow only runs
-for pushes to main, never for pull requests.
+It gives the runner its own account, `tvl-runner`, which owns `/opt/tvl-server` and may stop and
+start `tvl-server` (it still can't read the data folder), and registers the runner in
+`/opt/actions-runner` as a systemd service. Check it under the repo's Settings › Actions › Runners.
+Since the runner acts on the laptop, deploys only run for pushes to main, never for pull requests.
 
 ## Next to the old launcher, on the dev PC
 

@@ -1,4 +1,4 @@
-//! `tvl-server.exe`: the home server, run as a Windows service or in a console.
+//! `tvl-server`: the home server, run as a service (systemd, or Windows') or in a console.
 
 use std::process::ExitCode;
 
@@ -9,11 +9,11 @@ const USAGE: &str = "\
 tvl-server: the TV Launcher home server
 
   tvl-server run [--dev] [--data <folder>] [--port <http port>] [--shadow] [--force-lan]
-      Runs in this console until Ctrl+C. --dev uses the side-by-side setup (ports 47970-47972,
+      Runs until Ctrl+C or SIGTERM (how systemd runs it). --dev uses the side-by-side setup (ports 47970-47972,
       data in %LOCALAPPDATA%\\TVLauncher\\server-dev); --shadow leaves the smart-home LAN,
       automations, ringing and calendar cards to the old launcher.
   tvl-server install / uninstall
-      Registers (or removes) the Windows service that runs the server at boot: from an
+      Windows only. Registers (or removes) the Windows service that runs the server at boot: from an
       administrator console on the server laptop. The data folder stays on uninstall.
   tvl-server pin [--reset] [--dev] [--data <folder>]
       Shows (or makes anew) the admin PIN.
@@ -94,12 +94,28 @@ fn run(args: &[String]) -> Result<(), String> {
         if running.ctx.config.shadow {
             tracing::info!("shadow mode: the smart-home LAN, automations, ringing and calendar cards are left to the old launcher");
         }
-        let _ = tokio::signal::ctrl_c().await;
+        stop_asked().await;
         tracing::info!("stopping");
         running.stop();
         tokio::time::sleep(std::time::Duration::from_millis(300)).await;
         Ok(())
     })
+}
+
+/// Ctrl+C, or SIGTERM: what systemd sends to stop a service.
+async fn stop_asked() {
+    #[cfg(unix)]
+    {
+        use tokio::signal::unix::{signal, SignalKind};
+        if let Ok(mut term) = signal(SignalKind::terminate()) {
+            tokio::select! {
+                _ = tokio::signal::ctrl_c() => {}
+                _ = term.recv() => {}
+            }
+            return;
+        }
+    }
+    let _ = tokio::signal::ctrl_c().await;
 }
 
 fn import(args: &[String]) -> Result<(), String> {

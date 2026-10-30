@@ -3,7 +3,7 @@
 The launcher used to be one Tauri app on the TV PC that also ran the household's backend. Here it
 splits into:
 
-- **The server** (`crates/server`, `tvl-server.exe`): a Windows service on an always-on old laptop.
+- **The server** (`crates/server`, `tvl-server`): a systemd service on an always-on old laptop.
   It keeps the household's state and integrations, serves the companion, and **passes commands
   between devices**. It never plays video or audio.
 - **The TV app** (`apps/tv`): the desktop app on each TV PC. Its Rust side is the **agent**: it
@@ -13,7 +13,7 @@ splits into:
   browser from the server. Each screen follows the TV PC of its room.
 
 ```
-      ┌────────────── Home server: old laptop, Windows service, no video/audio ──────────────┐
+      ┌────────────── Home server: old laptop, Ubuntu service, no video/audio ───────────────┐
       │ tvl-server                                                                           │
       │  household  smart home (LAN) · scenes/automations · rooms/tasks · timers/alarms      │
       │             calendar · assistant (LLM, tools, Whisper) · hub · settings · tokens     │
@@ -158,15 +158,16 @@ had). Each entry has:
   `remote_text` ≤ 500 characters, `oauth.loopback` only to allowlisted URLs, `/api/file` only images
   from icons, art and photos.
 
-## The Windows service
+## The service
 
-- One binary: `tvl-server.exe run` (console) · `install` · `uninstall` · `import` · `pin`.
-- Runs as the virtual account `NT SERVICE\tvl-server`, Automatic (Delayed Start), restarted on
-  failure; data in `C:\ProgramData\TVLauncher\server`, readable only by that account and
-  Administrators; firewall rules on the Private profile for TCP 47960/47961, UDP 47962 and inbound
-  UDP 6666/6667/7000 (services never get the firewall prompt).
-- It never touches a window, browser, audio device, key press, `%APPDATA%`, OneDrive or its working
-  folder: anything that needs those goes through an agent.
+- One binary: `tvl-server run` (what systemd starts) · `import` · `pin`. Built for Windows it also
+  has `install` and `uninstall`, for a Windows service.
+- Runs as the system account `tvl-server`, from `scripts/tvl-server.service`, restarted on failure;
+  data in `/var/lib/tvl-server`, readable only by that account and root. It listens on TCP
+  47960/47961, UDP 47962 and UDP 6666/6667/7000; Ubuntu's firewall is off by default, so nothing
+  needs opening.
+- It never touches a window, browser, audio device, key press, OneDrive or its working folder:
+  anything that needs those goes through an agent.
 
 ## Milestones
 

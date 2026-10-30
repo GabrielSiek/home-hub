@@ -48,10 +48,18 @@ struct File {
 }
 
 impl Config {
-    /// The Windows service: C:\ProgramData\TVLauncher\server, ports 47960-47962.
+    /// The service: /var/lib/tvl-server (C:\ProgramData\TVLauncher\server on Windows), ports
+    /// 47960-47962.
     pub fn service() -> Self {
-        let program_data = std::env::var_os("ProgramData").map(PathBuf::from).unwrap_or_else(|| PathBuf::from(r"C:\ProgramData"));
-        Self::with(program_data.join("TVLauncher").join("server"), 47960)
+        #[cfg(windows)]
+        let data_dir = std::env::var_os("ProgramData")
+            .map(PathBuf::from)
+            .unwrap_or_else(|| PathBuf::from(r"C:\ProgramData"))
+            .join("TVLauncher")
+            .join("server");
+        #[cfg(not(windows))]
+        let data_dir = PathBuf::from("/var/lib/tvl-server");
+        Self::with(data_dir, 47960)
     }
 
     /// A console run on the dev PC next to the old launcher (which holds 47960/47961): data in

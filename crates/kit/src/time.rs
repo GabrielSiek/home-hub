@@ -175,7 +175,7 @@ pub fn parse_hm(s: &str) -> Option<(i64, i64)> {
     ((0..24).contains(&h) && (0..60).contains(&m)).then_some((h, m))
 }
 
-/// The PC's local time: Windows' zone rules give the offset from UTC at any moment (daylight
+/// The PC's local time: the system's zone rules give the offset from UTC at any moment (daylight
 /// saving included); the rest is calendar arithmetic on "wall" times, the local date and time
 /// written as if it were UTC.
 pub mod local {
@@ -212,10 +212,12 @@ pub mod local {
         wall - utc
     }
 
-    /// Off Windows there are no zone rules to ask: UTC. The server runs on Windows.
+    /// Milliseconds the local clock is ahead of UTC at `utc`, by the system's zone (/etc/localtime
+    /// or `TZ`, read once: a new zone takes a restart).
     #[cfg(not(windows))]
-    pub fn offset(_utc: i64) -> i64 {
-        0
+    pub fn offset(utc: i64) -> i64 {
+        static ZONE: std::sync::LazyLock<jiff::tz::TimeZone> = std::sync::LazyLock::new(jiff::tz::TimeZone::system);
+        jiff::Timestamp::from_millisecond(utc).map_or(0, |t| i64::from(ZONE.to_offset(t).seconds()) * 1000)
     }
 
     /// The local date and time at `utc`, as a wall time.
@@ -280,6 +282,15 @@ pub mod local {
 mod tests {
     use super::local::*;
     use super::*;
+
+    /// The workflow runs the tests in the house's zone. No daylight saving there since 2019.
+    #[cfg(not(windows))]
+    #[test]
+    fn the_local_zone_is_the_systems() {
+        if std::env::var("TZ").as_deref() == Ok("America/Sao_Paulo") {
+            assert_eq!(offset(1_790_000_000_000), -3 * HOUR);
+        }
+    }
 
     #[test]
     fn days_round_trip() {

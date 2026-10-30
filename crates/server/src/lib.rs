@@ -18,6 +18,7 @@ pub mod hub;
 pub mod import;
 pub mod oauth;
 pub mod router;
+#[cfg(windows)]
 pub mod service;
 pub mod settings;
 pub mod smarthome;

@@ -25,3 +25,7 @@ tracing-appender.workspace = true
 [target.'cfg(windows)'.dependencies]
 # The local time zone's rules, from Windows (same version the TV app builds).
 windows = { version = "0.61", features = ["Win32_Foundation", "Win32_System_Time"] }
+
+[target.'cfg(not(windows))'.dependencies]
+# The local time zone's rules, from the system's tzdata.
+jiff = "0.2"

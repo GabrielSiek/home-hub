@@ -154,7 +154,13 @@ impl Authority {
 
 /// This PC's name as the home network knows it (DESKTOP-AB12 → desktop-ab12).
 pub fn hostname() -> Option<String> {
-    let name = std::env::var("COMPUTERNAME").or_else(|_| std::env::var("HOSTNAME")).ok()?.to_ascii_lowercase();
+    // systemd gives its services neither variable: Linux keeps the name in /proc.
+    let name = std::env::var("COMPUTERNAME")
+        .or_else(|_| std::env::var("HOSTNAME"))
+        .ok()
+        .or_else(|| std::fs::read_to_string("/proc/sys/kernel/hostname").ok())?
+        .trim()
+        .to_ascii_lowercase();
     let ok = !name.is_empty() && name.chars().all(|c| c.is_ascii_alphanumeric() || c == '-');
     ok.then_some(name)
 }

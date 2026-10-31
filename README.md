@@ -15,7 +15,7 @@ the old code found and where each item is fixed.
 | `crates/server` | `tvl-server`: the home server, a systemd service on Ubuntu |
 | `apps/tv` | The desktop app for TV PCs (TV UI + agent), and its video player (mpv) |
 | `apps/companion` | The touch UI for phones and tablets, served by the server |
-| `scripts/` | `check-untouched.ps1` (nothing outside `refactor\` changed), `test-names-diff.ps1` (old tests carried over), `setup-server.sh` (a new server, from a backup), `deploy-server.sh` / `setup-deploy-runner.sh` (deploys on push to main) |
+| `scripts/` | `check-untouched.ps1` (nothing outside `refactor\` changed), `test-names-diff.ps1` (old tests carried over), `setup-server.sh` (a new server, from a backup), `setup-media.sh` (the library's Radarr, Sonarr, Prowlarr and qBittorrent), `deploy-server.sh` / `setup-deploy-runner.sh` (deploys on push to main) |
 
 ## Build and check
 

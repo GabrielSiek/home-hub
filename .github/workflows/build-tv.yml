@@ -1,0 +1,69 @@
+# Each push to main that touches the TV app: one of GitHub's Windows machines tests it and builds its
+# installers, which stay on the run to download. Nothing reaches a TV PC by itself, and no PC of ours
+# builds anything: docs/OPERATIONS.md, "The TV app's installers".
+#
+# Pushes to media-library build too, so the library can be tried on a TV PC before it's merged.
+name: Build TV app
+
+on:
+  push:
+    branches: [main, media-library]
+    paths:
+      - "apps/tv/**"
+      - "crates/agent-link/**"
+      - "crates/kit/**"
+      - "crates/protocol/**"
+      - "Cargo.toml"
+      - "Cargo.lock"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/build-tv.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-latest
+    env:
+      # .cargo/config.toml points target-dir at the dev PC's C:\TVLauncher\build; keep it in the
+      # workspace here so the cache finds it.
+      CARGO_TARGET_DIR: ${{ github.workspace }}/target
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      # The house's zone, as for the crates' tests. TZ means nothing to Windows.
+      - name: Set the time zone
+        run: tzutil /s "E. South America Standard Time"
+
+      - name: Install the front end's packages
+        run: npm ci
+
+      # Tauri embeds the front end when it compiles, in the tests too.
+      - name: Build the front end
+        run: npm run tv:build
+
+      - name: Test the TV app
+        run: cargo test --locked -p tvl-tv
+
+      - name: Build the installers
+        working-directory: apps/tv
+        run: npx tauri build -- --locked
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tvl-tv-windows
+          path: |
+            target/release/bundle/nsis/*.exe
+            target/release/bundle/msi/*.msi
+          if-no-files-found: error
+          retention-days: 30

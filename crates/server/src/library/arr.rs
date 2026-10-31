@@ -159,6 +159,20 @@ pub struct Profile {
     pub name: String,
 }
 
+#[derive(Debug, Clone, Default, Deserialize)]
+#[serde(rename_all = "camelCase", default)]
+struct HistoryEvent {
+    download_id: Option<String>,
+}
+
+/// The torrents named in a title's history, each once.
+fn torrents_in(events: Vec<HistoryEvent>) -> Vec<String> {
+    let mut hashes: Vec<String> = events.into_iter().filter_map(|e| e.download_id).filter(|h| !h.is_empty()).collect();
+    hashes.sort();
+    hashes.dedup();
+    hashes
+}
+
 /// The profile called `wanted` (any case), else the first.
 pub fn pick_profile<'a>(profiles: &'a [Profile], wanted: &str) -> Option<&'a Profile> {
     profiles.iter().find(|p| p.name.eq_ignore_ascii_case(wanted.trim())).or(profiles.first())
@@ -256,6 +270,11 @@ impl Arr {
         self.command(json!({ "name": "MoviesSearch", "movieIds": [id] })).await
     }
 
+    /// A movie's torrents. Its history goes with it, so ask before deleting it.
+    pub async fn movie_torrents(&self, id: u64) -> Result<Vec<String>> {
+        Ok(torrents_in(self.get(&format!("history/movie?movieId={id}")).await?))
+    }
+
     pub async fn delete_movie(&self, id: u64) -> Result<()> {
         self.send(Method::DELETE, &format!("movie/{id}?deleteFiles=true"), None).await.map(drop)
     }
@@ -305,6 +324,11 @@ impl Arr {
         self.command(json!({ "name": "EpisodeSearch", "episodeIds": ids })).await
     }
 
+    /// A series' torrents. Its history goes with it, so ask before deleting it.
+    pub async fn series_torrents(&self, id: u64) -> Result<Vec<String>> {
+        Ok(torrents_in(self.get(&format!("history/series?seriesId={id}")).await?))
+    }
+
     pub async fn delete_series(&self, id: u64) -> Result<()> {
         self.send(Method::DELETE, &format!("series/{id}?deleteFiles=true"), None).await.map(drop)
     }
@@ -335,6 +359,12 @@ mod tests {
         assert_eq!(pick_profile(&list, "hd-1080p").unwrap().id, 4);
         assert_eq!(pick_profile(&list, "nope").unwrap().id, 1);
         assert!(pick_profile(&[], "x").is_none());
+    }
+
+    #[test]
+    fn a_torrent_named_twice_in_the_history_counts_once() {
+        let e = |id: Option<&str>| HistoryEvent { download_id: id.map(String::from) };
+        assert_eq!(torrents_in(vec![e(Some("B")), e(None), e(Some("A")), e(Some("B")), e(Some(""))]), ["A", "B"]);
     }
 
     #[test]

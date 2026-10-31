@@ -87,6 +87,14 @@ async fn radarr(f: Shared) -> SocketAddr {
                 Json(b)
             }),
         )
+        // Deleting a movie deletes its history.
+        .route(
+            "/api/v3/history/movie",
+            get(|State(f): State<Shared>| async move {
+                let there = !f.movies.lock().is_empty();
+                Json(if there { json!([{ "downloadId": "MOVIE1" }, { "eventType": "grabbed" }, { "downloadId": "MOVIE1" }]) } else { json!([]) })
+            }),
+        )
         .route(
             "/api/v3/movie/lookup/tmdb",
             get(|Query(q): Query<std::collections::HashMap<String, String>>| async move {
@@ -119,6 +127,20 @@ async fn sonarr(f: Shared) -> SocketAddr {
                 b["tmdbId"] = json!(66732);
                 f.series.lock().push(b.clone());
                 Json(b)
+            }),
+        )
+        .route(
+            "/api/v3/history/series",
+            get(|State(f): State<Shared>| async move {
+                let there = !f.series.lock().is_empty();
+                Json(if there { json!([{ "downloadId": "SERIES1" }, { "downloadId": "SERIES2" }]) } else { json!([]) })
+            }),
+        )
+        .route(
+            "/api/v3/series/{id}",
+            delete(|State(f): State<Shared>, Query(q): Query<std::collections::HashMap<String, String>>| async move {
+                f.log.lock().push(("delete series".into(), json!(q)));
+                f.series.lock().clear();
             }),
         )
         .route(
@@ -160,6 +182,12 @@ async fn qbittorrent(f: Shared) -> SocketAddr {
                     return Err(StatusCode::FORBIDDEN);
                 }
                 Ok(Json(json!([{ "hash": "abc123", "name": "x", "state": "downloading", "progress": 0.5, "dlspeed": 2048, "eta": 90 }])))
+            }),
+        )
+        .route(
+            "/api/v2/torrents/delete",
+            post(|State(f): State<Shared>, Form(q): Form<std::collections::HashMap<String, String>>| async move {
+                f.log.lock().push(("delete torrents".into(), json!(q)));
             }),
         )
         // Version 4: no torrents/stop.
@@ -341,6 +369,35 @@ async fn removing_a_title_takes_its_files_and_needs_the_admin() {
     let agent = fake_agent(b.s.http, "tv-1", &tv).await;
     agent.call("library_remove", json!({ "mediaType": "movie", "id": 603 })).await.unwrap();
     assert_eq!(b.fake.did("delete movie")[0]["deleteFiles"], "true");
+    b.s.stop();
+}
+
+#[tokio::test]
+async fn removing_a_title_frees_the_disk_by_dropping_its_torrents_too() {
+    let b = bench().await;
+    let tv = paired_tv(&b.s, "tv-1", "Sala", None);
+    let agent = fake_agent(b.s.http, "tv-1", &tv).await;
+
+    movie_with_file(&b, "matrix.mkv");
+    agent.call("library_remove", json!({ "mediaType": "movie", "id": 603 })).await.unwrap();
+    let gone = b.fake.did("delete torrents");
+    assert_eq!(gone.len(), 1);
+    assert_eq!(gone[0]["hashes"], "movie1");
+    assert_eq!(gone[0]["deleteFiles"], "true");
+
+    b.fake.series.lock().push(json!({ "id": 7, "tmdbId": 66732, "title": "Stranger Things" }));
+    agent.call("library_remove", json!({ "mediaType": "tv", "id": 66732 })).await.unwrap();
+    assert_eq!(b.fake.did("delete torrents")[1]["hashes"], "series1|series2");
+    b.s.stop();
+}
+
+#[tokio::test]
+async fn a_title_that_was_never_here_drops_no_torrents() {
+    let b = bench().await;
+    let tv = paired_tv(&b.s, "tv-1", "Sala", None);
+    let agent = fake_agent(b.s.http, "tv-1", &tv).await;
+    agent.call("library_remove", json!({ "mediaType": "movie", "id": 603 })).await.unwrap();
+    assert!(b.fake.did("delete torrents").is_empty());
     b.s.stop();
 }
 

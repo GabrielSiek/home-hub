@@ -58,6 +58,20 @@ impl Services<'_> {
         self.sonarr.as_ref().ok_or_else(|| Error::msg("Sonarr isn't set up: Settings › Movies & TV"))
     }
 
+    /// A removed title's torrents: each is a second name for its files, so the disk isn't freed
+    /// while they stay. Radarr and Sonarr have forgotten them by now. The title is gone either way.
+    async fn drop_torrents(&self, hashes: Result<Vec<String>>) {
+        let Some(qbit) = &self.qbit else { return };
+        let done = match hashes {
+            Ok(hashes) if hashes.is_empty() => return,
+            Ok(hashes) => qbit.delete(&hashes.iter().map(|h| h.to_ascii_lowercase()).collect::<Vec<_>>()).await,
+            Err(e) => Err(e),
+        };
+        if let Err(e) = done {
+            tracing::warn!("library: a removed title's torrents stayed: {e}");
+        }
+    }
+
     /// Speeds are extra: without qBittorrent the queues still say how far things got.
     async fn torrents(&self) -> Torrents {
         match &self.qbit {
@@ -378,18 +392,22 @@ pub async fn request(ctx: &Ctx, media_type: &str, id: u64, season: Option<u32>, 
     title(ctx, media_type, id).await
 }
 
-/// Takes a title out of the library, its files too.
+/// Takes a title out of the library, its files and torrents too.
 pub async fn remove(ctx: &Ctx, media_type: &str, id: u64) -> Result<()> {
     let s = services(ctx);
     if media_type == "movie" {
         let radarr = s.radarr()?;
         if let Some(m) = radarr.movie(id).await? {
+            let torrents = radarr.movie_torrents(m.id).await;
             radarr.delete_movie(m.id).await?;
+            s.drop_torrents(torrents).await;
         }
     } else {
         let sonarr = s.sonarr()?;
         if let Some(series) = find_series(sonarr, id).await? {
+            let torrents = sonarr.series_torrents(series.id).await;
             sonarr.delete_series(series.id).await?;
+            s.drop_torrents(torrents).await;
         }
     }
     Ok(())

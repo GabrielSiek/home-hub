@@ -523,7 +523,7 @@ export function Settings({ tab: initialTab, focus }: { tab?: SettingsTab; focus?
                 <FocusInput label="Sonarr API key" type="password" value={s.sonarr_api_key} onChange={(v) => patch({ sonarr_api_key: v })} />
                 <FocusInput
                   label="qBittorrent Web UI address"
-                  hint="Optional: for speeds and pausing, e.g. http://localhost:8080. Radarr and Sonarr drive it either way."
+                  hint="For speeds, pausing and freeing the disk when a title is removed, e.g. http://localhost:8080. Radarr and Sonarr drive it either way."
                   value={s.qbittorrent_url}
                   onChange={(v) => patch({ qbittorrent_url: v })}
                 />

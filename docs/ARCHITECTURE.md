@@ -139,7 +139,9 @@ step of playing differs. Its tile shows once the server has a Radarr or Sonarr k
 - **Finding titles**: everything goes by TMDB id, as in the rest of the hub. Sonarr goes by TVDB, so
   the server asks TMDB for a series' TVDB id. A series is added with nothing monitored, and only the
   episodes asked for are fetched: one, a season, or all of it. Radarr and Sonarr own the files and
-  their names; the hub never moves or renames anything. Removing a title deletes its files (admin).
+  their names; the hub never moves or renames anything. Removing a title deletes its files and its
+  torrents (admin): a torrent still seeding is a hardlink to the same data, so the disk isn't freed
+  until both go. Its hashes come from the title's history, read first, since that goes with it.
 - **Downloads**: Radarr and Sonarr drive qBittorrent. The hub reads their queues, and qBittorrent
   directly for speeds and to pause. Without qBittorrent's address it still works, without those.
 - **Serving**: `GET /api/media/<token>`. A token opens one file for 12 hours and is only made for a

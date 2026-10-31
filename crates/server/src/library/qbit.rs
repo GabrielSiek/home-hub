@@ -1,5 +1,6 @@
 //! qBittorrent's Web UI API: speeds and states of what's downloading, and pausing it. Radarr and
-//! Sonarr drive the downloads themselves; the hub only looks, and pauses when asked.
+//! Sonarr drive the downloads themselves; the hub only looks, pauses when asked, and clears what's
+//! left of a title that was removed.
 
 use std::collections::HashMap;
 
@@ -37,6 +38,12 @@ impl Torrent {
 /// Torrents by hash, upper case as Radarr and Sonarr write it.
 pub type Torrents = HashMap<String, Torrent>;
 
+/// A sign-in that set no cookie and wasn't refused: the Web UI trusts this address. It answers "Ok."
+/// to that, or nothing from WebAPI 2.14; a refusal is "Fails.", or a 401 from then on.
+fn needs_no_sign_in(status: StatusCode, body: &str) -> bool {
+    status.is_success() && !body.trim().eq_ignore_ascii_case("fails.")
+}
+
 pub struct Qbit<'a> {
     base: String,
     user: String,
@@ -68,6 +75,7 @@ impl<'a> Qbit<'a> {
             .send()
             .await
             .map_err(|_| Error::msg("qBittorrent isn't answering"))?;
+        let status = res.status();
         // A session cookie with any name: newer versions put the port in it.
         let cookie = res
             .headers()
@@ -75,11 +83,10 @@ impl<'a> Qbit<'a> {
             .and_then(|c| c.to_str().ok())
             .and_then(|c| c.split(';').next())
             .map(str::to_string);
-        // An address the Web UI trusts needs no sign-in, and answers without a cookie.
         let body = res.text().await.unwrap_or_default();
         match cookie {
             Some(c) => Ok(c),
-            None if body.trim().eq_ignore_ascii_case("ok.") => Ok(String::new()),
+            None if needs_no_sign_in(status, &body) => Ok(String::new()),
             None => Err(Error::msg("qBittorrent refused its username or password")),
         }
     }
@@ -118,6 +125,17 @@ impl<'a> Qbit<'a> {
         Ok(list.into_iter().map(|t| (t.hash.to_ascii_uppercase(), t)).collect())
     }
 
+    /// Takes torrents out, and their data with them.
+    pub async fn delete(&self, hashes: &[String]) -> Result<()> {
+        let hashes = hashes.join("|");
+        let res = self.send("torrents/delete", Some(&[("hashes", hashes.as_str()), ("deleteFiles", "true")])).await?;
+        if res.status().is_success() {
+            Ok(())
+        } else {
+            Err(Error::msg(format!("qBittorrent answered {}", res.status())))
+        }
+    }
+
     /// Version 5 renamed pause and resume to stop and start.
     pub async fn set_paused(&self, hash: &str, paused: bool) -> Result<()> {
         let (new, old) = if paused { ("torrents/stop", "torrents/pause") } else { ("torrents/start", "torrents/resume") };
@@ -144,6 +162,16 @@ mod tests {
         assert_eq!(t(120).eta_s(), Some(120));
         assert_eq!(t(NO_ETA).eta_s(), None);
         assert_eq!(t(0).eta_s(), None);
+    }
+
+    #[test]
+    fn a_trusted_address_signs_in_without_a_cookie_on_every_version() {
+        assert!(needs_no_sign_in(StatusCode::OK, "Ok."));
+        assert!(needs_no_sign_in(StatusCode::OK, ""));
+        assert!(needs_no_sign_in(StatusCode::NO_CONTENT, ""));
+        assert!(!needs_no_sign_in(StatusCode::OK, "Fails."));
+        assert!(!needs_no_sign_in(StatusCode::UNAUTHORIZED, ""));
+        assert!(!needs_no_sign_in(StatusCode::FORBIDDEN, ""));
     }
 
     #[test]

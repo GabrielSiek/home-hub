@@ -25,6 +25,9 @@ axum.workspace = true
 tower.workspace = true
 tower-http.workspace = true
 rcgen.workspace = true
+# The Android TV remote: its certificate has to be RSA, and the code is worked out from both keys.
+rsa.workspace = true
+x509-parser.workspace = true
 rustls.workspace = true
 tokio-rustls.workspace = true
 time.workspace = true

@@ -21,8 +21,10 @@ use crate::calendar;
 use crate::clock;
 use crate::hub::Hub;
 use crate::library::Library;
+use crate::players::Players;
 use crate::settings::Settings;
 use crate::smarthome::SmartHome;
+use crate::spotify;
 use crate::http::security::Names;
 use crate::tls::Authority;
 
@@ -46,6 +48,8 @@ pub struct Server {
     pub assistant: Assistant,
     pub settings: Settings,
     pub library: Library,
+    pub spotify: spotify::State,
+    pub players: Players,
     pub started: Instant,
     /// The HTTPS port, once it's listening (TV PCs are told it).
     pub https_port: OnceLock<u16>,
@@ -80,6 +84,8 @@ impl Server {
             assistant: Assistant::default(),
             settings: Settings::open(&config.data_dir)?,
             library: Library::default(),
+            spotify: spotify::State::new(&config.data_dir),
+            players: Players::open(&config.data_dir),
             macs: JsonStore::open(config.data_dir.join("wake.json")),
             agent_events: Mutex::default(),
             started: Instant::now(),

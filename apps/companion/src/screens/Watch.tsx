@@ -43,12 +43,18 @@ import {
   type Row,
 } from './watch/data';
 import { AppArt, artBg, Card, ItemArt, ServiceLogo, SkeletonCard } from './watch/parts';
+import { LibrarySheet } from './watch/Library';
 import { PhoneRemote, TabletRemote } from './watch/Remote';
 
 export default function Watch({ layout, sub }: ScreenProps) {
   useEffect(syncWatch, []);
   if (layout === 'phone' && sub === 'remote') return <PhoneRemote onClose={() => setSub(null)} />;
-  return layout === 'tablet' ? <TabletWatch sub={sub} /> : <PhoneWatch sub={sub} />;
+  return (
+    <>
+      {layout === 'tablet' ? <TabletWatch sub={sub} /> : <PhoneWatch sub={sub} />}
+      <LibrarySheet layout={layout} open={sub === 'library'} onClose={() => setSub(null)} />
+    </>
+  );
 }
 
 // ---------- Browsing ----------
@@ -131,7 +137,13 @@ type Browse = ReturnType<typeof useBrowse>;
  *  what the link to the home server is doing. */
 function TvPill({ phone }: { phone: boolean }) {
   const link = useLink((s) => (demo ? 'online' : s.link));
-  if (link === 'online') return <FollowChip phone={phone} />;
+  if (link === 'online')
+    return (
+      <>
+        <Round icon="film" label="Smart TV" size={36} iconSize={16} bg="rgba(35, 35, 40, 0.8)" border="1px solid #333333" onClick={() => setSub('library')} />
+        <FollowChip phone={phone} />
+      </>
+    );
   const [bg, fg, dot] = link === 'offline' ? ['rgba(229, 72, 77, 0.16)', '#ff8a8d', '#e5484d'] : ['rgba(255, 255, 255, 0.08)', '#c8c8c8', '#8a8a94'];
   return (
     <span

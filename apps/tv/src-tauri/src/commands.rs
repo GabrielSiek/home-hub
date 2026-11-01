@@ -461,92 +461,9 @@ pub fn settings_changed(app: &AppHandle, old: &Settings, new: &Settings) {
     if (&old.steam_api_key, &old.steam_id, &old.steamgriddb_api_key) != (&new.steam_api_key, &new.steam_id, &new.steamgriddb_api_key) {
         games::invalidate(app);
     }
-    if old.spotify_client_id != new.spotify_client_id {
-        spotify::start(app);
-    }
     if old.twitch_client_id != new.twitch_client_id {
         twitch::start(app);
     }
-}
-
-#[tauri::command]
-pub fn spotify_get(app: AppHandle) -> spotify::Snapshot {
-    spotify::snapshot(&app)
-}
-
-/// Shows Spotify's consent page; resolves once it redirected back to the launcher.
-#[tauri::command]
-pub async fn spotify_sign_in(app: AppHandle) -> Result<()> {
-    spotify::sign_in(&app).await
-}
-
-#[tauri::command]
-pub fn spotify_sign_out(app: AppHandle) -> Result<()> {
-    spotify::sign_out(&app)
-}
-
-#[tauri::command]
-pub async fn spotify_control(app: AppHandle, control: spotify::Control) -> Result<()> {
-    spotify::control(&app, control).await
-}
-
-/// Plays a playlist, album, artist or show, or a track inside `context`, on this PC.
-#[tauri::command]
-pub async fn spotify_play(app: AppHandle, uri: String, context: Option<String>, position_ms: Option<u64>) -> Result<()> {
-    spotify::play(&app, &uri, context.as_deref(), position_ms).await
-}
-
-/// One library shelf: recent, playlists, albums, artists or shows.
-#[tauri::command]
-pub async fn spotify_shelf(app: AppHandle, kind: String) -> Result<Vec<spotify::Item>> {
-    spotify::shelf(&app, &kind).await
-}
-
-/// A playlist or Liked Songs with its songs, for the playlist screen.
-#[tauri::command]
-pub async fn spotify_playlist(app: AppHandle, uri: String) -> Result<spotify::Playlist> {
-    spotify::playlist(&app, &uri).await
-}
-
-/// An artist with their releases, for the artist screen.
-#[tauri::command]
-pub async fn spotify_artist(app: AppHandle, uri: String) -> Result<spotify::Artist> {
-    spotify::artist(&app, &uri).await
-}
-
-/// Everyone's most played songs of an artist, from Last.fm; null without a Last.fm key.
-#[tauri::command]
-pub async fn spotify_artist_popular(app: AppHandle, uri: String, name: String) -> Result<Option<Vec<spotify::TopTrack>>> {
-    spotify::popular(&app, &uri, &name).await
-}
-
-/// Plays songs one after another on this PC.
-#[tauri::command]
-pub async fn spotify_play_tracks(app: AppHandle, uris: Vec<String>) -> Result<()> {
-    spotify::play_tracks(&app, &uris).await
-}
-
-/// A podcast with its newest episodes, for the podcast screen.
-#[tauri::command]
-pub async fn spotify_show(app: AppHandle, uri: String) -> Result<spotify::Show> {
-    spotify::show(&app, &uri).await
-}
-
-/// The oldest episodes of a podcast with `total` of them, oldest first.
-#[tauri::command]
-pub async fn spotify_oldest_episodes(app: AppHandle, uri: String, total: u64) -> Result<Vec<spotify::Episode>> {
-    spotify::oldest_episodes(&app, &uri, total).await
-}
-
-/// Follows or unfollows an artist or podcast.
-#[tauri::command]
-pub async fn spotify_follow(app: AppHandle, uri: String, on: bool) -> Result<()> {
-    spotify::follow(&app, &uri, on).await
-}
-
-#[tauri::command]
-pub async fn spotify_search(app: AppHandle, query: String) -> Result<spotify::SearchResults> {
-    spotify::search(&app, &query).await
 }
 
 #[tauri::command]
@@ -789,7 +706,6 @@ pub fn press_space() -> Result<()> {
 pub fn reload_config(app: AppHandle) -> Result<()> {
     let state = app.state::<AppState>();
     *state.config.write().unwrap() = Config::load_or_init(&state.data_dir)?;
-    spotify::start(&app);
     twitch::start(&app);
     Ok(())
 }

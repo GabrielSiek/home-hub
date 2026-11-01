@@ -159,14 +159,8 @@ export function DevicesSheet({ layout, open, onClose }: { layout: Layout; open: 
   const state = (on: boolean) => (on && p ? (p.playing ? 'Playing now' : 'Paused here') : null);
   const rows: DeviceRow[] = [];
   const tv = list?.find((d) => d.local) ?? null;
-  rows.push({
-    key: tv?.id ?? TV_SLOT,
-    device: tv,
-    label: tvLabel,
-    icon: 'tv',
-    on: tv ? playsOn(tv, p?.device ?? null) : !!p?.device?.local,
-    sub: '',
-  });
+  // The server lists a TV PC only while it's on.
+  if (tv) rows.push({ key: tv.id, device: tv, label: tvLabel, icon: 'tv', on: playsOn(tv, p?.device ?? null), sub: '' });
   const rest = (list ?? []).filter((d) => !d.local).sort((a, b) => Number(b === own) - Number(a === own) || a.name.localeCompare(b.name));
   for (const d of rest) rows.push({ key: d.id, device: d, label: connectLabel(d, me, list, tvLabel), icon: deviceIcon(d.kind, false), on: playsOn(d, p?.device ?? null), sub: '' });
   for (const r of rows) {
@@ -185,7 +179,7 @@ export function DevicesSheet({ layout, open, onClose }: { layout: Layout; open: 
       <SheetHead title="Play on" sub="The music moves there and keeps playing" onClose={onClose} />
       {!signedIn ? (
         <EmptyNote icon="info" style={{ margin: '28px auto 12px' }}>
-          {spotify ? SIGN_IN : 'Connecting to the TV…'}
+          {spotify ? SIGN_IN : 'Connecting…'}
         </EmptyNote>
       ) : (
         <>

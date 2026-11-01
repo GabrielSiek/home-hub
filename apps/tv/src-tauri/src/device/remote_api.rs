@@ -14,7 +14,6 @@ use tauri::{AppHandle, Manager};
 use super::tv;
 use crate::commands as c;
 use crate::error::Error;
-use crate::spotify;
 use crate::state::AppState;
 
 /// Longer than any search box or password needs.
@@ -91,9 +90,6 @@ pub async fn dispatch(app: &AppHandle, cmd: &str, a: Value) -> Answer {
             tv::showing(app, show);
             json(())
         }
-        "spotify_devices" => json(spotify::devices(app).await?),
-        "spotify_transfer" => json(spotify::transfer(app, &arg::<String>(&a, "id")?).await?),
-        "spotify_queue" => json(spotify::queue(app).await?),
 
         // ---------- What's on, apps, the catalog ----------
         "get_status" => json(c::get_status(st())),
@@ -129,16 +125,6 @@ pub async fn dispatch(app: &AppHandle, cmd: &str, a: Value) -> Answer {
         "recs_shelves" => json(c::recs_shelves(h(), arg(&a, "service")?).await?),
         "recs_row" => json(c::recs_row(h(), arg(&a, "service")?, arg(&a, "shelf")?).await?),
 
-        // ---------- Music ----------
-        "spotify_get" => json(c::spotify_get(h())),
-        "spotify_control" => json(c::spotify_control(h(), arg(&a, "control")?).await?),
-        "spotify_play" => json(c::spotify_play(h(), arg(&a, "uri")?, arg(&a, "context")?, arg(&a, "positionMs")?).await?),
-        "spotify_shelf" => json(c::spotify_shelf(h(), arg(&a, "kind")?).await?),
-        "spotify_playlist" => json(c::spotify_playlist(h(), arg(&a, "uri")?).await?),
-        "spotify_search" => json(c::spotify_search(h(), arg(&a, "query")?).await?),
-        "spotify_play_tracks" => json(c::spotify_play_tracks(h(), arg(&a, "uris")?).await?),
-        "spotify_artist" => json(c::spotify_artist(h(), arg(&a, "uri")?).await?),
-        "spotify_show" => json(c::spotify_show(h(), arg(&a, "uri")?).await?),
 
         // ---------- Live TV, sports, streams ----------
         "live_now" => json(c::live_now(h()).await),

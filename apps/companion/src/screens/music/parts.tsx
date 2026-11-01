@@ -4,9 +4,10 @@ import { useRef, useState, type CSSProperties, type ReactNode } from 'react';
 
 import type { MusicItem, Player, Track } from '@tv/lib/api';
 import type { Rgb } from '@tv/lib/smarthome';
+import { backend } from '../../backend';
 import { songTime } from '../../format';
 import { Icon, type IconName } from '../../icons';
-import { songPosition, spotifyControl, useLive } from '../../live';
+import { songPosition, spotifyControl, toast, useLive } from '../../live';
 import { setSub, useNow, type Layout } from '../../nav';
 import { Art, Fill } from '../../ui';
 import { useTvName } from '../../house';
@@ -632,6 +633,53 @@ export function TileSkeletons({ layout }: { layout: Layout }) {
 }
 
 /** A quiet line in an empty list, with an icon over it. */
+/** Signs in from this page, TV PCs off: Spotify's page opens in a new tab and ends on a 127.0.0.1
+ *  address this device can't open. That address, pasted here, finishes it. */
+export function SignIn({ phone }: { phone: boolean }) {
+  const [waiting, setWaiting] = useState(false);
+  const [address, setAddress] = useState('');
+  const start = () => {
+    // Opened before the wait: Safari refuses a tab that isn't the tap's own.
+    const tab = window.open('', '_blank');
+    backend.spotifySignInLink().then(
+      (url) => {
+        if (tab) tab.location.href = url;
+        setWaiting(true);
+      },
+      (e) => {
+        tab?.close();
+        toast(e);
+      },
+    );
+  };
+  const finish = () => backend.oauthPaste(address).catch(toast);
+  const box: CSSProperties = { display: 'flex', gap: 8, alignItems: 'center', minHeight: 52, padding: phone ? 4 : 5, borderRadius: phone ? 18 : 20, background: 'rgba(10, 10, 16, 0.5)', border: '1px solid rgba(255, 255, 255, 0.06)' };
+  const button: CSSProperties = { flex: '0 0 auto', minHeight: 44, padding: '0 16px', borderRadius: 14, border: 0, background: '#1DB954', color: '#0c0c14', fontWeight: 700, cursor: 'pointer' };
+  if (!waiting)
+    return (
+      <div style={box}>
+        <span style={{ flex: '1 1 auto', minWidth: 0, padding: '0 10px', fontSize: 13, color: '#a0a0a0' }}>Connect the house to your Spotify</span>
+        <button type="button" className="tap" style={button} onClick={start}>
+          Sign in
+        </button>
+      </div>
+    );
+  return (
+    <div style={box}>
+      <input
+        value={address}
+        onChange={(e) => setAddress(e.target.value)}
+        placeholder="Paste the address the page ended on"
+        aria-label="The address the Spotify page ended on"
+        style={{ flex: '1 1 auto', minWidth: 0, height: 44, padding: '0 10px', borderRadius: 12, border: '1px solid #333333', background: 'rgba(0, 0, 0, 0.3)', color: '#f2f2f3', fontSize: 16 }}
+      />
+      <button type="button" className="tap" style={button} disabled={!address} onClick={finish}>
+        Done
+      </button>
+    </div>
+  );
+}
+
 export function EmptyNote({ icon = 'music', children, style }: { icon?: IconName; children: ReactNode; style?: CSSProperties }) {
   return (
     <span

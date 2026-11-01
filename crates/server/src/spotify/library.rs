@@ -4,10 +4,11 @@ use std::collections::HashSet;
 
 use serde::Serialize;
 use serde_json::{json, Value};
-use tauri::AppHandle;
 
 use super::{get, liked_songs_uri, names, state, Track, API};
-use crate::error::{Error, Result};
+use tvl_kit::{Error, Result};
+
+use crate::ctx::Ctx;
 
 /// Tiles are 210 px; covers this wide stay sharp on a 4K TV without being the 640 px ones.
 const TILE_PX: u64 = 300;
@@ -145,7 +146,7 @@ pub(super) fn page<'a>(v: &'a Value, inner: Option<&str>) -> impl Iterator<Item 
 }
 
 /// One shelf of the library: recent, playlists, albums, artists or shows.
-pub async fn shelf(app: &AppHandle, kind: &str) -> Result<Vec<Item>> {
+pub async fn shelf(app: &Ctx, kind: &str) -> Result<Vec<Item>> {
     let limit = || ("limit", "50".to_string());
     Ok(match kind {
         "recent" => recent(app).await?,
@@ -176,7 +177,7 @@ pub async fn shelf(app: &AppHandle, kind: &str) -> Result<Vec<Item>> {
 }
 
 /// What was played lately, by playlist, album or artist where it was played from.
-async fn recent(app: &AppHandle) -> Result<Vec<Item>> {
+async fn recent(app: &Ctx) -> Result<Vec<Item>> {
     let v = get(app, "/me/player/recently-played", &[("limit", "50".into())]).await?;
     // The artist screen's play counts come from here too.
     let _ = super::plays::record(app, &v);
@@ -206,8 +207,8 @@ async fn recent(app: &AppHandle) -> Result<Vec<Item>> {
 }
 
 /// A tile for something played from; cached, since recently played lists the same ones.
-async fn context_item(app: &AppHandle, uri: &str, track: &Value) -> Option<Item> {
-    if let Some(t) = state(app).inner.lock().unwrap().tiles.get(uri) {
+async fn context_item(app: &Ctx, uri: &str, track: &Value) -> Option<Item> {
+    if let Some(t) = state(app).inner.lock().tiles.get(uri) {
         return Some(t.clone());
     }
     let mut parts = uri.split(':').skip(1);
@@ -224,13 +225,13 @@ async fn context_item(app: &AppHandle, uri: &str, track: &Value) -> Option<Item>
         "show" => item(&get(app, &format!("/shows/{id}"), &[]).await.ok()?, "show", "Podcast".into()),
         _ => None,
     }?;
-    state(app).inner.lock().unwrap().tiles.insert(uri.to_string(), tile.clone());
+    state(app).inner.lock().tiles.insert(uri.to_string(), tile.clone());
     Some(tile)
 }
 
 /// A playlist (`spotify:playlist:<id>`), album (`spotify:album:<id>`) or Liked Songs, with up
 /// to `SONGS_MAX` of its songs.
-pub async fn playlist(app: &AppHandle, uri: &str) -> Result<Playlist> {
+pub async fn playlist(app: &Ctx, uri: &str) -> Result<Playlist> {
     if let Some(id) = uri.strip_prefix("spotify:album:") {
         return album(app, uri, id).await;
     }
@@ -271,7 +272,7 @@ pub async fn playlist(app: &AppHandle, uri: &str) -> Result<Playlist> {
 
 /// An album as a playlist: by its artists and year, its songs carrying its name and cover,
 /// which Spotify leaves out of an album's own song list.
-async fn album(app: &AppHandle, uri: &str, id: &str) -> Result<Playlist> {
+async fn album(app: &Ctx, uri: &str, id: &str) -> Result<Playlist> {
     let v = get(app, &format!("/albums/{id}"), &[]).await?;
     let title = v["name"].as_str().unwrap_or_default().to_string();
     let year = v["release_date"].as_str().and_then(|d| d.get(..4)).map(str::to_string);
@@ -295,7 +296,7 @@ async fn album(app: &AppHandle, uri: &str, id: &str) -> Result<Playlist> {
 
 /// The songs of a paged list, following `next` up to `SONGS_MAX`. A page that fails ends
 /// the list there: what's listed so far is still worth showing.
-async fn songs(app: &AppHandle, mut list: Value) -> Vec<Track> {
+async fn songs(app: &Ctx, mut list: Value) -> Vec<Track> {
     let mut out = Vec::new();
     loop {
         out.extend(page_songs(&list));
@@ -371,7 +372,7 @@ fn plain_text(html: &str) -> String {
         .to_string()
 }
 
-pub async fn search(app: &AppHandle, query: &str) -> Result<SearchResults> {
+pub async fn search(app: &Ctx, query: &str) -> Result<SearchResults> {
     let query = query.trim();
     if query.is_empty() {
         return Ok(SearchResults::default());

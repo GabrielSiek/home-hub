@@ -126,20 +126,6 @@ pub fn run() {
         commands::retro_browse,
         commands::retro_browse_start,
         commands::retro_check,
-        commands::spotify_get,
-        commands::spotify_sign_in,
-        commands::spotify_sign_out,
-        commands::spotify_control,
-        commands::spotify_play,
-        commands::spotify_shelf,
-        commands::spotify_playlist,
-        commands::spotify_search,
-        commands::spotify_artist,
-        commands::spotify_artist_popular,
-        commands::spotify_play_tracks,
-        commands::spotify_show,
-        commands::spotify_oldest_episodes,
-        commands::spotify_follow,
         commands::twitch_get,
         commands::twitch_sign_in,
         commands::twitch_sign_out,
@@ -232,7 +218,6 @@ pub fn run() {
 
             games::allow_steam_art(app.handle());
             games::spawn_watcher(app.handle().clone());
-            spotify::start(app.handle());
             twitch::start(app.handle());
             photos::start(app.handle());
             sports::start(app.handle());

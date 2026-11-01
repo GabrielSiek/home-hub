@@ -12,7 +12,9 @@ use crate::calendar;
 use crate::clock;
 use crate::hub;
 use crate::library;
+use crate::players;
 use crate::smarthome::{self, rooms, scenes};
+use crate::spotify;
 use crate::ctx::Ctx;
 use crate::router::{Caller, Failure};
 
@@ -87,8 +89,12 @@ pub async fn run(ctx: &Ctx, caller: &Caller, cmd: &str, a: Value) -> Answer {
         // The household's settings, keys masked; saving a key still masked keeps it.
         "server_settings_get" => json(ctx.settings.get().masked()),
         "server_settings_save" => {
+            let client_id = ctx.settings.get().spotify_client_id;
             ctx.settings.save(arg(&a, "settings")?)?;
             let house = ctx.settings.get();
+            if house.spotify_client_id != client_id {
+                spotify::start(ctx);
+            }
             ctx.bus.emit("settings", &crate::settings::for_tvs(&house));
             ctx.bus.emit("calendar", &crate::calendar::snapshot(ctx));
             json(house.masked())
@@ -234,6 +240,52 @@ pub async fn run(ctx: &Ctx, caller: &Caller, cmd: &str, a: Value) -> Answer {
         "library_download_control" => json(library::control(ctx, &arg::<String>(&a, "hash")?, arg(&a, "action")?).await?),
         "library_stream" => {
             json(library::stream(ctx, &arg::<String>(&a, "mediaType")?, arg(&a, "id")?, arg(&a, "season")?, arg(&a, "episode")?).await?)
+        }
+
+        // ---------- Spotify ----------
+        "spotify_get" => json(spotify::snapshot(ctx)),
+        "spotify_sign_in" => {
+            let device = crate::oauth::sign_in_device(ctx, caller)?;
+            json(spotify::sign_in(ctx, &device).await?)
+        }
+        "spotify_sign_in_link" => json(spotify::sign_in_link(ctx)?),
+        "oauth_paste" => json(spotify::paste(ctx, &arg::<String>(&a, "address")?).await?),
+        "spotify_sign_out" => json(spotify::sign_out(ctx)?),
+        "spotify_control" => json(spotify::control(ctx, caller, arg(&a, "control")?).await?),
+        "spotify_play" => {
+            let (context, device): (Option<String>, Option<String>) = (arg(&a, "context")?, arg(&a, "device")?);
+            json(spotify::play(ctx, caller, &arg::<String>(&a, "uri")?, context.as_deref(), arg(&a, "positionMs")?, device.as_deref()).await?)
+        }
+        "spotify_play_tracks" => {
+            let device: Option<String> = arg(&a, "device")?;
+            json(spotify::play_tracks(ctx, caller, &arg::<Vec<String>>(&a, "uris")?, device.as_deref()).await?)
+        }
+        "spotify_shelf" => json(spotify::shelf(ctx, &arg::<String>(&a, "kind")?).await?),
+        "spotify_playlist" => json(spotify::playlist(ctx, &arg::<String>(&a, "uri")?).await?),
+        "spotify_search" => json(spotify::search(ctx, &arg::<String>(&a, "query")?).await?),
+        "spotify_artist" => json(spotify::artist(ctx, &arg::<String>(&a, "uri")?).await?),
+        "spotify_artist_popular" => json(spotify::popular(ctx, &arg::<String>(&a, "uri")?, &arg::<String>(&a, "name")?).await?),
+        "spotify_show" => json(spotify::show(ctx, &arg::<String>(&a, "uri")?).await?),
+        "spotify_oldest_episodes" => json(spotify::oldest_episodes(ctx, &arg::<String>(&a, "uri")?, arg(&a, "total")?).await?),
+        "spotify_follow" => json(spotify::follow(ctx, &arg::<String>(&a, "uri")?, arg(&a, "on")?).await?),
+        "spotify_devices" => json(spotify::devices(ctx, caller).await?),
+        "spotify_transfer" => json(spotify::transfer(ctx, &arg::<String>(&a, "id")?).await?),
+        "spotify_queue" => json(spotify::queue(ctx).await?),
+
+        // ---------- TVs reached directly ----------
+        "cast_list" => json(players::list(ctx)),
+        "cast_play" => {
+            let (season, episode) = (arg(&a, "season")?, arg(&a, "episode")?);
+            json(players::play(ctx, &arg::<String>(&a, "player")?, &arg::<String>(&a, "mediaType")?, arg(&a, "id")?, season, episode).await?)
+        }
+        "cast_control" => json(players::control(ctx, &arg::<String>(&a, "player")?, arg(&a, "action")?).await?),
+        "cast_pair_start" => json(players::pair_start(ctx, &arg::<String>(&a, "player")?).await?),
+        "cast_pair_finish" => json(players::pair_finish(ctx, &arg::<String>(&a, "player")?, &arg::<String>(&a, "code")?).await?),
+        "stream_services" => json(players::streaming::SERVICES),
+        "stream_search" => json(players::streaming::search(ctx, &arg::<String>(&a, "query")?).await?),
+        "stream_open" => {
+            let url: Option<String> = arg(&a, "url")?;
+            json(players::open_service(ctx, &arg::<String>(&a, "player")?, &arg::<String>(&a, "service")?, url.as_deref()).await?)
         }
 
         // ---------- The companion's Hub ----------

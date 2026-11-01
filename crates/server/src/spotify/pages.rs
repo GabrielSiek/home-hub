@@ -6,13 +6,14 @@ use futures_util::future::join_all;
 use reqwest::Method;
 use serde::Serialize;
 use serde_json::Value;
-use tauri::AppHandle;
 
 use super::library::{image, item, page, Item};
 use super::plays::{self, song_key, top_track, MostPlayed, TopTrack, MOST_PLAYED_MAX};
 use super::{call, get, state, API};
-use crate::error::{Error, Result};
-use crate::history::now_ms;
+use tvl_kit::{Error, Result};
+use tvl_kit::time::now_ms;
+
+use crate::ctx::Ctx;
 
 /// The artist photo is 360 px, the show cover 340 px.
 const PHOTO_PX: u64 = 640;
@@ -104,7 +105,7 @@ fn id<'a>(uri: &'a str, kind: &str) -> Result<&'a str> {
 }
 
 /// Whether `uri` (an artist or show) is in the user's library; None when the check failed.
-async fn following(app: &AppHandle, uri: &str) -> Option<bool> {
+async fn following(app: &Ctx, uri: &str) -> Option<bool> {
     get(app, "/me/library/contains", &[("uris", uri.to_string())])
         .await
         .ok()
@@ -112,7 +113,7 @@ async fn following(app: &AppHandle, uri: &str) -> Option<bool> {
 }
 
 /// Follows or unfollows an artist, or saves or removes a podcast.
-pub async fn follow(app: &AppHandle, uri: &str, on: bool) -> Result<()> {
+pub async fn follow(app: &Ctx, uri: &str, on: bool) -> Result<()> {
     let method = if on { Method::PUT } else { Method::DELETE };
     call(app, method, "/me/library", &[("uris", uri.to_string())], None).await??;
     Ok(())
@@ -120,7 +121,7 @@ pub async fn follow(app: &AppHandle, uri: &str, on: bool) -> Result<()> {
 
 // ---------- Artist ----------
 
-pub async fn artist(app: &AppHandle, uri: &str) -> Result<Artist> {
+pub async fn artist(app: &Ctx, uri: &str) -> Result<Artist> {
     let id = id(uri, "artist")?;
     let path = format!("/artists/{id}");
     let (v, albums, singles, appears_on, following, top_rank, tops, _) = tokio::join!(
@@ -146,7 +147,7 @@ pub async fn artist(app: &AppHandle, uri: &str) -> Result<Artist> {
     let (albums, singles) = (undated(albums), undated(singles));
     let now = now_ms();
     let (most_played, counted_since, release_plays) = {
-        let log = state(app).plays.lock().unwrap();
+        let log = state(app).plays.lock();
         let most_played = std::array::from_fn(|i| {
             let from = PERIODS[i].0.map_or(i64::MIN, |back| now - back);
             fill(log.most_played(uri, from), &tops[i], uri)
@@ -178,13 +179,13 @@ pub async fn artist(app: &AppHandle, uri: &str) -> Result<Artist> {
 
 /// The user's Spotify top songs for each of `PERIODS`, with their artists' URIs; the same for
 /// every artist, so kept a while. Empty when Spotify won't say.
-async fn your_top(app: &AppHandle) -> [Vec<(Vec<String>, TopTrack)>; 3] {
+async fn your_top(app: &Ctx) -> [Vec<(Vec<String>, TopTrack)>; 3] {
     let lists = join_all(PERIODS.iter().map(|(_, range)| top_tracks(app, range))).await;
     lists.try_into().unwrap_or_default()
 }
 
-async fn top_tracks(app: &AppHandle, range: &'static str) -> Vec<(Vec<String>, TopTrack)> {
-    if let Some((at, list)) = state(app).inner.lock().unwrap().top_tracks.get(range) {
+async fn top_tracks(app: &Ctx, range: &'static str) -> Vec<(Vec<String>, TopTrack)> {
+    if let Some((at, list)) = state(app).inner.lock().top_tracks.get(range) {
         if now_ms() - at < TOP_MS {
             return list.clone();
         }
@@ -194,7 +195,7 @@ async fn top_tracks(app: &AppHandle, range: &'static str) -> Vec<(Vec<String>, T
         return Vec::new();
     };
     let list: Vec<_> = page(&v, None).filter_map(top_track).collect();
-    state(app).inner.lock().unwrap().top_tracks.insert(range, (now_ms(), list.clone()));
+    state(app).inner.lock().top_tracks.insert(range, (now_ms(), list.clone()));
     list
 }
 
@@ -215,7 +216,7 @@ fn fill(mut m: MostPlayed, top: &[(Vec<String>, TopTrack)], artist: &str) -> Mos
 
 /// Up to `max` of an artist's releases in `groups`, newest first, with their release dates. A
 /// page after the first that fails ends the list there.
-async fn releases(app: &AppHandle, id: &str, groups: &str, max: usize) -> Result<Vec<(Item, Option<String>)>> {
+async fn releases(app: &Ctx, id: &str, groups: &str, max: usize) -> Result<Vec<(Item, Option<String>)>> {
     let path = format!("/artists/{id}/albums");
     let mut seen = HashSet::new();
     let mut out = Vec::new();
@@ -264,7 +265,7 @@ fn release(v: &Value) -> Option<Item> {
 }
 
 /// The artist's place among the user's top artists of the last four weeks.
-async fn top_rank(app: &AppHandle, uri: &str) -> Option<u32> {
+async fn top_rank(app: &Ctx, uri: &str) -> Option<u32> {
     let query = [("time_range", "short_term".to_string()), ("limit", "50".to_string())];
     let v = get(app, "/me/top/artists", &query).await.ok()?;
     top_position(&v, uri)
@@ -276,7 +277,7 @@ fn top_position(v: &Value, uri: &str) -> Option<u32> {
 
 // ---------- Podcast ----------
 
-pub async fn show(app: &AppHandle, uri: &str) -> Result<Show> {
+pub async fn show(app: &Ctx, uri: &str) -> Result<Show> {
     let id = id(uri, "show")?;
     let path = format!("/shows/{id}");
     let (v, following) = tokio::join!(get(app, &path, &[]), following(app, uri));
@@ -317,7 +318,7 @@ pub async fn show(app: &AppHandle, uri: &str) -> Result<Show> {
 
 /// The oldest episodes of a show with `total` of them, oldest first: the end of the list,
 /// which the podcast screen doesn't have for a long-running show.
-pub async fn oldest_episodes(app: &AppHandle, uri: &str, total: u64) -> Result<Vec<Episode>> {
+pub async fn oldest_episodes(app: &Ctx, uri: &str, total: u64) -> Result<Vec<Episode>> {
     let id = id(uri, "show")?;
     let query = [
         ("limit", EPISODES_PAGE.to_string()),

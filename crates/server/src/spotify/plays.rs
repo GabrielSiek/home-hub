@@ -8,13 +8,13 @@ use std::path::{Path, PathBuf};
 
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use tauri::AppHandle;
 
 use super::library::{image, page, Item};
 use super::{get, state};
-use crate::error::Result;
-use crate::history::now_ms;
-use crate::photos::rfc3339_ms;
+use tvl_kit::Result;
+use tvl_kit::time::{now_ms, rfc3339_ms};
+
+use crate::ctx::Ctx;
 
 const FILE: &str = "spotify-plays.json";
 /// Song rows have a 40 px cover.
@@ -211,8 +211,8 @@ fn play(v: &Value) -> Option<Play> {
 }
 
 /// Keeps the new plays of a recently played reply.
-pub(super) fn record(app: &AppHandle, v: &Value) -> Result<()> {
-    let mut log = state(app).plays.lock().unwrap();
+pub(super) fn record(app: &Ctx, v: &Value) -> Result<()> {
+    let mut log = state(app).plays.lock();
     if log.add(page(v, None).filter_map(play)) {
         log.save()?;
     }
@@ -220,9 +220,9 @@ pub(super) fn record(app: &AppHandle, v: &Value) -> Result<()> {
 }
 
 /// Reads recently played, unless it was read in the last `every` ms.
-pub async fn sync(app: &AppHandle, every: i64) -> Result<()> {
+pub async fn sync(app: &Ctx, every: i64) -> Result<()> {
     {
-        let mut log = state(app).plays.lock().unwrap();
+        let mut log = state(app).plays.lock();
         if now_ms() - log.synced < every {
             return Ok(());
         }

@@ -445,6 +445,8 @@ export function deviceIcon(kind: string | undefined, local?: boolean): IconName 
       return 'tablet';
     case 'computer':
       return 'monitor';
+    case 'tv':
+      return 'tv';
     default:
       return 'speakerLoud';
   }

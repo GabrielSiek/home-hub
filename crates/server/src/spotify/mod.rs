@@ -1,7 +1,7 @@
-//! Spotify through the Web API: sign-in (OAuth with PKCE, so no client secret), the player
-//! state polled in the background, and control. The launcher plays nothing itself: the
-//! Spotify desktop app on this PC is the player (a Spotify Connect device), started hidden
-//! when there's nowhere to play.
+//! Spotify through the Web API: sign-in (OAuth with PKCE, so no client secret), the player state
+//! polled in the background, and control. The server plays nothing itself: every Connect device on
+//! the account is a player (the Spotify app on a TV PC, phones, Echos), and this module only tells
+//! Spotify which one. So the music is followed with every TV PC off.
 
 mod library;
 mod pages;
@@ -9,18 +9,14 @@ mod plays;
 mod popular;
 
 use std::collections::HashMap;
-use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
-use std::sync::Mutex;
 use std::time::Duration;
 
+use parking_lot::Mutex;
 use reqwest::{Method, StatusCode};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
-use tauri::{AppHandle, Emitter, Manager};
-use tauri_plugin_opener::OpenerExt;
-use tokio::net::TcpListener;
 use tokio::sync::Notify;
 
 pub use library::{playlist, search, shelf, Item, Playlist, SearchResults};
@@ -29,26 +25,25 @@ pub use pages::{artist, follow, oldest_episodes, show, Artist, Episode, Show};
 pub use plays::TopTrack;
 pub use popular::popular;
 
-use crate::error::{Error, Result};
-use crate::focus_win;
-use crate::history::now_ms;
-use crate::launcher;
-use tvl_kit::oauth::{challenge, loopback, random_string};
-use tvl_protocol::ServiceLink as Link;
-use crate::state::{AppState, Mode};
+use tvl_kit::oauth::{challenge, query_of, random_string};
+use tvl_kit::time::now_ms;
+use tvl_kit::{Error, Result};
+use tvl_protocol::{ScreenKind, ServiceLink as Link};
+
+use crate::ctx::Ctx;
+use crate::router::Caller;
 
 const TOKEN_FILE: &str = "spotify.json";
 const REDIRECT_PORT: u16 = 47951;
+const REDIRECT_PATH: &str = "/spotify";
 /// Has to be listed as a Redirect URI of the Spotify app (developer.spotify.com).
 pub const REDIRECT_URL: &str = "http://127.0.0.1:47951/spotify";
-/// Running-app id of the sign-in page while it is open.
-pub const SIGN_IN_APP: &str = "spotify-signin";
 const ACCOUNTS: &str = "https://accounts.spotify.com";
 const API: &str = "https://api.spotify.com/v1";
 const SCOPES: &str = "user-read-playback-state user-modify-playback-state user-read-currently-playing \
      user-read-recently-played playlist-read-private playlist-read-collaborative user-library-read \
      user-library-modify user-follow-read user-follow-modify user-top-read user-read-playback-position";
-/// How long the desktop app gets to show up as a device after starting it.
+/// How long a player gets to show up as a device after starting it.
 const START_WAIT: Duration = Duration::from_secs(30);
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -87,7 +82,7 @@ pub struct Device {
     /// Spotify's device type: Computer, Smartphone, Speaker…
     pub kind: String,
     pub volume: Option<u8>,
-    /// The Spotify app on this PC.
+    /// The Spotify app on a TV PC.
     pub local: bool,
 }
 
@@ -130,9 +125,12 @@ pub enum Control {
     Repeat(Repeat),
     Volume(u8),
     Like(bool),
-    /// Move playback to the Spotify app on this PC.
+    /// Move playback to the Spotify app on the caller's TV PC.
     Transfer,
 }
+
+/// The user's top songs of a time range, with their artists' URIs, and when fetched.
+type TopSongs = (i64, Vec<(Vec<String>, TopTrack)>);
 
 #[derive(Default)]
 struct Inner {
@@ -147,8 +145,11 @@ struct Inner {
     next: Option<(String, Option<Track>)>,
     /// Recently played tiles for what was played from, by context URI.
     tiles: HashMap<String, Item>,
-    /// The user's top songs by Spotify time range, with their artists' URIs, and when fetched.
-    top_tracks: HashMap<&'static str, (i64, Vec<(Vec<String>, TopTrack)>)>,
+    /// The last snapshot sent, to send one only when something changed.
+    sent: Option<Value>,
+    /// A sign-in started from a phone: its state and PKCE verifier, until the address is pasted.
+    waiting: Option<(String, String)>,
+    top_tracks: HashMap<&'static str, TopSongs>,
     /// Everyone's most played songs by artist URI, and when fetched.
     popular: HashMap<String, (i64, Vec<TopTrack>)>,
 }
@@ -169,9 +170,7 @@ pub struct State {
 impl State {
     pub fn new(data_dir: &Path) -> Self {
         let token_path = data_dir.join(TOKEN_FILE);
-        let token = fs::read_to_string(&token_path)
-            .ok()
-            .and_then(|s| serde_json::from_str(&s).ok());
+        let token = tvl_kit::store::load(&token_path);
         Self {
             token_path,
             inner: Mutex::new(Inner {
@@ -188,7 +187,6 @@ impl State {
     fn token(&self) -> Result<Token> {
         self.inner
             .lock()
-            .unwrap()
             .token
             .clone()
             .ok_or_else(|| Error::msg("Not signed in to Spotify"))
@@ -196,88 +194,138 @@ impl State {
 
     fn set_token(&self, token: Option<Token>) -> Result<()> {
         match &token {
-            Some(t) => fs::write(&self.token_path, serde_json::to_string_pretty(t)?)?,
-            None if self.token_path.exists() => fs::remove_file(&self.token_path)?,
+            Some(t) => tvl_kit::store::save(&self.token_path, t, true)?,
+            None if self.token_path.exists() => std::fs::remove_file(&self.token_path)?,
             None => {}
         }
-        self.inner.lock().unwrap().token = token;
+        self.inner.lock().token = token;
         Ok(())
     }
 }
 
-fn state(app: &AppHandle) -> &State {
-    &app.state::<AppState>().inner().spotify
+fn state(app: &Ctx) -> &State {
+    &app.spotify
 }
 
-fn client_id(app: &AppHandle) -> Option<String> {
-    app.state::<AppState>().config.read().unwrap().settings.spotify_client_id()
+fn client_id(app: &Ctx) -> Option<String> {
+    Some(app.settings.get().spotify_client_id).filter(|id| !id.is_empty())
 }
 
-fn http(app: &AppHandle) -> reqwest::Client {
-    app.state::<AppState>().http.clone()
+fn http() -> reqwest::Client {
+    tvl_kit::http::api()
 }
 
-pub fn snapshot(app: &AppHandle) -> Snapshot {
-    let inner = state(app).inner.lock().unwrap();
+pub fn snapshot(app: &Ctx) -> Snapshot {
+    let inner = state(app).inner.lock();
     Snapshot {
         link: inner.link.clone(),
         player: inner.player.clone(),
     }
 }
 
-fn emit(app: &AppHandle) {
-    let _ = app.emit("spotify", snapshot(app));
+/// Tells every screen, only when something changed: a song playing moves on with each poll, which
+/// keeps them in step; nothing playing says nothing.
+fn emit(app: &Ctx) {
+    let now = snapshot(app);
+    let Ok(value) = serde_json::to_value(&now) else { return };
+    {
+        let mut inner = state(app).inner.lock();
+        if inner.sent.as_ref() == Some(&value) {
+            return;
+        }
+        inner.sent = Some(value);
+    }
+    app.bus.emit("spotify", &now);
 }
 
 // ---------- Sign-in ----------
 
-/// Opens Spotify's consent page in the launcher's browser and waits for it to redirect back
-/// to this PC with the authorization code. The browser profile is the one the Spotify web
-/// app uses, so usually the account is already signed in and Agree is all it takes.
-pub async fn sign_in(app: &AppHandle) -> Result<()> {
-    let client_id = client_id(app).ok_or_else(|| Error::msg("Add the Spotify Client ID first, then Save"))?;
-    let listener = TcpListener::bind(("127.0.0.1", REDIRECT_PORT))
-        .await
-        .map_err(|e| Error::msg(format!("Port {REDIRECT_PORT} for the Spotify sign-in is busy: {e}")))?;
-
+/// Spotify's consent page, with what the answer has to come back with.
+fn consent(client_id: &str) -> (String, String, String) {
     let verifier = random_string(64);
     let expected_state = random_string(16);
     let enc = |s: &str| urlencoding::encode(s).into_owned();
     let url = format!(
         "{ACCOUNTS}/authorize?response_type=code&client_id={}&scope={}&redirect_uri={}\
          &code_challenge_method=S256&code_challenge={}&state={expected_state}",
-        enc(&client_id),
+        enc(client_id),
         enc(SCOPES),
         enc(REDIRECT_URL),
         challenge(&verifier),
     );
-    launcher::open_page(app, &url, SIGN_IN_APP)?;
-    let result = loopback::wait_for_redirect(&listener, "/spotify", "Spotify", || launcher::is_running(app, SIGN_IN_APP), |q| {
-        q.get("state") == Some(&expected_state) && (q.contains_key("code") || q.contains_key("error"))
-    })
-    .await;
-    launcher::close_if(app, SIGN_IN_APP);
-    let q = result?;
-    if let Some(e) = q.get("error") {
+    (url, verifier, expected_state)
+}
+
+/// Signs in through TV PC `device`: its browser opens the consent page and catches the redirect.
+/// The profile is the one the Spotify web app uses, so usually Agree is all it takes.
+pub async fn sign_in(app: &Ctx, device: &str) -> Result<()> {
+    let client_id = client_id(app).ok_or_else(|| Error::msg("Add the Spotify Client ID first, then Save"))?;
+    let (url, verifier, expected_state) = consent(&client_id);
+    let args = json!({
+        "url": url,
+        "port": REDIRECT_PORT,
+        "path": REDIRECT_PATH,
+        "service": "Spotify",
+        "state": expected_state,
+    });
+    let answer = app
+        .agents
+        .call(device, "oauth.loopback", args, None, 5 * 60_000, false)
+        .await
+        .map_err(|e| Error::msg(format!("The TV PC couldn't open the sign-in: {e:?}")))?;
+    if answer["state"].as_str() != Some(expected_state.as_str()) {
+        return Err(Error::msg("The sign-in answered for another request: try again"));
+    }
+    finish_sign_in(app, &client_id, answer["code"].as_str(), answer["error"].as_str(), &verifier).await
+}
+
+/// The consent page for a phone, with no TV PC to catch the redirect: its browser can't open the
+/// 127.0.0.1 address Spotify sends it to, so that address comes back through `paste`.
+pub fn sign_in_link(app: &Ctx) -> Result<String> {
+    let client_id = client_id(app).ok_or_else(|| Error::msg("Add the Spotify Client ID first, then Save"))?;
+    let (url, verifier, expected_state) = consent(&client_id);
+    state(app).inner.lock().waiting = Some((expected_state, verifier));
+    Ok(url)
+}
+
+/// Finishes the sign-in `sign_in_link` started, from the address the phone couldn't open.
+pub async fn paste(app: &Ctx, address: &str) -> Result<()> {
+    let q = query_of(address.trim());
+    let client_id = client_id(app).ok_or_else(|| Error::msg("The Spotify Client ID isn't set"))?;
+    let verifier = {
+        let mut inner = state(app).inner.lock();
+        match inner.waiting.take() {
+            Some((expected, verifier)) if q.get("state") == Some(&expected) => verifier,
+            waiting => {
+                inner.waiting = waiting;
+                return Err(Error::msg("That isn't the address of this sign-in: start it again"));
+            }
+        }
+    };
+    finish_sign_in(app, &client_id, q.get("code").map(String::as_str), q.get("error").map(String::as_str), &verifier).await
+}
+
+async fn finish_sign_in(app: &Ctx, client_id: &str, code: Option<&str>, error: Option<&str>, verifier: &str) -> Result<()> {
+    if let Some(e) = error {
         return Err(Error::msg(if e == "access_denied" {
             "Spotify sign-in cancelled".to_string()
         } else {
             format!("Spotify sign-in failed: {e}")
         }));
     }
-
+    let code = code.ok_or_else(|| Error::msg("Spotify sent no code: try again"))?;
     let form = [
         ("grant_type", "authorization_code"),
-        ("code", q["code"].as_str()),
+        ("code", code),
         ("redirect_uri", REDIRECT_URL),
-        ("client_id", client_id.as_str()),
-        ("code_verifier", verifier.as_str()),
+        ("client_id", client_id),
+        ("code_verifier", verifier),
     ];
-    let t = token_request(app, &form)
+    let t = token_request(&form)
         .await?
         .map_err(|why| Error::msg(format!("Spotify sign-in: {why}")))?;
     let access = t.access_token.clone();
-    let me: Value = http(app)
+    let me: Value = http()
         .get(format!("{API}/me"))
         .bearer_auth(&access)
         .send()
@@ -295,7 +343,7 @@ pub async fn sign_in(app: &AppHandle) -> Result<()> {
     Ok(())
 }
 
-pub fn sign_out(app: &AppHandle) -> Result<()> {
+pub fn sign_out(app: &Ctx) -> Result<()> {
     state(app).set_token(None)?;
     start(app);
     Ok(())
@@ -309,11 +357,8 @@ struct TokenResponse {
 }
 
 /// Ok(Err(why)) when Spotify turns the request down (a 4xx), e.g. a revoked refresh token.
-async fn token_request(
-    app: &AppHandle,
-    form: &[(&str, &str)],
-) -> Result<std::result::Result<TokenResponse, String>> {
-    let r = http(app).post(format!("{ACCOUNTS}/api/token")).form(form).send().await?;
+async fn token_request(form: &[(&str, &str)]) -> Result<std::result::Result<TokenResponse, String>> {
+    let r = http().post(format!("{ACCOUNTS}/api/token")).form(form).send().await?;
     let status = r.status();
     if status.is_success() {
         return Ok(Ok(r.json().await?));
@@ -327,7 +372,7 @@ async fn token_request(
 }
 
 /// A valid access token, refreshed when it's about to expire (or `force`d after a 401).
-async fn access_token(app: &AppHandle, force: bool) -> Result<String> {
+async fn access_token(app: &Ctx, force: bool) -> Result<String> {
     let s = state(app);
     let tok = s.token()?;
     if !force && tok.expires - now_ms() > 60_000 {
@@ -346,7 +391,7 @@ async fn access_token(app: &AppHandle, force: bool) -> Result<String> {
         ("refresh_token", tok.refresh.as_str()),
         ("client_id", client_id.as_str()),
     ];
-    let t = match token_request(app, &form).await? {
+    let t = match token_request(&form).await? {
         Ok(t) => t,
         // Revoked, or the Client ID changed: only a new sign-in helps.
         Err(why) => {
@@ -394,7 +439,7 @@ impl From<ApiError> for Error {
 
 /// One Web API call. Ok(None) for an empty reply (204, or a command's 200 with no body).
 async fn call(
-    app: &AppHandle,
+    app: &Ctx,
     method: Method,
     path: &str,
     query: &[(&str, String)],
@@ -403,7 +448,7 @@ async fn call(
     let mut force = false;
     loop {
         let at = access_token(app, force).await?;
-        let mut req = http(app)
+        let mut req = http()
             .request(method.clone(), format!("{API}{path}"))
             .bearer_auth(&at)
             .query(query);
@@ -443,17 +488,17 @@ async fn call(
 }
 
 /// A GET whose reply is needed.
-async fn get(app: &AppHandle, path: &str, query: &[(&str, String)]) -> Result<Value> {
+async fn get(app: &Ctx, path: &str, query: &[(&str, String)]) -> Result<Value> {
     Ok(call(app, Method::GET, path, query, None).await??.unwrap_or_default())
 }
 
-/// A player command. With nothing active to play on, the Spotify app on this PC is
-/// started if need be and the command sent to it.
-async fn command(app: &AppHandle, method: Method, path: &str, query: &[(&str, String)], body: Option<&Value>) -> Result<()> {
+/// A player command. With nothing active to play on, it's sent to the Spotify app on the caller's
+/// TV PC, started if need be.
+async fn command(app: &Ctx, caller: &Caller, method: Method, path: &str, query: &[(&str, String)], body: Option<&Value>) -> Result<()> {
     match call(app, method.clone(), path, query, body).await? {
         Ok(_) => Ok(()),
         Err(e) if e.status == StatusCode::NOT_FOUND && e.reason == "NO_ACTIVE_DEVICE" => {
-            let device = local_device(app).await?;
+            let device = callers_device(app, caller).await?;
             let mut query = query.to_vec();
             query.push(("device_id", device));
             call(app, method, path, &query, body).await??;
@@ -463,62 +508,55 @@ async fn command(app: &AppHandle, method: Method, path: &str, query: &[(&str, St
     }
 }
 
-// ---------- This PC's Spotify app ----------
+// ---------- The TV PCs' Spotify apps ----------
 
-/// Whether a Connect device is the Spotify desktop app on this PC, which names its device
-/// after the computer.
-fn is_this_pc(name: &str, kind: &str) -> bool {
-    kind.eq_ignore_ascii_case("computer")
-        && std::env::var("COMPUTERNAME").is_ok_and(|pc| pc.eq_ignore_ascii_case(name.trim()))
+/// The TV PC whose Spotify app a Connect device is: the app names its device after the computer,
+/// and the TV PC says that name when it connects.
+fn tv_of(app: &Ctx, name: &str, kind: &str) -> Option<String> {
+    if !kind.eq_ignore_ascii_case("computer") {
+        return None;
+    }
+    let tvs = app.devices.list();
+    tvs.into_iter()
+        .find(|s| s.kind == ScreenKind::Tv && s.caps.as_ref().and_then(|c| c.spotify_device.as_deref()).is_some_and(|d| d.eq_ignore_ascii_case(name.trim())))
+        .map(|s| s.id)
 }
 
-async fn find_local_device(app: &AppHandle) -> Result<Option<String>> {
+async fn find_tv_device(app: &Ctx, tv: &str) -> Result<Option<String>> {
     let v = get(app, "/me/player/devices", &[]).await?;
     Ok(v["devices"].as_array().into_iter().flatten().find_map(|d| {
-        let local = is_this_pc(d["name"].as_str()?, d["type"].as_str()?) && !d["is_restricted"].as_bool().unwrap_or(false);
-        local.then(|| d["id"].as_str().map(str::to_string)).flatten()
+        let here = tv_of(app, d["name"].as_str()?, d["type"].as_str()?).is_some_and(|id| id == tv) && !d["is_restricted"].as_bool().unwrap_or(false);
+        here.then(|| d["id"].as_str().map(str::to_string)).flatten()
     }))
 }
 
-/// The device id of the Spotify app on this PC, starting the app (minimized) when it isn't
-/// running. The launcher is brought back in front once it shows up.
-async fn local_device(app: &AppHandle) -> Result<String> {
-    if let Some(id) = find_local_device(app).await? {
+/// The device id of the Spotify app on TV PC `tv`, which starts it (minimized) when it isn't
+/// running and comes back in front once it shows up.
+async fn tv_device(app: &Ctx, tv: &str) -> Result<String> {
+    if let Some(id) = find_tv_device(app, tv).await? {
         return Ok(id);
     }
-    start_desktop(app)?;
+    let off = |e| Error::msg(format!("The TV PC couldn't start Spotify: {e:?}"));
+    app.agents.call(tv, "spotify.start", json!({}), None, 10_000, false).await.map_err(off)?;
     let deadline = tokio::time::Instant::now() + START_WAIT;
     while tokio::time::Instant::now() < deadline {
         tokio::time::sleep(Duration::from_secs(1)).await;
-        if let Some(id) = find_local_device(app).await? {
-            if app.state::<AppState>().mode() == Mode::Launcher {
-                focus_win::bring_to_front(app);
-            }
+        if let Some(id) = find_tv_device(app, tv).await? {
+            let _ = app.agents.call(tv, "spotify.started", json!({}), None, 5_000, false).await;
             return Ok(id);
         }
     }
-    Err(Error::msg(
-        "Spotify didn't show up on this PC. Open the Spotify app once and sign in to the same account",
-    ))
+    Err(Error::msg("Spotify didn't show up on the TV PC. Open the Spotify app once and sign in to the same account"))
 }
 
-/// Starts the Spotify desktop app: the classic installer's, else the Microsoft Store one
-/// (through its command alias), else whatever handles spotify: links.
-fn start_desktop(app: &AppHandle) -> Result<()> {
-    let env = |k: &str| std::env::var_os(k).map(PathBuf::from);
-    let candidates = [
-        env("APPDATA").map(|d| d.join(r"Spotify\Spotify.exe")),
-        env("LOCALAPPDATA").map(|d| d.join(r"Microsoft\WindowsApps\Spotify.exe")),
-    ];
-    // symlink_metadata: the Store alias is a reparse point that plain metadata can't open.
-    for exe in candidates.into_iter().flatten().filter(|p| fs::symlink_metadata(p).is_ok()) {
-        if std::process::Command::new(&exe).arg("--minimized").spawn().is_ok() {
-            return Ok(());
-        }
-    }
-    app.opener()
-        .open_url("spotify:", None::<&str>)
-        .map_err(|_| Error::msg("The Spotify app isn't installed on this PC"))
+/// The TV PC the caller means: its own, or the one it controls while that's on.
+fn callers_tv(app: &Ctx, caller: &Caller) -> Option<String> {
+    caller.agent.clone().or_else(|| app.devices.target(caller.screen.as_deref(), caller.target.as_deref()).ok())
+}
+
+async fn callers_device(app: &Ctx, caller: &Caller) -> Result<String> {
+    let tv = callers_tv(app, caller).ok_or_else(|| Error::msg("Nothing to play on: choose a device"))?;
+    tv_device(app, &tv).await
 }
 
 // ---------- Player state ----------
@@ -564,7 +602,7 @@ fn parse_player(v: &Value) -> Player {
                 name: name.to_string(),
                 kind: kind.to_string(),
                 volume: d["volume_percent"].as_u64().map(|p| p.min(100) as u8),
-                local: is_this_pc(name, kind),
+                local: false,
             }
         }),
         shuffle: v["shuffle_state"].as_bool().unwrap_or(false),
@@ -581,11 +619,11 @@ fn parse_player(v: &Value) -> Player {
 }
 
 /// The name of a playlist, album, artist or show being played from; cached.
-async fn context_name(app: &AppHandle, uri: &str, track: Option<&Track>) -> Option<String> {
+async fn context_name(app: &Ctx, uri: &str, track: Option<&Track>) -> Option<String> {
     if uri.ends_with(":collection") {
         return Some("Liked songs".into());
     }
-    if let Some(n) = state(app).inner.lock().unwrap().names.get(uri) {
+    if let Some(n) = state(app).inner.lock().names.get(uri) {
         return Some(n.clone()).filter(|n| !n.is_empty());
     }
     let mut parts = uri.split(':').skip(1);
@@ -605,22 +643,21 @@ async fn context_name(app: &AppHandle, uri: &str, track: Option<&Track>) -> Opti
     state(app)
         .inner
         .lock()
-        .unwrap()
         .names
         .insert(uri.to_string(), name.clone().unwrap_or_default());
     name
 }
 
 /// Whether the track is in Liked Songs; cached per track.
-async fn liked(app: &AppHandle, uri: &str) -> Option<bool> {
-    if let Some(l) = state(app).inner.lock().unwrap().liked.get(uri) {
+async fn liked(app: &Ctx, uri: &str) -> Option<bool> {
+    if let Some(l) = state(app).inner.lock().liked.get(uri) {
         return *l;
     }
     let l = get(app, "/me/library/contains", &[("uris", uri.to_string())])
         .await
         .ok()
         .and_then(|v| v[0].as_bool());
-    let mut inner = state(app).inner.lock().unwrap();
+    let mut inner = state(app).inner.lock();
     if inner.liked.len() > 500 {
         inner.liked.clear();
     }
@@ -629,19 +666,19 @@ async fn liked(app: &AppHandle, uri: &str) -> Option<bool> {
 }
 
 /// The first track in the queue after `uri`; fetched again when the track changes.
-async fn up_next(app: &AppHandle, uri: &str) -> Option<Track> {
-    if let Some((for_uri, next)) = &state(app).inner.lock().unwrap().next {
+async fn up_next(app: &Ctx, uri: &str) -> Option<Track> {
+    if let Some((for_uri, next)) = &state(app).inner.lock().next {
         if for_uri == uri {
             return next.clone();
         }
     }
     let next = get(app, "/me/player/queue", &[]).await.ok().and_then(|v| parse_track(&v["queue"][0]));
-    state(app).inner.lock().unwrap().next = Some((uri.to_string(), next.clone()));
+    state(app).inner.lock().next = Some((uri.to_string(), next.clone()));
     next
 }
 
 /// Fetches the player state. A 429 comes back as the seconds to wait.
-async fn poll(app: &AppHandle) -> Result<std::result::Result<(), u64>> {
+async fn poll(app: &Ctx) -> Result<std::result::Result<(), u64>> {
     let query = [("additional_types", "episode".to_string())];
     let v = match call(app, Method::GET, "/me/player", &query, None).await? {
         Ok(v) => v,
@@ -650,6 +687,9 @@ async fn poll(app: &AppHandle) -> Result<std::result::Result<(), u64>> {
     };
     let mut player = v.as_ref().map(parse_player);
     if let Some(p) = &mut player {
+        if let Some(d) = &mut p.device {
+            d.local = tv_of(app, &d.name, &d.kind).is_some();
+        }
         if let Some(uri) = p.context_uri.clone() {
             p.context = context_name(app, &uri, p.track.as_ref()).await;
         }
@@ -658,43 +698,43 @@ async fn poll(app: &AppHandle) -> Result<std::result::Result<(), u64>> {
             p.next = up_next(app, &uri).await;
         }
     }
-    state(app).inner.lock().unwrap().player = player;
+    state(app).inner.lock().player = player;
     Ok(Ok(()))
 }
 
 // ---------- Background task ----------
 
 /// (Re)starts the background task, e.g. after a sign-in or a new Client ID.
-pub fn start(app: &AppHandle) {
+pub fn start(app: &Ctx) {
     let gen = state(app).gen.fetch_add(1, Ordering::SeqCst) + 1;
-    tauri::async_runtime::spawn(run(app.clone(), gen));
+    tokio::spawn(run(app.clone(), gen));
 }
 
-fn alive(app: &AppHandle, gen: u64) -> bool {
-    state(app).gen.load(Ordering::SeqCst) == gen
+fn alive(app: &Ctx, gen: u64) -> bool {
+    state(app).gen.load(Ordering::SeqCst) == gen && !app.shutdown.is_cancelled()
 }
 
-/// How long until the next poll: often while the launcher shows a song playing, rarely
-/// while an app or game is in front.
-fn interval(app: &AppHandle) -> Duration {
-    if app.state::<AppState>().mode() != Mode::Launcher {
-        return Duration::from_secs(20);
+/// How long until the next poll: often while a screen is open to show it, rarely with none, when
+/// it only keeps the plays counted.
+fn interval(app: &Ctx) -> Duration {
+    if !app.devices.list().iter().any(|s| s.online) {
+        return Duration::from_secs(30);
     }
-    let playing = state(app).inner.lock().unwrap().player.as_ref().is_some_and(|p| p.playing);
+    let playing = state(app).inner.lock().player.as_ref().is_some_and(|p| p.playing);
     Duration::from_secs(if playing { 3 } else { 6 })
 }
 
-async fn run(app: AppHandle, gen: u64) {
+async fn run(app: Ctx, gen: u64) {
     let mut pause = Duration::from_secs(5);
     loop {
         if !alive(&app, gen) {
             return;
         }
         let configured = client_id(&app).is_some();
-        let signed_in = state(&app).inner.lock().unwrap().token.is_some();
+        let signed_in = state(&app).inner.lock().token.is_some();
         if !configured || !signed_in {
             {
-                let mut inner = state(&app).inner.lock().unwrap();
+                let mut inner = state(&app).inner.lock();
                 inner.player = None;
                 inner.link = Link {
                     configured,
@@ -712,12 +752,12 @@ async fn run(app: AppHandle, gen: u64) {
         }
         if result.is_ok() {
             let app = app.clone();
-            tauri::async_runtime::spawn(async move {
+            tokio::spawn(async move {
                 let _ = plays::sync(&app, plays::SYNC_IDLE).await;
             });
         }
         let wait = {
-            let mut inner = state(&app).inner.lock().unwrap();
+            let mut inner = state(&app).inner.lock();
             let signed_in = inner.token.is_some();
             match result {
                 Ok(Ok(())) => {
@@ -750,14 +790,15 @@ async fn run(app: AppHandle, gen: u64) {
             _ = tokio::time::sleep(wait) => {}
             // Spotify takes a moment to reflect a command.
             _ = state(&app).wake.notified() => tokio::time::sleep(Duration::from_millis(700)).await,
+            _ = app.shutdown.cancelled() => return,
         }
     }
 }
 
 /// After a command: show the expected result at once, and poll soon for the real one.
-fn after_command(app: &AppHandle, f: impl FnOnce(&mut Player)) {
+fn after_command(app: &Ctx, f: impl FnOnce(&mut Player)) {
     {
-        let mut inner = state(app).inner.lock().unwrap();
+        let mut inner = state(app).inner.lock();
         if let Some(p) = inner.player.as_mut() {
             f(p);
         }
@@ -770,27 +811,26 @@ fn after_command(app: &AppHandle, f: impl FnOnce(&mut Player)) {
 
 // ---------- Commands ----------
 
-pub async fn control(app: &AppHandle, c: Control) -> Result<()> {
+pub async fn control(app: &Ctx, caller: &Caller, c: Control) -> Result<()> {
     let q = |k: &'static str, v: String| vec![(k, v)];
     match c {
-        Control::Play => command(app, Method::PUT, "/me/player/play", &[], None).await?,
-        Control::Pause => command(app, Method::PUT, "/me/player/pause", &[], None).await?,
-        Control::Next => command(app, Method::POST, "/me/player/next", &[], None).await?,
-        Control::Previous => command(app, Method::POST, "/me/player/previous", &[], None).await?,
-        Control::Seek(ms) => command(app, Method::PUT, "/me/player/seek", &q("position_ms", ms.to_string()), None).await?,
-        Control::Shuffle(on) => command(app, Method::PUT, "/me/player/shuffle", &q("state", on.to_string()), None).await?,
+        Control::Play => command(app, caller, Method::PUT, "/me/player/play", &[], None).await?,
+        Control::Pause => command(app, caller, Method::PUT, "/me/player/pause", &[], None).await?,
+        Control::Next => command(app, caller, Method::POST, "/me/player/next", &[], None).await?,
+        Control::Previous => command(app, caller, Method::POST, "/me/player/previous", &[], None).await?,
+        Control::Seek(ms) => command(app, caller, Method::PUT, "/me/player/seek", &q("position_ms", ms.to_string()), None).await?,
+        Control::Shuffle(on) => command(app, caller, Method::PUT, "/me/player/shuffle", &q("state", on.to_string()), None).await?,
         Control::Repeat(r) => {
             let r = serde_json::to_value(r)?.as_str().unwrap_or("off").to_string();
-            command(app, Method::PUT, "/me/player/repeat", &q("state", r), None).await?
+            command(app, caller, Method::PUT, "/me/player/repeat", &q("state", r), None).await?
         }
         Control::Volume(v) => {
-            command(app, Method::PUT, "/me/player/volume", &q("volume_percent", v.min(100).to_string()), None).await?
+            command(app, caller, Method::PUT, "/me/player/volume", &q("volume_percent", v.min(100).to_string()), None).await?
         }
         Control::Like(on) => {
             let uri = state(app)
                 .inner
                 .lock()
-                .unwrap()
                 .player
                 .as_ref()
                 .and_then(|p| p.track.as_ref())
@@ -798,10 +838,10 @@ pub async fn control(app: &AppHandle, c: Control) -> Result<()> {
                 .ok_or_else(|| Error::msg("Nothing is playing"))?;
             let method = if on { Method::PUT } else { Method::DELETE };
             call(app, method, "/me/library", &q("uris", uri.clone()), None).await??;
-            state(app).inner.lock().unwrap().liked.insert(uri, Some(on));
+            state(app).inner.lock().liked.insert(uri, Some(on));
         }
         Control::Transfer => {
-            let device = local_device(app).await?;
+            let device = callers_device(app, caller).await?;
             let body = json!({ "device_ids": [device], "play": true });
             call(app, Method::PUT, "/me/player", &[], Some(&body)).await??;
         }
@@ -826,23 +866,25 @@ pub async fn control(app: &AppHandle, c: Control) -> Result<()> {
 /// A Spotify Connect device the music can move to, for the companion's device picker.
 #[derive(Debug, Clone, Serialize)]
 pub struct ConnectDevice {
-    /// Spotify's device id; LOCAL_DEVICE for this PC's app while it isn't running.
+    /// Spotify's device id; or `tv:<id>` for a TV PC whose app isn't running, or `cast:<id>` for a
+    /// smart TV, which moving the music there starts.
     pub id: String,
     pub name: String,
     /// Spotify's device type: Computer, Smartphone, Tablet, Speaker…
     pub kind: String,
     pub active: bool,
-    /// The Spotify app on this PC: the living room TV.
+    /// The Spotify app on the TV PC the caller controls.
     pub local: bool,
     pub volume: Option<u8>,
 }
 
-/// Stands for this PC's Spotify app before it runs; moving the music there starts it.
-pub const LOCAL_DEVICE: &str = "local";
+const TV_DEVICE: &str = "tv:";
+const CAST_DEVICE: &str = "cast:";
 
-/// The Connect devices signed in to the account: this PC always, phones and tablets while their
-/// Spotify app is open.
-pub async fn devices(app: &AppHandle) -> Result<Vec<ConnectDevice>> {
+/// The Connect devices signed in to the account (Echos, and phones and tablets while their Spotify
+/// app is open), the TV PCs that are on, and the smart TVs on the network.
+pub async fn devices(app: &Ctx, caller: &Caller) -> Result<Vec<ConnectDevice>> {
+    let mine = callers_tv(app, caller);
     let v = get(app, "/me/player/devices", &[]).await?;
     let mut list: Vec<ConnectDevice> = v["devices"]
         .as_array()
@@ -854,7 +896,7 @@ pub async fn devices(app: &AppHandle) -> Result<Vec<ConnectDevice>> {
             let kind = d["type"].as_str().unwrap_or_default().to_string();
             Some(ConnectDevice {
                 id: d["id"].as_str()?.to_string(),
-                local: is_this_pc(&name, &kind),
+                local: mine.is_some() && tv_of(app, &name, &kind) == mine,
                 active: d["is_active"].as_bool().unwrap_or(false),
                 volume: d["volume_percent"].as_u64().map(|n| n.min(100) as u8),
                 name,
@@ -862,25 +904,73 @@ pub async fn devices(app: &AppHandle) -> Result<Vec<ConnectDevice>> {
             })
         })
         .collect();
-    if !list.iter().any(|d| d.local) {
-        list.insert(
-            0,
-            ConnectDevice {
-                id: LOCAL_DEVICE.into(),
-                name: std::env::var("COMPUTERNAME").unwrap_or_else(|_| "This PC".into()),
+    for tv in app.devices.list().into_iter().filter(|s| s.kind == ScreenKind::Tv && s.online) {
+        let Some(named) = tv.caps.as_ref().and_then(|c| c.spotify_device.clone()) else { continue };
+        if !list.iter().any(|d| d.name.eq_ignore_ascii_case(named.trim())) {
+            list.insert(0, ConnectDevice {
+                local: mine.as_deref() == Some(tv.id.as_str()),
+                id: format!("{TV_DEVICE}{}", tv.id),
+                name: tv.name,
                 kind: "Computer".into(),
                 active: false,
-                local: true,
                 volume: None,
-            },
-        );
+            });
+        }
+    }
+    for tv in crate::players::list(app) {
+        if !list.iter().any(|d| d.name.eq_ignore_ascii_case(&tv.name)) {
+            list.push(ConnectDevice {
+                id: format!("{CAST_DEVICE}{}", tv.id),
+                name: tv.name,
+                kind: "TV".into(),
+                active: false,
+                local: false,
+                volume: None,
+            });
+        }
     }
     Ok(list)
 }
 
+/// Spotify's id for a device of the picker, starting what has to run first.
+async fn spotify_id(app: &Ctx, id: &str) -> Result<String> {
+    if let Some(tv) = id.strip_prefix(TV_DEVICE) {
+        return tv_device(app, tv).await;
+    }
+    match id.strip_prefix(CAST_DEVICE) {
+        Some(tv) => cast_device(app, tv).await,
+        None => Ok(id.to_string()),
+    }
+}
+
+fn connect_devices(v: &Value) -> impl Iterator<Item = (&str, &str)> {
+    let list = v["devices"].as_array().into_iter().flatten();
+    list.filter_map(|d| Some((d["id"].as_str()?, d["name"].as_str()?)))
+}
+
+/// Opens Spotify on smart TV `id` and waits for its app to join the account's devices: under the
+/// TV's own name, or failing that as the one device that wasn't there before.
+async fn cast_device(app: &Ctx, id: &str) -> Result<String> {
+    let name = crate::players::list(app).into_iter().find(|p| p.id == id).map(|p| p.name).unwrap_or_default();
+    let before: Vec<String> = connect_devices(&get(app, "/me/player/devices", &[]).await?).map(|(id, _)| id.to_string()).collect();
+    crate::players::open_spotify(app, id).await?;
+    let deadline = tokio::time::Instant::now() + START_WAIT;
+    while tokio::time::Instant::now() < deadline {
+        let v = get(app, "/me/player/devices", &[]).await?;
+        let found = connect_devices(&v)
+            .find(|(_, n)| n.eq_ignore_ascii_case(&name))
+            .or_else(|| connect_devices(&v).find(|(id, _)| !before.iter().any(|b| b == id)));
+        if let Some((id, _)) = found {
+            return Ok(id.to_string());
+        }
+        tokio::time::sleep(Duration::from_secs(1)).await;
+    }
+    Err(Error::msg("Spotify opened on the TV but didn't join: check it's signed in to the same account there"))
+}
+
 /// Moves playback to device `id` and keeps it playing.
-pub async fn transfer(app: &AppHandle, id: &str) -> Result<()> {
-    let id = if id == LOCAL_DEVICE { local_device(app).await? } else { id.to_string() };
+pub async fn transfer(app: &Ctx, id: &str) -> Result<()> {
+    let id = spotify_id(app, id).await?;
     let body = json!({ "device_ids": [id], "play": true });
     call(app, Method::PUT, "/me/player", &[], Some(&body)).await??;
     after_command(app, |_| {});
@@ -888,40 +978,51 @@ pub async fn transfer(app: &AppHandle, id: &str) -> Result<()> {
 }
 
 /// What plays after the current song: Spotify's queue, then its autoplay.
-pub async fn queue(app: &AppHandle) -> Result<Vec<Track>> {
+pub async fn queue(app: &Ctx) -> Result<Vec<Track>> {
     let v = get(app, "/me/player/queue", &[]).await?;
     Ok(v["queue"].as_array().into_iter().flatten().filter_map(parse_track).take(30).collect())
 }
 
-/// Plays `uri` on this PC: a playlist, album, artist, show or Liked Songs from the start, or
-/// a track or episode, inside `context` when given (so the album or playlist carries on),
-/// from `position_ms` in when given (an episode listened to halfway).
-pub async fn play(app: &AppHandle, uri: &str, context: Option<&str>, position_ms: Option<u64>) -> Result<()> {
-    let device = local_device(app).await?;
+/// Where something asked to play goes: the device named; for a TV PC, its own Spotify app; else
+/// whatever is playing now, so a phone can start a playlist on the Echo already in use.
+async fn destination(app: &Ctx, caller: &Caller, device: Option<&str>) -> Result<Vec<(&'static str, String)>> {
+    let id = match device {
+        Some(id) => Some(spotify_id(app, id).await?),
+        None if caller.agent.is_some() => Some(callers_device(app, caller).await?),
+        None => None,
+    };
+    Ok(id.map(|id| ("device_id", id)).into_iter().collect())
+}
+
+/// Plays `uri` on `device`: a playlist, album, artist, show or Liked Songs from the start, or a
+/// track or episode, inside `context` when given (so the album or playlist carries on), from
+/// `position_ms` in when given (an episode listened to halfway).
+pub async fn play(app: &Ctx, caller: &Caller, uri: &str, context: Option<&str>, position_ms: Option<u64>, device: Option<&str>) -> Result<()> {
+    let query = destination(app, caller, device).await?;
     let mut body = play_body(uri, context);
     if let Some(ms) = position_ms {
         body["position_ms"] = json!(ms);
     }
-    call(app, Method::PUT, "/me/player/play", &[("device_id", device)], Some(&body)).await??;
+    command(app, caller, Method::PUT, "/me/player/play", &query, Some(&body)).await?;
     after_command(app, |p| p.playing = true);
     Ok(())
 }
 
-/// Plays songs one after another on this PC, from the first: e.g. the user's most played of an
+/// Plays songs one after another on `device`, from the first: e.g. the user's most played of an
 /// artist.
-pub async fn play_tracks(app: &AppHandle, uris: &[String]) -> Result<()> {
+pub async fn play_tracks(app: &Ctx, caller: &Caller, uris: &[String], device: Option<&str>) -> Result<()> {
     if uris.is_empty() {
         return Err(Error::msg("Nothing to play"));
     }
-    let device = local_device(app).await?;
+    let query = destination(app, caller, device).await?;
     let body = json!({ "uris": uris });
-    call(app, Method::PUT, "/me/player/play", &[("device_id", device)], Some(&body)).await??;
+    command(app, caller, Method::PUT, "/me/player/play", &query, Some(&body)).await?;
     after_command(app, |p| p.playing = true);
     Ok(())
 }
 
 /// The Liked Songs context of the signed-in account.
-fn liked_songs_uri(app: &AppHandle) -> Result<String> {
+fn liked_songs_uri(app: &Ctx) -> Result<String> {
     Ok(format!("spotify:user:{}:collection", state(app).token()?.user))
 }
 
@@ -964,7 +1065,17 @@ mod tests {
         assert_eq!(t.image.as_deref(), Some("big"));
         let d = p.device.unwrap();
         assert_eq!(d.volume, Some(70));
-        assert!(!d.local, "a phone is never this PC");
+        assert!(!d.local, "only the poll, which knows the TV PCs, says so");
+    }
+
+    #[test]
+    fn the_consent_page_asks_for_what_the_redirect_answers() {
+        let (url, verifier, expected) = consent("my-id");
+        assert!(url.starts_with("https://accounts.spotify.com/authorize?"));
+        assert!(url.contains("client_id=my-id"));
+        assert!(url.contains(&format!("state={expected}")));
+        assert!(url.contains(&format!("code_challenge={}", challenge(&verifier))));
+        assert!(!url.contains(&verifier), "the verifier stays on the server");
     }
 
     #[test]

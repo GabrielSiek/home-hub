@@ -17,7 +17,7 @@ export const REPEAT_NEXT: Record<Repeat, Repeat> = { off: 'context', context: 't
 
 export const REPEAT_LABEL: Record<Repeat, string> = { off: 'Repeat', context: 'Repeat all', track: 'Repeat song' };
 
-export const SIGN_IN = 'Sign in to Spotify on the TV: Settings › Music';
+export const SIGN_IN = 'Sign in to Spotify here in Music';
 
 /** Contexts a song inside can be played from, so the list carries on after it. */
 export const listContext = (uri: string | null | undefined) => !!uri && /^spotify:(playlist|album)|:collection$/.test(uri);
@@ -225,9 +225,12 @@ export function playOnSlots(layout: Layout, list: ConnectDevice[] | null, device
     on: playsOn(d, device),
     open: false,
   });
-  const tvSlot: Slot = tvDev ? slot(tvDev, tv) : { key: TV_SLOT, label: tv, icon: 'tv', device: null, tv: true, on: !!device?.local, open: false };
   const placeholder = (word: string, icon: IconName): Slot => ({ key: `open:${word}`, label: word, icon, device: null, tv: false, on: false, open: true });
   const other = (d: ConnectDevice) => slot(d, deviceLabel(d, tv));
+  // With no TV PC on, its place goes to the next device: an Echo, a smart TV.
+  const spare = others.find((d) => d !== playingOther);
+  const more = placeholder('More devices', 'speakerLoud');
+  const tvSlot: Slot = tvDev ? slot(tvDev, tv) : spare ? other(spare) : more;
   if (layout === 'tablet') {
     // This iPad; or what plays elsewhere, so the buttons show where the music is.
     let first: Slot;
@@ -236,10 +239,10 @@ export function playOnSlots(layout: Layout, list: ConnectDevice[] | null, device
     else if (me) first = placeholder(me.word, me.kind === 'smartphone' ? 'phone' : 'tablet');
     else if (others.length) first = other(others[0]);
     else first = placeholder('Other device', 'speakerLoud');
-    return [first, tvSlot];
+    return [first, tvSlot.key === first.key ? more : tvSlot];
   }
   const first = own && me ? slot(own, me.word) : placeholder(me?.word ?? 'This phone', 'phone');
-  const third = playingOther ?? (others.length === 1 ? others[0] : null);
+  const third = playingOther ?? (tvDev && others.length === 1 ? others[0] : null);
   return [first, tvSlot, third ? other(third) : placeholder('Other', 'speakerLoud')];
 }
 

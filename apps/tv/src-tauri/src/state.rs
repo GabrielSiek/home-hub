@@ -14,7 +14,6 @@ use crate::livetv;
 use crate::photos;
 use crate::recs::RecsState;
 use crate::retro;
-use crate::spotify;
 use crate::sports;
 use crate::twitch;
 use crate::watch::WatchState;
@@ -55,7 +54,6 @@ pub struct AppState {
     pub pad: Mutex<Option<String>>,
     pub games: GamesState,
     pub retro: retro::State,
-    pub spotify: spotify::State,
     pub twitch: twitch::State,
     pub assistant: AssistantState,
     pub watch: WatchState,
@@ -78,7 +76,6 @@ impl AppState {
             history: Mutex::new(History::load(&data_dir)),
             games: GamesState::new(&data_dir),
             retro: retro::State::new(&data_dir),
-            spotify: spotify::State::new(&data_dir),
             twitch: twitch::State::new(&data_dir),
             assistant: AssistantState::default(),
             watch: WatchState::new(&data_dir),

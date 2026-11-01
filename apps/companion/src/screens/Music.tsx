@@ -7,7 +7,7 @@ import { useEffect, type CSSProperties } from 'react';
 import type { MusicItem, Player, SpotifySnapshot, Track } from '@tv/lib/api';
 import type { Rgb } from '@tv/lib/smarthome';
 import type { ScreenProps } from '../App';
-import { FollowChip, TvNotice, useTvGate, type Gate } from '../follow';
+import { FollowChip } from '../follow';
 import { useTvName } from '../house';
 import { Icon } from '../icons';
 import { useLive } from '../live';
@@ -15,7 +15,7 @@ import { setSub, type Layout } from '../nav';
 import { Art, fadeUp, Round, useBox } from '../ui';
 import { deviceIcon, deviceLabel } from './Hub';
 import { cardBg, coverCss, coverGlow, glow, listContext, loadDevices, mine, seedRgb, SIGN_IN, thisDevice, useArtRgb, useDevices, useQueue, useShelf, type Me } from './music/data';
-import { Cover, fadeFoot, fadeRight, Like, PlayOn, Progress, Transport, Volume } from './music/parts';
+import { Cover, fadeFoot, fadeRight, Like, PlayOn, Progress, SignIn, Transport, Volume } from './music/parts';
 import { DevicesSheet, ListSheet, PlaylistTiles, QueueRows, QueueSheet, SearchSheet } from './music/sheets';
 
 type Lists = { data: MusicItem[] | null; error: string | null };
@@ -65,9 +65,7 @@ interface View {
 }
 
 /** "playing on Quarto TV", "paused on this iPad"; `tv` names the TV this page controls. */
-function whereText(spotify: SpotifySnapshot | null, me: Me | null, own: string | null, tv: string, gate: Gate) {
-  if (gate === 'off') return `${tv} is off`;
-  if (gate !== 'on') return 'no TV chosen';
+function whereText(spotify: SpotifySnapshot | null, me: Me | null, own: string | null, tv: string) {
   if (!spotify) return 'connecting…';
   if (!spotify.link.signed_in) return spotify.link.configured ? 'not signed in' : 'not set up';
   const p = spotify.player;
@@ -78,28 +76,25 @@ function whereText(spotify: SpotifySnapshot | null, me: Me | null, own: string |
 }
 
 /** The title and the line under it: the song, or why there's none. */
-function songLines(spotify: SpotifySnapshot | null, phone: boolean, tv: string, gate: Gate) {
+function songLines(spotify: SpotifySnapshot | null, phone: boolean) {
   const t = spotify?.player?.track;
-  if (gate === 'off') return { title: `${tv} is off`, line: 'Spotify plays through the TV' };
-  if (gate !== 'on') return { title: 'No TV chosen', line: 'Spotify plays through the TV' };
-  if (!spotify) return { title: 'Connecting…', line: `Spotify on ${tv}` };
-  if (!spotify.link.signed_in) return { title: 'Spotify isn’t signed in', line: phone ? 'Sign in on the TV: Settings › Music' : SIGN_IN };
-  if (!t) return { title: 'Nothing playing', line: spotify.link.error ?? 'Pick a playlist to play it on the TV' };
+  if (!spotify) return { title: 'Connecting…', line: 'Spotify' };
+  if (!spotify.link.signed_in) return { title: 'Spotify isn’t signed in', line: SIGN_IN };
+  if (!t) return { title: 'Nothing playing', line: spotify.link.error ?? 'Pick a playlist, or where to play' };
   return { title: t.title, line: phone ? t.artist : [t.artist, t.album].filter(Boolean).join(' · ') };
 }
 
 function useWhere(layout: Layout, spotify: SpotifySnapshot | null) {
   const list = useDevices((s) => s.list);
   const tv = useTvName();
-  const gate = useTvGate();
   const me = thisDevice(layout);
-  return whereText(spotify, me, mine(list, me)?.name ?? null, tv, gate);
+  return whereText(spotify, me, mine(list, me)?.name ?? null, tv);
 }
 
-/** Where the music goes: the Play on buttons, or why the TV can't play it now. */
-function PlayOnOrNotice({ layout, signedIn }: { layout: Layout; signedIn: boolean }) {
-  const gate = useTvGate();
-  if (gate !== 'on') return <TvNotice gate={gate} phone={layout === 'phone'} bar style={{ minHeight: 52 }} />;
+/** Where the music goes: the Play on buttons, or the sign-in they need. */
+function PlayOnOrSignIn({ layout, signedIn }: { layout: Layout; signedIn: boolean }) {
+  const spotify = useLive((s) => s.spotify);
+  if (spotify && !signedIn) return <SignIn phone={layout === 'phone'} />;
   return <PlayOn layout={layout} signedIn={signedIn} />;
 }
 
@@ -203,9 +198,7 @@ function TabletPlayer({
   style: CSSProperties;
 }) {
   const t = p?.track ?? null;
-  const tv = useTvName();
-  const gate = useTvGate();
-  const { title, line } = songLines(spotify, false, tv, gate);
+  const { title, line } = songLines(spotify, false);
   // The cover gives way first on short windows; the board's 240 px at 768.
   const [ref, box] = useBox<HTMLDivElement>();
   const size = box ? Math.max(90, Math.min(300, box.h - 42, box.w - 56)) : 240;
@@ -257,7 +250,7 @@ function TabletPlayer({
       </div>
       <span style={{ flex: '0 1 36px', minHeight: 12 }} />
       <div style={{ flex: '0 0 auto', margin: '0 20px 20px' }}>
-        <PlayOnOrNotice layout="tablet" signedIn={signedIn} />
+        <PlayOnOrSignIn layout="tablet" signedIn={signedIn} />
       </div>
     </section>
   );
@@ -319,10 +312,8 @@ function From({ p }: { p: Player }) {
 
 function PhoneMusic({ spotify, p, queue, rgb, signedIn }: View) {
   const where = useWhere('phone', spotify);
-  const tv = useTvName();
-  const gate = useTvGate();
   const t = p?.track ?? null;
-  const { title, line } = songLines(spotify, true, tv, gate);
+  const { title, line } = songLines(spotify, true);
   const [ref, box] = useBox<HTMLDivElement>();
   // The board's 270 px cover on a 390 × 844 phone; smaller first when the phone is shorter.
   const size = box ? Math.max(110, Math.min(300, box.h - 16, box.w - 120)) : 270;
@@ -374,7 +365,7 @@ function PhoneMusic({ spotify, p, queue, rgb, signedIn }: View) {
           <Volume layout="phone" p={p} signedIn={signedIn} />
         </div>
         <div style={{ flex: '0 0 auto', margin: '14px 16px 0' }}>
-          <PlayOnOrNotice layout="phone" signedIn={signedIn} />
+          <PlayOnOrSignIn layout="phone" signedIn={signedIn} />
         </div>
         <button
           type="button"

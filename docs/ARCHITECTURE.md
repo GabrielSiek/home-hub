@@ -41,7 +41,9 @@ splits into:
 | Settings | household, room and per-device settings; secrets masked | caches its own settings | admin behind the PIN |
 | Sign-ins | PKCE, code exchange, token storage, single-flight refresh | opens the consent page in its Edge, catches the 127.0.0.1 redirect | paste fallback |
 | Streaming sign-ins, watch sessions, profile links | M2: progress per device | **stay on the PC** | – |
-| TMDB, recommendations, sports, live TV, Spotify, Twitch, YouTube, photos | M2 | as before, until M2 | through the router |
+| Spotify | sign-in, tokens, player state, library, picks the Connect device | starts its own Spotify app when told; alarms go through the server | UI, its own sign-in (paste) |
+| TMDB, recommendations, sports, live TV, Twitch, YouTube, photos | M2 | as before, until M2 | through the router |
+| Smart TVs (Google Cast, Android TV remote) | finds and pairs them, tells them what to open or which library file to fetch | – | smart TV sheet, Play on |
 | Games, emulators | – | stay on the PC | – |
 | The library (movies and series of our own) | talks to Radarr, Sonarr and qBittorrent, holds their keys, hands out the files | plays them (mpv), keeps progress | – for now |
 
@@ -115,10 +117,10 @@ had). Each entry has:
 
 | Topic | From | To |
 |---|---|---|
-| `smarthome`, `companion`, `clock`, `calendar`, `devices` | server | everyone |
+| `smarthome`, `companion`, `clock`, `calendar`, `devices`, `spotify`, `players` | server | everyone |
 | `follow`, `resync` | server | one subscriber |
 | `settings` (unmasked subset) | server | agents only |
-| `mode`, `tv`, `watch`, `watch-sync`, `spotify`, `mic-ready` | agent | the screens following it |
+| `mode`, `tv`, `watch`, `watch-sync`, `mic-ready` | agent | the screens following it |
 | `device.context`, `ring.note`, `feed.sports` | agent | server only |
 | `input`, `cursor`, `pad`, `games-*`, `retro-*`, `voice-*`, `twitch`, `youtube`, `photos`, `sports-*` | agent | its own webview only |
 
@@ -157,6 +159,32 @@ step of playing differs. Its tile shows once the server has a Radarr or Sonarr k
   their own there. The running app is mpv as far as the launcher goes: Home, a game or a service
   starting, and mpv exiting all take the paths a browser does.
 - **Progress** is the same `Session` and store as the services', fed by mpv's position every 250 ms.
+
+## Music and smart TVs
+
+Spotify runs on the server, so the music is followed with every TV PC off. The server plays
+nothing: each Connect device on the account is a player, and it only tells Spotify which one.
+
+- **Echos** need no code of their own: they're Connect devices. They're told nothing directly,
+  because Alexa has no local interface: music is all they take.
+- **A TV PC** is known by the name its Spotify app gives its device (`caps.spotify_device`). When
+  it isn't running, `spotify.start` opens it, and the server waits for it to join.
+- **A smart TV** is found by DNS-SD and reached with Google Cast. Opening Spotify on it makes its
+  own app join the account's devices. A library file is played by Cast's player, fetching
+  `/api/media/<token>` from the server: nothing converts it, so a format the TV can't read comes
+  back as an error.
+- **Streaming services** open in the TV's own apps, signed in there; the server can't carry their
+  video, which is protected. That takes the Android TV remote protocol, which needs one pairing
+  per TV: the TV shows a code (`cast_pair_start`, `cast_pair_finish`, kept in tv-remote.json with
+  our RSA certificate). `stream_search` asks JustWatch where a title is, and `stream_open` sends the
+  TV the address. Only addresses on that service's own sites go through. A TV PC's profiles and
+  progress don't carry over: the TV's apps keep their own.
+- **What plays where.** A device named wins; a TV PC plays on itself; a phone or tablet plays on
+  what's active, and failing that on the TV PC it controls.
+- **Signing in with no TV PC on** (`spotify_sign_in_link`, then `oauth_paste`): Spotify's page ends
+  on a 127.0.0.1 address the phone can't open, and that address, pasted, finishes the sign-in.
+- **Fire TVs** aren't reached yet: they have no Cast, and only answer over ADB once its debugging
+  is turned on in each one's settings.
 
 ## Timers and alarms across devices
 
@@ -215,7 +243,7 @@ step of playing differs. Its tile shows once the server has a Radarr or Sonarr k
 | M1b | Clock and calendar across devices, sign-ins through a TV PC | server done |
 | M1c | Assistant (per-screen conversations, TV tools forwarded) and household settings | server done |
 | M1 TV side | The TV app as an agent (link, invoke router, ring effects, calendar card, sign-in loopback, assistant tools, device context, Grêmio feed), the TV UI's Server settings, the companion following its room's TV PC | built and tested; the manual run on the real house is next |
-| M2 | Media data on the server, one domain at a time; playback stays on the TV PCs | |
+| M2 | Media data on the server, one domain at a time; playback stays on the TV PCs | Spotify done |
 | M3 | Viewer profiles, shared front-end package, installers, cutover | |
 
 **Order of work.** The server's domains (smart home, clock, calendar, assistant) were all ported

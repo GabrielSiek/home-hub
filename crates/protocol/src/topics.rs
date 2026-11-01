@@ -3,7 +3,7 @@
 
 /// From the server to every screen and TV PC.
 /// `pairing` carries only how many TV PCs wait to be approved; the codes need the admin PIN.
-pub const TO_EVERYONE: &[&str] = &["smarthome", "companion", "clock", "calendar", "devices", "pairing"];
+pub const TO_EVERYONE: &[&str] = &["smarthome", "companion", "clock", "calendar", "devices", "pairing", "spotify", "players"];
 
 /// From the server to one browser: the TV PC it controls changed, or it fell behind and should
 /// load everything again.
@@ -13,7 +13,7 @@ pub const TO_ONE: &[&str] = &["follow", "resync"];
 pub const TO_AGENTS: &[&str] = &["settings"];
 
 /// From a TV PC to the screens that control it.
-pub const FROM_AGENT_TO_FOLLOWERS: &[&str] = &["mode", "tv", "watch", "watch-sync", "spotify", "mic-ready"];
+pub const FROM_AGENT_TO_FOLLOWERS: &[&str] = &["mode", "tv", "watch", "watch-sync", "mic-ready"];
 
 /// From a TV PC to the server only.
 pub const FROM_AGENT_TO_SERVER: &[&str] = &["device.context", "ring.note", "feed.sports"];

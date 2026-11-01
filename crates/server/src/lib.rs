@@ -18,11 +18,13 @@ pub mod hub;
 pub mod import;
 pub mod library;
 pub mod oauth;
+pub mod players;
 pub mod router;
 #[cfg(windows)]
 pub mod service;
 pub mod settings;
 pub mod smarthome;
+pub mod spotify;
 pub mod tls;
 
 use std::net::SocketAddr;
@@ -61,5 +63,7 @@ pub async fn start_with_clock(config: Config, clock: Arc<dyn Clock>) -> Result<R
     smarthome::start(&ctx);
     clock::start(&ctx);
     calendar::start(&ctx);
+    players::start(&ctx);
+    spotify::start(&ctx);
     Ok(Running { ctx, http: bound.http, https: bound.https })
 }

@@ -53,6 +53,44 @@ export type RemoteKey =
   | 'ChannelUp'
   | 'ChannelDown';
 
+/** A smart TV the server reaches directly. */
+export interface Player {
+  id: string;
+  name: string;
+  kind: string;
+  /** Takes the remote's links: it can open streaming apps. */
+  paired: boolean;
+}
+
+/** A streaming service with its own app on the TV. */
+export interface StreamService {
+  id: string;
+  name: string;
+}
+
+/** A title on the services, from JustWatch. */
+export interface StreamTitle {
+  title: string;
+  year: number | null;
+  series: boolean;
+  poster: string | null;
+  offers: { service: string; name: string; url: string }[];
+}
+
+export interface LibraryTitle {
+  id: number;
+  media_type: string;
+  title: string;
+  year: string | null;
+  poster: string | null;
+}
+
+export interface LibraryListing {
+  configured: boolean;
+  titles: LibraryTitle[];
+  problems: string[];
+}
+
 /** A Spotify Connect device the music can move to. */
 export interface ConnectDevice {
   id: string;
@@ -127,6 +165,27 @@ export const backend = {
     ]),
   /** Moves the music to a Connect device and keeps it playing. */
   spotifyTransfer: (id: string) => call<void>('spotify_transfer', { id }),
+  /** Spotify's consent page, for signing in here with no TV PC to catch its redirect. */
+  spotifySignInLink: () => call<string>('spotify_sign_in_link'),
+  /** Finishes that sign-in: the 127.0.0.1 address Spotify ended on, which a phone can't open. */
+  oauthPaste: (address: string) => call<void>('oauth_paste', { address }),
+  /** The smart TVs on the network, reached with no TV PC. */
+  players: () => call<Player[]>('cast_list', undefined, () => [{ id: 'cast', name: 'Living room TV', kind: 'cast', paired: true }]),
+  /** Plays a title of the house's library on one of them. */
+  playerPlay: (player: string, mediaType: string, id: number) => call<void>('cast_play', { player, mediaType, id }),
+  playerControl: (player: string, action: 'play' | 'pause' | 'stop') => call<void>('cast_control', { player, action }),
+  /** Makes the TV show a code; `pairFinish` takes it. */
+  pairStart: (player: string) => call<void>('cast_pair_start', { player }),
+  pairFinish: (player: string, code: string) => call<void>('cast_pair_finish', { player, code }),
+  streamServices: () =>
+    call<StreamService[]>('stream_services', undefined, () => [
+      { id: 'netflix', name: 'Netflix' },
+      { id: 'youtube', name: 'YouTube' },
+    ]),
+  streamSearch: (query: string) => call<StreamTitle[]>('stream_search', { query }, () => []),
+  /** Opens a service on the TV: its app, or `url` in it. */
+  streamOpen: (player: string, service: string, url?: string) => call<void>('stream_open', { player, service, url: url ?? null }),
+  library: () => call<LibraryListing>('library_get', undefined, () => ({ configured: false, titles: [], problems: [] })),
   /** Up next: Spotify's queue after the song playing. */
   spotifyQueue: () => call<Track[]>('spotify_queue', undefined, () => []),
 };

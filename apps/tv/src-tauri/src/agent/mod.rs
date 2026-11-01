@@ -6,7 +6,7 @@
 //!   assistant's tools that act on this TV, and the pictures a page shows from this PC.
 //! - The server's events reach the TV UI under the same names, with this TV's own entries marked
 //!   (`this`) and only its own rings.
-//! - What this TV says about itself (`mode`, `tv`, `watch`, `watch-sync`, `spotify`, `mic-ready`)
+//! - What this TV says about itself (`mode`, `tv`, `watch`, `watch-sync`, `mic-ready`)
 //!   goes to the screens following it; what the server needs (`device.context`, `feed.sports`) to
 //!   the server.
 //! - The TV UI's server-owned commands go to the server (invoke.rs).
@@ -117,7 +117,7 @@ pub fn start(app: &AppHandle) {
         mic: crate::assistant::voice::has_microphone(),
         voice: st.config.read().unwrap().settings.assistant_speech != crate::config::Speech::Off,
         ring: true,
-        spotify_device: None,
+        spotify_device: crate::spotify::device_name(),
     };
     let me = Identity { device: kept.device, name: kept.name, caps, mac: wired_mac(), app_version: env!("CARGO_PKG_VERSION").into() };
     let host = Arc::new(Tv { app: app.clone() });
@@ -236,6 +236,11 @@ impl Host for Tv {
                     Ok(Value::Null)
                 }
                 "oauth.loopback" => sign_in_page(&app, &args).await.map_err(|e| e.to_string()),
+                "spotify.start" => crate::spotify::start_desktop(&app).map(|()| Value::Null).map_err(|e| e.to_string()),
+                "spotify.started" => {
+                    crate::spotify::started(&app);
+                    Ok(Value::Null)
+                }
                 "assistant.tool" => {
                     let name = args["name"].as_str().unwrap_or_default();
                     let tool_args = args["args"].as_str().unwrap_or("{}");
@@ -263,6 +268,9 @@ impl Host for Tv {
             _ => {
                 if name == "devices" {
                     self.remember_me(&payload);
+                }
+                if name == "spotify" {
+                    crate::spotify::heard(&payload);
                 }
                 let payload = for_this_tv(&self.app, &name, payload);
                 let _ = self.app.emit(&name, payload);

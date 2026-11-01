@@ -398,10 +398,7 @@ fn sync(app: &AppHandle) {
 /// Quiets what's playing and makes sure the ring is heard.
 fn begin(app: &AppHandle, playlist: bool) {
     let st = state(app);
-    let music = !playlist
-        && spotify::snapshot(app)
-            .player
-            .is_some_and(|p| p.playing && p.device.as_ref().is_some_and(|d| d.local));
+    let music = !playlist && spotify::here().is_some_and(|h| h.playing);
     if music {
         let app = app.clone();
         tauri::async_runtime::spawn(async move {
@@ -493,7 +490,7 @@ fn bell(app: &AppHandle, r: &Ring, generation: u64) {
 /// Plays the alarm's playlist on this PC, from quiet to its usual volume over a minute.
 async fn playlist(app: &AppHandle, uri: &str, generation: u64) -> crate::error::Result<()> {
     let current = |app: &AppHandle| state(app).inner.lock().unwrap().fx.generation == generation;
-    let before = spotify::snapshot(app).player.and_then(|p| p.device).filter(|d| d.local).and_then(|d| d.volume);
+    let before = spotify::here().and_then(|h| h.volume);
     {
         let mut inner = state(app).inner.lock().unwrap();
         if inner.fx.generation == generation {
@@ -502,7 +499,7 @@ async fn playlist(app: &AppHandle, uri: &str, generation: u64) -> crate::error::
     }
     // Quiet before it starts, when there's a player to tell; again once it plays.
     let _ = spotify::control(app, spotify::Control::Volume(PLAYLIST_FROM)).await;
-    spotify::play(app, uri, None, None).await?;
+    spotify::play(app, uri).await?;
     let _ = spotify::control(app, spotify::Control::Volume(PLAYLIST_FROM)).await;
     let target = u32::from(before.unwrap_or(70).clamp(30, 100));
     let from = u32::from(PLAYLIST_FROM);

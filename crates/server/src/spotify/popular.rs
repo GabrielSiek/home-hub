@@ -6,14 +6,14 @@ use std::collections::HashSet;
 
 use futures_util::future::join_all;
 use serde_json::Value;
-use tauri::{AppHandle, Manager};
 
 use super::library::page;
 use super::plays::{song_key, top_track, TopTrack, MOST_PLAYED_MAX};
+use tvl_kit::time::now_ms;
+use tvl_kit::{Error, Result};
+
 use super::{get, http, state};
-use crate::error::{Error, Result};
-use crate::history::now_ms;
-use crate::state::AppState;
+use crate::ctx::Ctx;
 
 const LASTFM: &str = "https://ws.audioscrobbler.com/2.0/";
 /// Last.fm's counts barely move in a day.
@@ -21,11 +21,12 @@ const CACHE_MS: i64 = 24 * 3600 * 1000;
 
 /// The artist's most played songs on Last.fm, with everyone's play counts, most played first.
 /// None without a Last.fm API key. Songs not found on Spotify are left out.
-pub async fn popular(app: &AppHandle, uri: &str, name: &str) -> Result<Option<Vec<TopTrack>>> {
-    let Some(key) = app.state::<AppState>().config.read().unwrap().settings.lastfm_key() else {
+pub async fn popular(app: &Ctx, uri: &str, name: &str) -> Result<Option<Vec<TopTrack>>> {
+    let key = app.settings.get().lastfm_api_key;
+    if key.is_empty() {
         return Ok(None);
-    };
-    if let Some((at, list)) = state(app).inner.lock().unwrap().popular.get(uri) {
+    }
+    if let Some((at, list)) = state(app).inner.lock().popular.get(uri) {
         if now_ms() - at < CACHE_MS {
             return Ok(Some(list.clone()));
         }
@@ -38,7 +39,7 @@ pub async fn popular(app: &AppHandle, uri: &str, name: &str) -> Result<Option<Ve
         ("format", "json"),
         ("api_key", key.as_str()),
     ];
-    let v: Value = http(app).get(LASTFM).query(&query).send().await?.json().await?;
+    let v: Value = http().get(LASTFM).query(&query).send().await?.json().await?;
     if let Some(why) = v["message"].as_str().filter(|_| v["error"].is_number()) {
         return Err(Error::msg(format!("Last.fm: {why}")));
     }
@@ -49,7 +50,7 @@ pub async fn popular(app: &AppHandle, uri: &str, name: &str) -> Result<Option<Ve
         .zip(found)
         .filter_map(|((_, count), t)| Some(TopTrack { count: Some(count), ..t? }))
         .collect();
-    state(app).inner.lock().unwrap().popular.insert(uri.to_string(), (now_ms(), list.clone()));
+    state(app).inner.lock().popular.insert(uri.to_string(), (now_ms(), list.clone()));
     Ok(Some(list))
 }
 
@@ -70,7 +71,7 @@ fn ranked(v: &Value) -> Vec<(String, u64)> {
 }
 
 /// The artist's song called `title` on Spotify: the same song by them, else their first hit.
-async fn find(app: &AppHandle, title: &str, artist_uri: &str, artist: &str) -> Option<TopTrack> {
+async fn find(app: &Ctx, title: &str, artist_uri: &str, artist: &str) -> Option<TopTrack> {
     let clean = |s: &str| s.replace('"', "");
     let q = format!("track:\"{}\" artist:\"{}\"", clean(title), clean(artist));
     let v = get(app, "/search", &[("q", q), ("type", "track".into()), ("limit", "5".into())]).await.ok()?;

@@ -245,7 +245,7 @@ export const useWatchData = create<WatchData>(() => ({
 
 const set = useWatchData.setState;
 
-const loadApps = () => api.listApps().then((apps) => set({ apps }), (e) => (set({ apps: [] }), toast(e)));
+const loadApps = () => api.listApps().then((apps) => set({ apps }), () => set({ apps: [] }));
 
 export function loadLists() {
   api.watchProgress().then((progress) => set({ progress }), () => set({ progress: [] }));

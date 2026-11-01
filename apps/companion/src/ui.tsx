@@ -498,7 +498,7 @@ export function Overlays({ layout }: { layout: 'tablet' | 'phone' }) {
           role="status"
           aria-live="polite"
           style={{
-            position: 'fixed',
+            position: 'absolute',
             left: '50%',
             bottom,
             transform: 'translateX(-50%)',

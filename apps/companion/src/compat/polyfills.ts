@@ -30,16 +30,17 @@ if (typeof structuredClone !== 'function') {
   (globalThis as unknown as Loose).structuredClone = <T,>(value: T): T => (value === undefined ? value : JSON.parse(JSON.stringify(value)));
 }
 
-// ---------- Full screen height (iOS 12 home screen apps) ----------
-// Opened from the home screen with the status bar over the page, iOS 12 lays the page out as tall
-// as the screen less the status bar, yet draws it from the screen's top edge: a black band is
-// left along the bottom. There #root (styles.css) is made as tall as the screen instead.
+// ---------- Full screen height (iOS home screen apps) ----------
+// Opened from the home screen with the status bar over the page, iOS 12 and the iPhones of today
+// lay the page out as tall as the screen less the status bar, yet draw it from the screen's top
+// edge: a black band is left along the bottom. There #root (styles.css) is made as tall as the
+// screen instead. The status bar is 20 px, or up to 62 px around a notch or Dynamic Island.
 
 function fitScreen() {
   const root = document.documentElement;
   const full = window.innerWidth > window.innerHeight ? Math.min(screen.width, screen.height) : Math.max(screen.width, screen.height);
   const missing = full - root.clientHeight;
-  root.style.setProperty('--app-h', missing > 0 && missing <= 40 ? `${full}px` : '');
+  root.style.setProperty('--app-h', missing > 0 && missing <= 80 ?`${full}px` : '');
 }
 
 if ((navigator as Navigator & { standalone?: boolean }).standalone) {

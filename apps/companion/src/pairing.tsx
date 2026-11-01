@@ -80,7 +80,7 @@ const ago = (since: number) => {
 };
 
 const pill: CSSProperties = {
-  position: 'fixed',
+  position: 'absolute',
   left: '50%',
   bottom: 'calc(env(safe-area-inset-bottom, 0px) + 84px)',
   zIndex: 40,

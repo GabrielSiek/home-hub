@@ -90,7 +90,7 @@ pub async fn run(ctx: &Ctx, caller: &Caller, cmd: &str, a: Value) -> Answer {
         "server_settings_get" => json(ctx.settings.get().masked()),
         "server_settings_save" => {
             let client_id = ctx.settings.get().spotify_client_id;
-            ctx.settings.save(arg(&a, "settings")?)?;
+            ctx.settings.save_from(&arg::<serde_json::Value>(&a, "settings")?)?;
             let house = ctx.settings.get();
             if house.spotify_client_id != client_id {
                 spotify::start(ctx);

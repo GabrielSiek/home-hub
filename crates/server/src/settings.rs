@@ -27,7 +27,13 @@ pub struct House {
     pub steam_api_key: String,
     pub steamgriddb_api_key: String,
     pub youtube_api_key: String,
+    /// Which model answers the assistant.
+    pub assistant_llm: Llm,
+    /// Anthropic API key (platform.claude.com): Claude for the assistant.
+    pub anthropic_api_key: String,
+    /// Speech recognition (Whisper), and the answers when `assistant_llm` is DeepInfra.
     pub deepinfra_api_key: String,
+    /// Model id of the `assistant_llm` provider. Empty, or not a Claude model with Claude: its default.
     pub assistant_model: String,
     /// City for the weather. Empty: located by IP address.
     pub assistant_location: String,
@@ -54,6 +60,17 @@ pub struct House {
     pub library_quality: String,
 }
 
+/// The assistant's model provider.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum Llm {
+    /// Claude, with the Anthropic key; DeepInfra while there's none.
+    #[default]
+    Claude,
+    /// A DeepInfra model, with the DeepInfra key.
+    DeepInfra,
+}
+
 impl Default for House {
     fn default() -> Self {
         Self {
@@ -63,6 +80,8 @@ impl Default for House {
             steam_api_key: String::new(),
             steamgriddb_api_key: String::new(),
             youtube_api_key: String::new(),
+            assistant_llm: Llm::Claude,
+            anthropic_api_key: String::new(),
             deepinfra_api_key: String::new(),
             assistant_model: String::new(),
             assistant_location: String::new(),
@@ -91,6 +110,7 @@ pub const KEYS: &[(&str, &str)] = &[
     ("steam_api_key", "STEAM_API_KEY"),
     ("steamgriddb_api_key", "STEAMGRIDDB_API_KEY"),
     ("youtube_api_key", "YOUTUBE_API_KEY"),
+    ("anthropic_api_key", "ANTHROPIC_API_KEY"),
     ("deepinfra_api_key", "DEEPINFRA_API_KEY"),
     ("spotify_client_id", "SPOTIFY_CLIENT_ID"),
     ("lastfm_api_key", "LASTFM_API_KEY"),
@@ -109,6 +129,7 @@ impl House {
             "steam_api_key" => &mut self.steam_api_key,
             "steamgriddb_api_key" => &mut self.steamgriddb_api_key,
             "youtube_api_key" => &mut self.youtube_api_key,
+            "anthropic_api_key" => &mut self.anthropic_api_key,
             "deepinfra_api_key" => &mut self.deepinfra_api_key,
             "spotify_client_id" => &mut self.spotify_client_id,
             "lastfm_api_key" => &mut self.lastfm_api_key,
@@ -207,6 +228,27 @@ impl Settings {
         *self.house.write() = merged;
         Ok(())
     }
+
+    /// Saves the settings as a screen sent them. A field it doesn't send keeps its value: a TV app
+    /// older than this server doesn't know the newer ones (the Anthropic key), and would otherwise
+    /// blank them.
+    pub fn save_from(&self, next: &serde_json::Value) -> Result<()> {
+        let next = over(&self.get(), next)?;
+        self.save(next)
+    }
+}
+
+/// `house` with the fields `next` has over it; anything else in `next` is left out.
+fn over(house: &House, next: &serde_json::Value) -> Result<House> {
+    let mut v = serde_json::to_value(house)?;
+    if let (Some(base), Some(next)) = (v.as_object_mut(), next.as_object()) {
+        for (k, x) in next {
+            if let Some(slot) = base.get_mut(k) {
+                *slot = x.clone();
+            }
+        }
+    }
+    Ok(serde_json::from_value(v)?)
 }
 
 /// settings.toml through a temporary file, as `tvl_kit::store` does for JSON.
@@ -242,6 +284,18 @@ mod tests {
         let saved = h.merged(edited);
         assert_eq!(saved.deepinfra_api_key, "di-abcdefgh9876");
         assert_eq!(saved.lastfm_api_key, "new-lastfm");
+    }
+
+    #[test]
+    fn a_screen_that_doesnt_know_a_field_keeps_it() {
+        let h = House { anthropic_api_key: "test-anthropic-1234".into(), deepinfra_api_key: "di-9876".into(), ..Default::default() };
+        // A TV app from before the Anthropic key: its own fields, a masked key, one the house hasn't.
+        let from_tv = serde_json::json!({ "deepinfra_api_key": "••••9876", "region": "PT", "library_on": true, "browser": "edge" });
+        let next = h.merged(over(&h, &from_tv).unwrap());
+        assert_eq!(next.anthropic_api_key, "test-anthropic-1234");
+        assert_eq!(next.deepinfra_api_key, "di-9876");
+        assert_eq!(next.region, "PT");
+        assert_eq!(next.assistant_llm, Llm::Claude);
     }
 
     #[test]

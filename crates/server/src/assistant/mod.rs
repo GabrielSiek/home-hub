@@ -1,4 +1,4 @@
-//! The assistant's brain, on the server: an LLM on DeepInfra that answers questions and drives the
+//! The assistant's brain, on the server: an LLM (Claude, or a model on DeepInfra) that answers questions and drives the
 //! house through tools (smart home, timers and alarms, tasks, weather, news) and the TV of the
 //! screen it was spoken to (apps, games, titles, channels, volume). From the old launcher's
 //! `assistant/`. Timer and alarm requests it can read by itself ("timer de 12 minutos pra pizza")
@@ -28,6 +28,7 @@ use tvl_protocol::clock::RingTarget;
 
 use crate::ctx::Ctx;
 use crate::router::Caller;
+use crate::settings::Llm;
 use crate::{clock, smarthome};
 
 /// Model calls per question; tools that need another tool's answer take a few.
@@ -128,10 +129,30 @@ fn place(app: &Ctx, caller: &Caller, asked: &Asked) -> Place {
     }
 }
 
+/// The DeepInfra key: speech recognition, and DeepInfra's answers.
 pub(crate) fn api_key(app: &Ctx) -> Result<String> {
     Some(app.settings.get().deepinfra_api_key.trim().to_string())
         .filter(|k| !k.is_empty())
         .ok_or_else(|| Error::msg("Add a DeepInfra API key in Settings to use the assistant"))
+}
+
+/// The model that answers: Claude when it's the provider and there's an Anthropic key, else
+/// DeepInfra's.
+fn backend(app: &Ctx) -> Result<llm::Backend> {
+    let s = app.settings.get();
+    let model = Some(s.assistant_model.trim().to_string()).filter(|m| !m.is_empty());
+    let anthropic = Some(s.anthropic_api_key.trim().to_string()).filter(|k| !k.is_empty());
+    match (s.assistant_llm, anthropic) {
+        (Llm::Claude, Some(key)) => Ok(llm::Backend::Claude {
+            key,
+            // A DeepInfra model left in Settings doesn't apply to Claude.
+            model: model.filter(|m| m.starts_with("claude-")).unwrap_or_else(|| llm::CLAUDE_MODEL.to_string()),
+        }),
+        _ => Ok(llm::Backend::DeepInfra {
+            key: api_key(app)?,
+            model: model.filter(|m| !m.starts_with("claude-")).unwrap_or_else(|| llm::DEFAULT_MODEL.to_string()),
+        }),
+    }
 }
 
 /// Answers `text`, running whatever tools the model asks for. `now`: the asker's local date and
@@ -179,10 +200,7 @@ async fn answer(app: &Ctx, text: &str, now: &str, place: &Place) -> Result<Reply
         keep(app, &key, history);
         return Ok(Reply { text: done.text, cards: done.cards, media: Vec::new(), ui: Vec::new() });
     }
-    let api_key = api_key(app)?;
-    let model = Some(app.settings.get().assistant_model.trim().to_string())
-        .filter(|m| !m.is_empty())
-        .unwrap_or_else(|| llm::DEFAULT_MODEL.to_string());
+    let backend = backend(app)?;
 
     let mut history = history_of(app, &key);
     history.push(json!({ "role": "user", "content": text.trim() }));
@@ -192,10 +210,11 @@ async fn answer(app: &Ctx, text: &str, now: &str, place: &Place) -> Result<Reply
     let mut reply = String::new();
     let http = tvl_kit::http::api();
     for round in 0..=MAX_ROUNDS {
-        // The last round has no tools, so the model has to say something.
-        let offered: &[Value] = if round < MAX_ROUNDS { &definitions } else { &[] };
+        // The last round can't use tools, so the model has to say something.
+        let use_tools = round < MAX_ROUNDS;
         let messages: Vec<Value> = std::iter::once(system.clone()).chain(history.iter().cloned()).collect();
-        let msg = llm::chat(&http, &api_key, &model, &messages, offered).await?;
+        // The TV PC reads the whole reply out once it's here.
+        let msg = llm::chat(&http, &backend, &messages, &definitions, use_tools, &mut |_| {}).await?;
         history.push(msg.to_history());
         if msg.tool_calls().is_empty() {
             reply = msg.text();

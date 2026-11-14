@@ -393,13 +393,15 @@ export function Sheet({
 }
 
 /** A sheet's title row with its close button. */
-export function SheetHead({ title, sub, onClose }: { title: string; sub?: ReactNode; onClose: () => void }) {
+/** `action`: a button of the sheet's own, before Close. */
+export function SheetHead({ title, sub, onClose, action }: { title: string; sub?: ReactNode; onClose: () => void; action?: ReactNode }) {
   return (
     <span style={{ display: 'flex', alignItems: 'flex-start', gap: 16 }}>
       <span style={{ flex: '1 1 auto', minWidth: 0, display: 'flex', flexDirection: 'column', lineHeight: 1.3 }}>
         <span style={{ fontSize: 22, fontWeight: 700 }}>{title}</span>
         {sub && <span style={{ fontSize: 13, color: '#a0a0a0' }}>{sub}</span>}
       </span>
+      {action}
       <Round icon="close" label="Close" onClick={onClose} />
     </span>
   );

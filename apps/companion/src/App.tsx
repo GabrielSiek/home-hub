@@ -6,6 +6,8 @@ import { HouseSheets } from './follow';
 import { Icon, type IconName } from './icons';
 import { go, openOver, SECTIONS, useLayout, useNav, type Layout, type Section } from './nav';
 import { Overlays } from './ui';
+// Readies the device's voice on the first tap, before the assistant (loaded later) needs it.
+import './speak';
 import Hub from './screens/Hub';
 
 const Watch = lazy(() => import('./screens/Watch'));

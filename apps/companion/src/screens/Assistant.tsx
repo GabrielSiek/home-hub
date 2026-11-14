@@ -1,8 +1,9 @@
-// The assistant from a phone or tablet: the TV's assistant (DeepInfra, with the same tools for
+// The assistant from a phone or tablet: the house's assistant (Claude, with the same tools for
 // lights, timers, music and channels), asked by voice first: opening the sheet starts listening,
 // the orb stops it early or starts it again, typing is the fallback. It listens on the device's
 // own microphone where the browser lends one (over HTTPS, and on an iPad from Safari, not a home
-// screen app: voice.ts), else through the launcher PC's.
+// screen app: voice.ts), else through the launcher PC's. Replies are read out in the device's own
+// voice (speak.ts), unless the speaker button turns that off.
 import { useEffect, useRef, useState } from 'react';
 
 import { api, on } from '@tv/lib/api';
@@ -14,7 +15,8 @@ import { toast, useLive } from '../live';
 import { closeOver, underSub, useNav } from '../nav';
 import { screenId, thisScreen } from '../screen';
 import { homeAt } from './home/model';
-import { Sheet, SheetHead } from '../ui';
+import { canSpeak, setSpeaksReplies, speak, speaksReplies, stopSpeaking } from '../speak';
+import { Round, Sheet, SheetHead } from '../ui';
 import { deviceMic, NeedsTap, NoMic, record, transcribe, type Recording } from '../voice';
 
 interface Turn {
@@ -57,6 +59,8 @@ export default function Assistant({ layout }: ScreenProps) {
   const [hint, setHint] = useState<string | null>(null);
   /** Whether it listens on this device's microphone (else the PC's). */
   const [own, setOwn] = useState(false);
+  /** Whether replies are read out here. */
+  const [talks, setTalks] = useState(speaksReplies);
   const list = useRef<HTMLDivElement>(null);
   const alive = useRef(true);
   /** A recording made for this sheet, on the PC or here, until it's done with or dropped. */
@@ -74,6 +78,7 @@ export default function Assistant({ layout }: ScreenProps) {
 
   const close = () => {
     dropRecording();
+    stopSpeaking();
     closeOver();
   };
 
@@ -81,13 +86,17 @@ export default function Assistant({ layout }: ScreenProps) {
     const t = q.trim();
     if (!t) return;
     dropRecording();
+    stopSpeaking();
     setText('');
     setHint(null);
     setTurns((ts) => [...ts, { role: 'me', text: t }]);
     setVoice('thinking');
     try {
       const reply = await api.assistantAsk(t, new Date().toString(), { screen: screenId, room: roomOnShow() });
-      if (alive.current) setTurns((ts) => [...ts, { role: 'assistant', text: reply.text }]);
+      if (alive.current) {
+        setTurns((ts) => [...ts, { role: 'assistant', text: reply.text }]);
+        speak(reply.text);
+      }
     } catch (e) {
       toast(e);
     } finally {
@@ -122,6 +131,8 @@ export default function Assistant({ layout }: ScreenProps) {
   };
 
   const listen = () => {
+    // The microphone mustn't hear the last reply being read out.
+    stopSpeaking();
     setHint(null);
     setVoice('opening');
     hearing.current = true;
@@ -155,6 +166,7 @@ export default function Assistant({ layout }: ScreenProps) {
       alive.current = false;
       off();
       dropRecording();
+      stopSpeaking();
     };
   }, []);
 
@@ -179,7 +191,23 @@ export default function Assistant({ layout }: ScreenProps) {
 
   return (
     <Sheet open onClose={close} label="Assistant" layout={layout} height={phone ? '72%' : 'min(580px, calc(100% - 60px))'}>
-      <SheetHead title="Assistant" sub="Lights, timers, music, channels: the TV does it." onClose={close} />
+      <SheetHead
+        title="Assistant"
+        sub="Lights, timers, music, channels: the TV does it."
+        onClose={close}
+        action={
+          canSpeak() && (
+            <Round
+              icon={talks ? 'speaker' : 'speakerOff'}
+              label={talks ? 'Stop reading replies out' : 'Read replies out'}
+              onClick={() => {
+                setSpeaksReplies(!talks);
+                setTalks(!talks);
+              }}
+            />
+          )
+        }
+      />
       <div ref={list} className="vs" style={{ flex: '1 1 auto', minHeight: 0, marginTop: 14, display: 'flex', flexDirection: 'column', gap: 10 }}>
         {turns.length === 0 && (
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>

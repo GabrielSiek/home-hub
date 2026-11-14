@@ -9,6 +9,7 @@
 //! Hearing and speaking stay where the microphones and speakers are: a TV PC records and speaks
 //! with its own voice; the words are made into text here (transcribe.rs).
 
+mod live;
 pub mod llm;
 mod news;
 pub mod tools;
@@ -83,6 +84,9 @@ pub struct Reply {
     pub media: Vec<Value>,
     /// Steps for the UI after the reply (navigate, close).
     pub ui: Vec<Value>,
+    /// The reading id when the TV PC that asked is reading the reply out live, as it was written
+    /// ("assistant.say"); None: the screen reads it out itself.
+    pub voice: Option<u32>,
 }
 
 struct Conversation {
@@ -156,10 +160,17 @@ fn backend(app: &Ctx) -> Result<llm::Backend> {
 }
 
 /// Answers `text`, running whatever tools the model asks for. `now`: the asker's local date and
-/// time, as its screen sees it.
-pub async fn ask(app: &Ctx, caller: &Caller, text: &str, now: &str, asked: Asked) -> Result<Reply> {
+/// time, as its screen sees it. `voice`: a reading id from a TV PC that asked, to have it read the
+/// reply out while it's written.
+pub async fn ask(app: &Ctx, caller: &Caller, text: &str, now: &str, asked: Asked, voice: Option<u32>) -> Result<Reply> {
     let place = place(app, caller, &asked);
-    let reply = answer(app, text, now, &place).await?;
+    let live = voice.zip(caller.agent.as_deref()).map(|(id, device)| live::Live::start(app, device, id));
+    let mut reply = answer(app, text, now, &place, live.as_ref()).await?;
+    if live.is_some() {
+        reply.voice = voice;
+    }
+    // The reply is complete: the TV PC hears so after its last sentence.
+    drop(live);
     smarthome::rooms::heard(
         app,
         smarthome::Heard {
@@ -190,15 +201,18 @@ fn keep(app: &Ctx, key: &str, history: Vec<Value>) {
     all.insert(key.to_string(), Conversation { history: trimmed(history), last: Instant::now() });
 }
 
-async fn answer(app: &Ctx, text: &str, now: &str, place: &Place) -> Result<Reply> {
+async fn answer(app: &Ctx, text: &str, now: &str, place: &Place, live: Option<&live::Live>) -> Result<Reply> {
     let key = place.screen.clone().unwrap_or_default();
     if let Some(done) = clock::quick(app, text, place.ring_target.clone()) {
+        if let Some(live) = live {
+            live.say(&done.text);
+        }
         // Kept in the conversation, so the model can follow up on it ("make it 15").
         let mut history = history_of(app, &key);
         history.push(json!({ "role": "user", "content": text.trim() }));
         history.push(json!({ "role": "assistant", "content": done.text }));
         keep(app, &key, history);
-        return Ok(Reply { text: done.text, cards: done.cards, media: Vec::new(), ui: Vec::new() });
+        return Ok(Reply { text: done.text, cards: done.cards, media: Vec::new(), ui: Vec::new(), voice: None });
     }
     let backend = backend(app)?;
 
@@ -207,17 +221,32 @@ async fn answer(app: &Ctx, text: &str, now: &str, place: &Place) -> Result<Reply
     let system = json!({ "role": "system", "content": system_prompt(app, now, place) });
     let definitions = tools::definitions();
     let mut out = tools::Outcome::default();
-    let mut reply = String::new();
+    // Everything the model says, before its tool calls too ("Vou ver a previsão."): it's read out
+    // as it's written, so the reply shows all of it.
+    let mut said: Vec<String> = Vec::new();
+    let mut sentences = live::Sentences::default();
     let http = tvl_kit::http::api();
     for round in 0..=MAX_ROUNDS {
         // The last round can't use tools, so the model has to say something.
         let use_tools = round < MAX_ROUNDS;
         let messages: Vec<Value> = std::iter::once(system.clone()).chain(history.iter().cloned()).collect();
-        // The TV PC reads the whole reply out once it's here.
-        let msg = llm::chat(&http, &backend, &messages, &definitions, use_tools, &mut |_| {}).await?;
+        let mut hear = |piece: &str| {
+            if let Some(live) = live {
+                for s in sentences.push(piece) {
+                    live.say(&s);
+                }
+            }
+        };
+        let msg = llm::chat(&http, &backend, &messages, &definitions, use_tools, &mut hear).await?;
+        if let (Some(live), Some(last)) = (live, sentences.flush()) {
+            live.say(&last);
+        }
         history.push(msg.to_history());
+        let text = msg.text();
+        if !text.is_empty() {
+            said.push(text);
+        }
         if msg.tool_calls().is_empty() {
-            reply = msg.text();
             break;
         }
         for call in msg.tool_calls() {
@@ -225,11 +254,16 @@ async fn answer(app: &Ctx, text: &str, now: &str, place: &Place) -> Result<Reply
             history.push(json!({ "role": "tool", "tool_call_id": call.id, "content": result }));
         }
     }
+    let mut reply = said.join(" ");
     if reply.is_empty() {
         reply = if out.cards.is_empty() { "Sorry, I didn't get that." } else { "Done." }.to_string();
     }
+    // Not written piece by piece: a fallback line, or a request the model declined.
+    if let Some(live) = live.filter(|_| !sentences.any()) {
+        live.say(&reply);
+    }
     keep(app, &key, history);
-    Ok(Reply { text: reply, cards: out.cards, media: out.media, ui: out.ui })
+    Ok(Reply { text: reply, cards: out.cards, media: out.media, ui: out.ui, voice: None })
 }
 
 /// The newest messages, starting at a question so no tool answer loses its call.

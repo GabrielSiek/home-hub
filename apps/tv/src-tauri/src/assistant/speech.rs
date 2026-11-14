@@ -11,7 +11,7 @@ use std::collections::{HashMap, VecDeque};
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::{Arc, Mutex};
+use std::sync::{mpsc, Arc, Mutex};
 use std::time::{Duration, Instant};
 
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
@@ -21,7 +21,7 @@ use serde_json::json;
 use sherpa_onnx::{GenerationConfig, OfflineTts, OfflineTtsConfig, OfflineTtsKokoroModelConfig, OfflineTtsModelConfig};
 use tauri::{AppHandle, Emitter, Manager};
 
-use crate::config::Settings;
+use crate::config::{Settings, Speech};
 use crate::error::{Error, Result};
 use crate::state::AppState;
 
@@ -51,19 +51,22 @@ const POLL: Duration = Duration::from_millis(20);
 const STALLED: Duration = Duration::from_secs(3);
 /// Progress events while downloading, at most this often.
 const TICK: Duration = Duration::from_millis(250);
-/// Unused this long, the model is let go (it holds ~400 MB); opening the assistant loads it again.
-const IDLE: Duration = Duration::from_secs(15 * 60);
+/// After the launcher opens, the model loads this much later, so it doesn't slow the start.
+const LOAD_AFTER_START: Duration = Duration::from_secs(20);
 
 #[derive(Default)]
 pub struct Speaker {
-    /// Loaded when the assistant opens (about two seconds) and kept while in use. Its inner lock
-    /// keeps to one reply at a time.
+    /// Kept loaded while the launcher is in front: loading takes ~2 s, ~6 s once Windows has
+    /// dropped the files from its cache, and a reply waited for that. Let go while a game runs
+    /// (it holds ~400 MB). Its inner lock keeps to one reply at a time.
     engine: Mutex<Option<Arc<Mutex<OfflineTts>>>>,
-    used: Mutex<Option<Instant>>,
     /// Set to stop the reply being read out.
     current: Mutex<Option<Arc<AtomicBool>>>,
     /// The download in progress, or the last one's failure.
     job: Mutex<Option<VoiceModel>>,
+    /// Replies being read out live, by reading id: the server sends their sentences as the model
+    /// writes them.
+    lives: Mutex<HashMap<u32, Live>>,
 }
 
 /// The model's download, for Settings ("voice-model" events).
@@ -126,30 +129,53 @@ pub async fn prepare(app: AppHandle) {
         install(app).await;
         return;
     }
+    load_now(&app).await;
+}
+
+/// Loads the model if it's there and isn't loaded yet.
+async fn load_now(app: &AppHandle) {
     let a = app.clone();
     let loaded = tauri::async_runtime::spawn_blocking(move || engine(&a.state::<AppState>()).map(drop)).await;
     if let Ok(Err(e)) = loaded {
         eprintln!("voice: {e}");
     }
-    keep_warm(&app);
 }
 
-/// Marks the model as used now; unused for IDLE after this, it's let go.
-fn keep_warm(app: &AppHandle) {
-    *app.state::<AppState>().assistant.speaker.used.lock().unwrap() = Some(Instant::now());
+/// Whether replies are read out by the voice on this PC, and its model is downloaded.
+fn wanted(app: &AppHandle) -> bool {
+    let st = app.state::<AppState>();
+    let local = st.config.read().unwrap().settings.assistant_speech == Speech::Local;
+    local && installed(&model_dir(&st.data_dir))
+}
+
+/// Loads the model a little after the launcher opens, so the first reply doesn't wait for it.
+pub fn start(app: &AppHandle) {
     let app = app.clone();
     tauri::async_runtime::spawn(async move {
-        tokio::time::sleep(IDLE).await;
-        let speaker = &app.state::<AppState>().assistant.speaker;
-        if speaker.used.lock().unwrap().is_some_and(|t| t.elapsed() >= IDLE) {
-            // Busy loading: it's in use after all.
-            if let Ok(mut engine) = speaker.engine.try_lock() {
-                if engine.take().is_some() {
-                    eprintln!("voice: let the model go after {IDLE:?} unused");
-                }
-            }
+        tokio::time::sleep(LOAD_AFTER_START).await;
+        if wanted(&app) && app.state::<AppState>().games.running().is_none() {
+            load_now(&app).await;
         }
     });
+}
+
+/// A game started: lets the model go for its memory. Opening the assistant loads it again.
+pub fn release(app: &AppHandle) {
+    // Busy loading: the assistant was just opened, keep it. A reply being read out keeps its
+    // own handle and finishes.
+    if let Ok(mut engine) = app.state::<AppState>().assistant.speaker.engine.try_lock() {
+        if engine.take().is_some() {
+            eprintln!("voice: let the model go while a game runs");
+        }
+    }
+}
+
+/// The game is over: loads the model again, back on the launcher.
+pub fn reload(app: &AppHandle) {
+    if wanted(app) {
+        let app = app.clone();
+        tauri::async_runtime::spawn(async move { load_now(&app).await });
+    }
 }
 
 /// Downloads and unpacks the model, unless it's there or already on its way.
@@ -177,9 +203,7 @@ async fn install(app: AppHandle) {
         Ok(()) => {
             set_job(&app, None);
             // Loaded now, so the first reply doesn't wait for it.
-            let a = app.clone();
-            let _ = tauri::async_runtime::spawn_blocking(move || engine(&a.state::<AppState>()).map(drop)).await;
-            keep_warm(&app);
+            load_now(&app).await;
         }
         Err(e) => {
             eprintln!("voice: the download failed: {e}");
@@ -407,7 +431,6 @@ pub async fn say(app: &AppHandle, text: &str, voice: Option<&str>, id: u32) -> R
             *current = None;
         }
     }
-    keep_warm(app);
     result
 }
 
@@ -430,8 +453,14 @@ fn read_out(app: &AppHandle, text: &str, sid: i32, lang: &str, id: u32, stop: &A
     })
 }
 
-/// Makes `text` sentence by sentence into `player` and lets it play out. `started` runs once the
-/// first sentence is on its way to the speakers.
+/// Runs once, when the first sound of a reply is on its way to the speakers.
+type Started = Arc<Mutex<Option<Box<dyn FnOnce() + Send>>>>;
+
+fn started(f: impl FnOnce() + Send + 'static) -> Started {
+    Arc::new(Mutex::new(Some(Box::new(f))))
+}
+
+/// Makes `text` sentence by sentence into `player` and lets it play out.
 fn play_out(
     mut player: Player,
     engine: &Mutex<OfflineTts>,
@@ -441,19 +470,33 @@ fn play_out(
     stop: &Arc<AtomicBool>,
     started: impl FnOnce() + Send + 'static,
 ) -> Result<()> {
+    make(engine, &player, text, sid, lang, stop, &self::started(started))?;
+    player.wait()
+}
+
+/// Makes `text` sentence by sentence into `player`'s queue; returns once it's all made (or
+/// hushed), while the queue plays on.
+fn make(
+    engine: &Mutex<OfflineTts>,
+    player: &Player,
+    text: &str,
+    sid: i32,
+    lang: &str,
+    stop: &Arc<AtomicBool>,
+    started: &Started,
+) -> Result<()> {
     let tts = engine.lock().unwrap();
     if stop.load(Ordering::Relaxed) {
         return Ok(());
     }
     player.queue.lock().unwrap().voice_rate = tts.sample_rate() as u32;
-    let (queue, halt) = (player.queue.clone(), stop.clone());
-    let mut started = Some(started);
+    let (queue, halt, started) = (player.queue.clone(), stop.clone(), started.clone());
     let made = tts.generate_with_config(
         text,
         &generation(sid, lang),
         Some(move |samples: &[f32], _progress: f32| {
             queue.lock().unwrap().samples.extend(samples);
-            if let Some(f) = started.take() {
+            if let Some(f) = started.lock().unwrap().take() {
                 f();
             }
             !halt.load(Ordering::Relaxed)
@@ -464,7 +507,127 @@ fn play_out(
     if made.is_none() && !stop.load(Ordering::Relaxed) {
         return Err(Error::msg("The voice couldn't read that"));
     }
-    player.wait()
+    Ok(())
+}
+
+/// A reply read out while the model is still writing it: its sentences go in as they're
+/// finished, and the first plays while the rest are written and made. Dropping it ends the
+/// reply; "voice-end" goes out once that has played out, been hushed or failed.
+pub struct Live {
+    tx: mpsc::Sender<String>,
+}
+
+impl Live {
+    pub fn say(&self, text: &str) {
+        let _ = self.tx.send(text.to_string());
+    }
+}
+
+/// How a live reading ended, for the UI: it falls back to Windows' voices when nothing was said.
+#[derive(Debug, Clone, Serialize)]
+struct LiveEnd {
+    id: u32,
+    said: bool,
+    error: Option<String>,
+}
+
+/// Starts reading a reply out live in Settings' voice, when that's the voice on this PC and its
+/// model is here. "voice-start" (with `id`) goes out when the sound starts.
+pub fn live(app: &AppHandle, id: u32) -> Option<Live> {
+    if !wanted(app) {
+        return None;
+    }
+    let st = app.state::<AppState>();
+    let (sid, lang) = pick(&st.config.read().unwrap().settings, None);
+    let stop = Arc::new(AtomicBool::new(false));
+    if let Some(earlier) = st.assistant.speaker.current.lock().unwrap().replace(stop.clone()) {
+        earlier.store(true, Ordering::Relaxed);
+    }
+    let (tx, rx) = mpsc::channel::<String>();
+    let app = app.clone();
+    std::thread::Builder::new()
+        .name("live voice".into())
+        .spawn(move || {
+            let (said, error) = read_live(&app, &rx, sid, lang, id, &stop);
+            let st = app.state::<AppState>();
+            {
+                let mut current = st.assistant.speaker.current.lock().unwrap();
+                if current.as_ref().is_some_and(|c| Arc::ptr_eq(c, &stop)) {
+                    *current = None;
+                }
+            }
+            if let Some(e) = &error {
+                eprintln!("voice: {e}");
+            }
+            let _ = app.emit("voice-end", LiveEnd { id, said, error: error.map(|e| e.to_string()) });
+        })
+        .ok()?;
+    Some(Live { tx })
+}
+
+/// A question asked with reading id `id`: starts reading its reply out live, when the voice on
+/// this PC is the one in Settings. False: the UI reads the reply out itself, so the server isn't
+/// asked to send its sentences.
+pub fn live_begin(app: &AppHandle, id: u32) -> bool {
+    let Some(live) = live(app, id) else { return false };
+    app.state::<AppState>().assistant.speaker.lives.lock().unwrap().insert(id, live);
+    true
+}
+
+/// A sentence of reply `id`, from the server ("assistant.say").
+pub fn live_say(app: &AppHandle, id: u32, text: &str) {
+    if let Some(live) = app.state::<AppState>().assistant.speaker.lives.lock().unwrap().get(&id) {
+        live.say(text);
+    }
+}
+
+/// Reply `id` is complete ("assistant.said"), or won't come: what's queued plays out, then
+/// "voice-end" goes out.
+pub fn live_end(app: &AppHandle, id: u32) {
+    let live = app.state::<AppState>().assistant.speaker.lives.lock().unwrap().remove(&id);
+    drop(live);
+}
+
+/// Reads out what comes in on `rx` until it closes; returns whether anything was heard.
+fn read_live(
+    app: &AppHandle,
+    rx: &mpsc::Receiver<String>,
+    sid: i32,
+    lang: &str,
+    id: u32,
+    stop: &Arc<AtomicBool>,
+) -> (bool, Option<Error>) {
+    let asked = Instant::now();
+    // Loaded now if it wasn't, while the model thinks.
+    let engine = match engine(&app.state::<AppState>()) {
+        Ok(e) => e,
+        Err(e) => return (false, Some(e)),
+    };
+    let heard = Arc::new(AtomicBool::new(false));
+    let first = {
+        let (app, heard) = (app.clone(), heard.clone());
+        started(move || {
+            heard.store(true, Ordering::Relaxed);
+            eprintln!("voice: speaking {:?} after the question", asked.elapsed());
+            let _ = app.emit("voice-start", id);
+        })
+    };
+    let mut player: Option<Player> = None;
+    for sentence in rx.iter() {
+        if stop.load(Ordering::Relaxed) {
+            break;
+        }
+        let text = speakable(&sentence);
+        if text.is_empty() {
+            continue;
+        }
+        let p = player.get_or_insert_with(|| Player::start(stop.clone()));
+        if let Err(e) = make(&engine, p, &text, sid, lang, stop, &first) {
+            return (heard.load(Ordering::Relaxed), Some(e));
+        }
+    }
+    let error = player.and_then(|mut p| p.wait().err());
+    (heard.load(Ordering::Relaxed), error)
 }
 
 /// What the speakers play: the voice's samples at its own rate, stepped through at the device's.
@@ -648,9 +811,10 @@ mod tests {
         assert!(installed(&dir), "no model in {}", dir.display());
         let t = Instant::now();
         let tts = load(&dir).expect("loads");
+        let loaded = t.elapsed();
         let (sid, lang) = speaker("pf_dora").unwrap();
         warm_up(&tts, sid, lang);
-        println!("loaded and warmed up in {:?} with {} threads", t.elapsed(), threads());
+        println!("loaded in {loaded:?}, warmed up after {:?}, with {} threads", t.elapsed(), threads());
         let text = "Pronto, liguei as luzes da sala. Amanhã faz 24 graus em Porto Alegre, com sol de manhã                     e chuva à tarde. Quer que eu coloque um alarme para as sete?";
         for (voice, text) in [("pf_dora", text), ("af_heart", "Done! The lights are on.")] {
             let (sid, lang) = speaker(voice).unwrap();

@@ -36,6 +36,33 @@ pub fn route(invoke: Invoke, local: &(dyn Fn(Invoke) -> bool + Send + Sync)) -> 
 
 /// Runs server-owned `cmd` there, and shapes the answer for this TV.
 pub async fn forward(app: &AppHandle, cmd: &str, args: Value) -> Result<Value, String> {
+    if cmd == "assistant_ask" {
+        return ask(app, args).await;
+    }
+    forward_plain(app, cmd, args).await
+}
+
+/// A question to the assistant. With a reading id (`voice`), this PC's voice starts reading the
+/// reply out as the server's model writes it: the server sends the sentences ("assistant.say").
+/// Without its voice on here, the server isn't asked to, and the UI reads the reply out itself.
+async fn ask(app: &AppHandle, mut args: Value) -> Result<Value, String> {
+    let id = args["voice"].as_u64().and_then(|v| u32::try_from(v).ok());
+    let live = id.filter(|id| crate::assistant::speech::live_begin(app, *id));
+    if live.is_none() {
+        args["voice"] = Value::Null;
+    }
+    let reply = forward_plain(app, "assistant_ask", args).await;
+    if let Some(id) = live {
+        // A server that reads out live says when the reply is complete ("assistant.said").
+        let reading = reply.as_ref().is_ok_and(|r| r["voice"].as_u64() == Some(u64::from(id)));
+        if !reading {
+            crate::assistant::speech::live_end(app, id);
+        }
+    }
+    reply
+}
+
+async fn forward_plain(app: &AppHandle, cmd: &str, args: Value) -> Result<Value, String> {
     let rings = cmd.starts_with("clock_");
     // Answered on this TV: the bell stops now, not when the server's word comes back.
     if cmd == "clock_respond" {

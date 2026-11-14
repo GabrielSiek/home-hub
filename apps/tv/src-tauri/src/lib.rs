@@ -225,6 +225,7 @@ pub fn run() {
             ring::start(app.handle());
             retro::start(app.handle());
             agent::start(app.handle());
+            assistant::speech::start(app.handle());
             if !passive {
                 input::spawn(app.handle().clone());
                 cursor::spawn(app.handle().clone());

@@ -9,6 +9,7 @@ import {
   type AssistantUi,
   type Settings,
   type Speech,
+  type VoiceEnd,
 } from './api';
 import { nav, type ScreenName } from './nav';
 import { toast } from './toast';
@@ -64,7 +65,71 @@ let stopVoice: (() => void) | null = null;
 /** The reply the launcher is reading out, told apart from earlier ones by its id. */
 let reading: { id: number; started: () => void } | null = null;
 let readingId = 0;
-let hearingVoiceStart = false;
+let hearingVoice = false;
+/** Live readings that ended before anyone waited for them, by id. */
+const voiceEnded = new Map<number, VoiceEnd>();
+const voiceWaiting = new Map<number, (e: VoiceEnd) => void>();
+
+function hearVoice() {
+  if (hearingVoice) return;
+  hearingVoice = true;
+  on<number>('voice-start', (id) => {
+    if (reading?.id === id) reading.started();
+  });
+  on<VoiceEnd>('voice-end', (e) => {
+    const waiting = voiceWaiting.get(e.id);
+    voiceWaiting.delete(e.id);
+    if (waiting) waiting(e);
+    else voiceEnded.set(e.id, e);
+  });
+}
+
+/** Resolves when the live reading `id` is over. */
+function voiceEnd(id: number): Promise<VoiceEnd> {
+  const ended = voiceEnded.get(id);
+  voiceEnded.delete(id);
+  if (ended) return Promise.resolve(ended);
+  return new Promise((resolve) => voiceWaiting.set(id, resolve));
+}
+
+const hushLive = () => {
+  api.assistantHush().catch(() => {});
+};
+
+/** A reading id for the backend to read the reply out with, live, while the model writes it. */
+function startLive(mine: number): number {
+  hearVoice();
+  voiceEnded.clear();
+  const id = ++readingId;
+  reading = {
+    id,
+    started: () => {
+      if (mine === step) set({ phase: 'speaking' });
+    },
+  };
+  // Also hushes it while the reply is still being written.
+  stopVoice = hushLive;
+  return id;
+}
+
+function endLive(id: number) {
+  if (reading?.id === id) reading = null;
+  if (stopVoice === hushLive) stopVoice = null;
+}
+
+/** Waits for the live reading to play out; when the voice on this PC said nothing (it failed, or
+ *  no sentence came), reads the reply with Windows' voices instead. */
+async function readLive(id: number, text: string, mine: number) {
+  const end = await voiceEnd(id);
+  endLive(id);
+  // Not when replies were turned off meanwhile (that hushes it too).
+  if (!end.said && mine === step && (await voice()) !== 'off' && mine === step) {
+    console.warn('The voice on this PC said nothing, using Windows voices:', end.error);
+    await speakWithWindows(text, () => {
+      if (mine === step) set({ phase: 'speaking' });
+    });
+  }
+}
 
 function addTurn(t: Omit<Turn, 'id'>) {
   set((s) => ({ turns: [...s.turns, { ...t, id: nextId++ }].slice(-MAX_TURNS) }));
@@ -86,12 +151,7 @@ function runUi(steps: AssistantUi[]) {
 /** Kokoro on this PC: the launcher plays each sentence as soon as it's made. Resolves when it has
  *  been said or stopped; rejects while the model is still downloading. */
 function speakHere(text: string, onStart: () => void): Promise<void> {
-  if (!hearingVoiceStart) {
-    hearingVoiceStart = true;
-    on<number>('voice-start', (id) => {
-      if (reading?.id === id) reading.started();
-    });
-  }
+  hearVoice();
   const id = ++readingId;
   reading = { id, started: onStart };
   const hush = () => {
@@ -196,13 +256,21 @@ export const assistant = {
     lastAsked = Date.now();
     addTurn({ role: 'user', text: t });
     set({ phase: 'thinking', notice: null });
+    // The voice on this PC starts on the first sentence while the model writes the rest.
+    const live = (await voice()) === 'local' && isTauri ? startLive(mine) : null;
     try {
-      const reply = await api.assistantAsk(t, new Date().toString());
+      const reply = await api.assistantAsk(t, new Date().toString(), undefined, live);
       if (mine !== step) return;
       addTurn({ role: 'assistant', text: reply.text, cards: reply.cards, media: reply.media });
       runUi(reply.ui);
-      await speak(reply.text, mine);
+      if (live !== null && reply.voice === live) {
+        await readLive(live, reply.text, mine);
+      } else {
+        if (live !== null) endLive(live);
+        await speak(reply.text, mine);
+      }
     } catch (e) {
+      if (live !== null) endLive(live);
       if (mine !== step) return;
       addTurn({ role: 'assistant', text: String(e), error: true });
     }

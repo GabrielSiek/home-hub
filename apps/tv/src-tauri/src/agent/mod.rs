@@ -222,7 +222,7 @@ impl Host for Tv {
         let app = self.app.clone();
         Box::pin(async move {
             let read = tvl_protocol::spec(&cmd).is_some_and(|s| s.idempotent);
-            if !read && !cmd.starts_with("ring.") {
+            if !read && !cmd.starts_with("ring.") && !cmd.starts_with("assistant.sa") {
                 tracing::info!(cmd, from = from.as_deref().unwrap_or("server"), "from the server");
             }
             match cmd.as_str() {
@@ -245,6 +245,17 @@ impl Host for Tv {
                     let name = args["name"].as_str().unwrap_or_default();
                     let tool_args = args["args"].as_str().unwrap_or("{}");
                     Ok(crate::assistant::tools::run(&app, name, tool_args).await)
+                }
+                // A reply this PC is reading out live: its next sentence, and its end.
+                "assistant.say" => {
+                    let id = args["id"].as_u64().and_then(|v| u32::try_from(v).ok()).unwrap_or_default();
+                    crate::assistant::speech::live_say(&app, id, args["text"].as_str().unwrap_or_default());
+                    Ok(Value::Null)
+                }
+                "assistant.said" => {
+                    let id = args["id"].as_u64().and_then(|v| u32::try_from(v).ok()).unwrap_or_default();
+                    crate::assistant::speech::live_end(&app, id);
+                    Ok(Value::Null)
                 }
                 "device.file" => picture(&app, args["path"].as_str().unwrap_or_default()).map_err(|e| e.to_string()),
                 _ => match crate::device::remote_api::dispatch(&app, &cmd, args).await {

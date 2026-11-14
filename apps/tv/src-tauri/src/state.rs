@@ -107,6 +107,12 @@ impl AppState {
 }
 
 pub fn set_mode(app: &AppHandle, mode: Mode) {
-    *app.state::<AppState>().mode.lock().unwrap() = mode;
+    let before = std::mem::replace(&mut *app.state::<AppState>().mode.lock().unwrap(), mode);
     let _ = app.emit("mode", mode);
+    // The assistant's voice gives a game its memory back, and is ready again after it.
+    match (before == Mode::Game, mode == Mode::Game) {
+        (false, true) => crate::assistant::speech::release(app),
+        (true, false) => crate::assistant::speech::reload(app),
+        _ => {}
+    }
 }

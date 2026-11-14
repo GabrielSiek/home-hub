@@ -218,7 +218,7 @@ pub async fn run(ctx: &Ctx, caller: &Caller, cmd: &str, a: Value) -> Answer {
         "assistant_ask" => {
             let asked = crate::assistant::Asked { screen: arg(&a, "screen")?, room: arg(&a, "room")? };
             let now: String = arg(&a, "now")?;
-            json(crate::assistant::ask(ctx, caller, &arg::<String>(&a, "text")?, &now, asked).await?)
+            json(crate::assistant::ask(ctx, caller, &arg::<String>(&a, "text")?, &now, asked, arg(&a, "voice")?).await?)
         }
         // A TV PC's microphone, as base64 WAV: the words, or null when nothing was said.
         "assistant_transcribe" => {

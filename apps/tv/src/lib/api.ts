@@ -494,6 +494,17 @@ export interface AssistantReply {
   cards: AssistantCard[];
   media: AssistantMedia[];
   ui: AssistantUi[];
+  /** The reading id when this PC's voice is reading the reply out (live, as the server's model
+   *  wrote it): a "voice-end" event says when it's done. Null: read it out here. */
+  voice?: number | null;
+}
+
+/** A live reading is over ("voice-end"). */
+export interface VoiceEnd {
+  id: number;
+  /** Something was heard. */
+  said: boolean;
+  error: string | null;
 }
 
 export interface Status {
@@ -2622,8 +2633,9 @@ export const api = {
     call<Clock>('clock_respond', { id, answer }, () => sampleClock.respond(id, answer)),
   /** `from`: the companion screen it was said on (none: this TV), and the room it's about when
    *  the request names none, if not that screen's. */
-  assistantAsk: (text: string, now: string, from?: { screen?: string | null; room?: string | null }) =>
-    call<AssistantReply>('assistant_ask', { text, now, screen: from?.screen ?? null, room: from?.room ?? null }, () => ({
+  /** `voice`: a reading id, to have this PC's voice read the reply out while it's written. */
+  assistantAsk: (text: string, now: string, from?: { screen?: string | null; room?: string | null }, voice?: number | null) =>
+    call<AssistantReply>('assistant_ask', { text, now, screen: from?.screen ?? null, room: from?.room ?? null, voice: voice ?? null }, () => ({
       text: 'The assistant runs inside the TV Launcher app.',
       cards: [],
       media: [],
